@@ -1,4 +1,4 @@
-module Language exposing
+module M.Language exposing
     ( Block(..)
     , BlockMeta
     , Expr(..)
@@ -114,38 +114,38 @@ type alias PrimitiveBlock =
 
 
 type alias SimpleExpressionBlock =
-    Block (Either String (List (Expr (Maybe ())))) (Maybe ())
+    Block (Either String (List (Expr ()))) ()
 
 
 type alias SimplePrimitiveBlock =
-    Block String (Maybe ())
+    Block String ()
 
 
 
 -- GENERIC SIMPLIFIERS
 
 
-simplifyBlock : (contentA -> contentB) -> Block contentA blockMeta -> Block contentB (Maybe a)
+simplifyBlock : (contentA -> contentB) -> Block contentA blockMeta -> Block contentB ()
 simplifyBlock simplifyContent (Block block) =
     Block
         { heading = block.heading
         , indent = block.indent
         , content = simplifyContent block.content
-        , meta = Nothing
+        , meta = ()
         }
 
 
-simplifyExpr : Expr meta -> Expr (Maybe a)
+simplifyExpr : Expr meta -> Expr ()
 simplifyExpr expr =
     case expr of
         Fun name args _ ->
-            Fun name args Nothing
+            Fun name args ()
 
         VFun name arg _ ->
-            VFun name arg Nothing
+            VFun name arg ()
 
         Text text _ ->
-            Text text Nothing
+            Text text ()
 
 
 
@@ -155,7 +155,7 @@ simplifyExpr expr =
 simplifyExpressionBlock : ExpressionBlock -> SimpleExpressionBlock
 simplifyExpressionBlock block =
     let
-        simplifyContent : Either String (List (Expr exprMeta)) -> Either String (List (Expr (Maybe ())))
+        simplifyContent : Either String (List (Expr exprMeta)) -> Either String (List (Expr ()))
         simplifyContent content =
             case content of
                 Left str ->

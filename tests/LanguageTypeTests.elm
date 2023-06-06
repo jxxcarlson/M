@@ -3,7 +3,7 @@ module LanguageTypeTests exposing (..)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import Language
+import M.Language
     exposing
         ( Block(..)
         , BlockMeta
@@ -27,9 +27,9 @@ testF label f input output =
 suite : Test
 suite =
     describe "M"
-        [ testF "simplifyExpr" Language.simplifyExpr expr1 expr2
-        , testF "simplifyPrimitiveBlock" Language.simplifyPrimitiveBlock primitiveBlock1 primitiveBlock1Simplified
-        , testF "simplifyExpressionBlock" Language.simplifyExpressionBlock expressionBlock expressionBlockSimplified
+        [ testF "simplifyExpr" M.Language.simplifyExpr expr1 expr2
+        , testF "simplifyPrimitiveBlock" M.Language.simplifyPrimitiveBlock primitiveBlock1 primitiveBlock1Simplified
+        , testF "simplifyExpressionBlock" M.Language.simplifyExpressionBlock expressionBlock expressionBlockSimplified
         ]
 
 
@@ -42,7 +42,7 @@ expr1 =
 
 
 expr2 =
-    Fun "bold" [ "Hello" ] Nothing
+    Fun "bold" [ "Hello" ] ()
 
 
 
@@ -102,7 +102,7 @@ primitiveBlock1Simplified =
         { heading = parHeading
         , indent = 0
         , content = "This is a test"
-        , meta = Nothing
+        , meta = ()
         }
 
 
@@ -125,6 +125,6 @@ expressionBlockSimplified =
     Block
         { heading = parHeading
         , indent = 0
-        , content = Right [ Text "This is a test" Nothing ]
-        , meta = Nothing
+        , content = Right [ Text "This is a test" () ]
+        , meta = ()
         }
