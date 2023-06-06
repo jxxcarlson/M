@@ -26,19 +26,29 @@ import Either exposing (Either(..))
 -- PARAMETRIZED TYPES
 
 
-type Expr meta
-    = Fun String (List String) meta
-    | VFun String String meta
-    | Text String meta
+type Expr metaData
+    = Fun String (List String) metaData
+    | VFun String String metaData
+    | Text String metaData
 
 
-type Block content blockMeta
+{-|
+
+    PrimitiveBlocks, content = String
+    ExpressionBlocks, content = Either String (List Expression)
+
+-}
+type Block content blockMetaData
     = Block
         { heading : Heading
         , indent : Int
         , content : content
-        , meta : blockMeta
+        , meta : blockMetaData
         }
+
+
+
+-- HEADINGS
 
 
 type Heading
@@ -61,13 +71,17 @@ type Property
     | B Bool
 
 
+
+-- METADATA TYPES
+
+
 type alias ExprMeta =
     { begin : Int, end : Int, index : Int, id : String }
 
 
 type alias BlockMeta =
     { lineNumber : Int
-    , numberOfLnes : Int
+    , numberOfLines : Int
     , id : String
     , messages : List String
     , sourceText : String
