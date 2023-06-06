@@ -32,7 +32,7 @@ type alias ExprBlock exprMeta blockMeta =
 {-| A block whose content is a String.
 -}
 type alias PrimitiveBlock blockMeta =
-    Block blockMeta String
+    Block String blockMeta
 
 
 type Block content blockMeta
