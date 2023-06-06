@@ -2,19 +2,28 @@ module Language exposing
     ( Block(..)
     , BlockMeta
     , Expr(..)
-    , ExprBlock
     , ExprMeta
+    , Expression
+    , ExpressionBlock
     , Heading(..)
     , Name
     , PrimitiveBlock
     , Properties
     , Property(..)
+    , SimpleExpressionBlock
+    , SimplePrimitiveBlock
     , simplifyBlock
     , simplifyExpr
+    , simplifyExpressionBlock
+    , simplifyPrimitiveBlock
     )
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
+
+
+
+-- PARAMETRIZED TYPES
 
 
 type Expr meta
@@ -23,34 +32,12 @@ type Expr meta
     | Text String meta
 
 
-{-| A block whose content is a list of expressions.
--}
-type alias ExprBlock exprMeta blockMeta =
-    Block blockMeta (Either String (List (Expr exprMeta)))
-
-
-{-| A block whose content is a String.
--}
-type alias PrimitiveBlock blockMeta =
-    Block String blockMeta
-
-
 type Block content blockMeta
     = Block
         { heading : Heading
         , indent : Int
         , content : content
         , meta : blockMeta
-        }
-
-
-simplifyBlock : Block content blockMeta -> Block content (Maybe a)
-simplifyBlock (Block block) =
-    Block
-        { heading = block.heading
-        , indent = block.indent
-        , content = block.content
-        , meta = Nothing
         }
 
 
@@ -88,6 +75,52 @@ type alias BlockMeta =
     }
 
 
+
+-- CONCRETE TYPES
+
+
+type alias Expression =
+    Expr ExprMeta
+
+
+{-| A block whose content is a list of expressions.
+-}
+type alias ExpressionBlock =
+    Block (Either String (List Expression)) BlockMeta
+
+
+{-| A block whose content is a String.
+-}
+type alias PrimitiveBlock =
+    Block String BlockMeta
+
+
+
+-- SIMPLIFIED TYPES
+
+
+type alias SimpleExpressionBlock =
+    Block (Either String (List (Expr (Maybe ())))) (Maybe ())
+
+
+type alias SimplePrimitiveBlock =
+    Block String (Maybe ())
+
+
+
+-- GENERIC SIMPLIFIERS
+
+
+simplifyBlock : (contentA -> contentB) -> Block contentA blockMeta -> Block contentB (Maybe a)
+simplifyBlock simplifyContent (Block block) =
+    Block
+        { heading = block.heading
+        , indent = block.indent
+        , content = simplifyContent block.content
+        , meta = Nothing
+        }
+
+
 simplifyExpr : Expr meta -> Expr (Maybe a)
 simplifyExpr expr =
     case expr of
@@ -99,3 +132,27 @@ simplifyExpr expr =
 
         Text text _ ->
             Text text Nothing
+
+
+
+-- CONCRETE SIMPLIFIERS
+
+
+simplifyExpressionBlock : ExpressionBlock -> SimpleExpressionBlock
+simplifyExpressionBlock block =
+    let
+        simplifyContent : Either String (List (Expr exprMeta)) -> Either String (List (Expr (Maybe ())))
+        simplifyContent content =
+            case content of
+                Left str ->
+                    Left str
+
+                Right exprs ->
+                    Right (List.map simplifyExpr exprs)
+    in
+    simplifyBlock simplifyContent block
+
+
+simplifyPrimitiveBlock : PrimitiveBlock -> SimplePrimitiveBlock
+simplifyPrimitiveBlock block =
+    simplifyBlock identity block
