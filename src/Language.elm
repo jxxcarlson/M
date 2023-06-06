@@ -1,4 +1,17 @@
-module Language exposing (..)
+module Language exposing
+    ( Block(..)
+    , BlockMeta
+    , Expr(..)
+    , ExprBlock
+    , ExprMeta
+    , Heading(..)
+    , Name
+    , PrimitiveBlock
+    , Properties
+    , Property(..)
+    , simplifyBlock
+    , simplifyExpr
+    )
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -10,12 +23,34 @@ type Expr meta
     | Text String meta
 
 
-type Block blockMeta exprMeta
+{-| A block whose content is a list of expressions.
+-}
+type alias ExprBlock exprMeta blockMeta =
+    Block blockMeta (Either String (List (Expr exprMeta)))
+
+
+{-| A block whose content is a String.
+-}
+type alias PrimitiveBlock blockMeta =
+    Block blockMeta String
+
+
+type Block content blockMeta
     = Block
         { heading : Heading
         , indent : Int
-        , content : Either String (List (Expr exprMeta))
+        , content : content
         , meta : blockMeta
+        }
+
+
+simplifyBlock : Block content blockMeta -> Block content (Maybe a)
+simplifyBlock (Block block) =
+    Block
+        { heading = block.heading
+        , indent = block.indent
+        , content = block.content
+        , meta = Nothing
         }
 
 
@@ -51,3 +86,16 @@ type alias BlockMeta =
     , sourceText : String
     , error : Maybe String
     }
+
+
+simplifyExpr : Expr meta -> Expr (Maybe a)
+simplifyExpr expr =
+    case expr of
+        Fun name args _ ->
+            Fun name args Nothing
+
+        VFun name arg _ ->
+            VFun name arg Nothing
+
+        Text text _ ->
+            Text text Nothing
