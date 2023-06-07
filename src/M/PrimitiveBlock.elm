@@ -15,7 +15,7 @@ module Parser.PrimitiveBlock exposing
 
 import Dict exposing (Dict)
 import List.Extra
-import M.Language exposing (PrimitiveBlock)
+import M.Language exposing (BlockMeta, PrimitiveBlock, emptyBlockMeta)
 import M.Line as Line exposing (Line, isEmpty, isNonEmptyBlank)
 
 
@@ -31,7 +31,7 @@ parse isVerbatimLine lines =
 
 length : PrimitiveBlock -> Int
 length block =
-    String.length block.content
+    List.length block.content
 
 
 listLength1 : List PrimitiveBlock -> Int
@@ -94,8 +94,24 @@ finalize block =
         sourceText =
             -- TODO: maybe this should be set at the Primitive block level
             String.join "\n" content
+
+        oldMeta =
+            block.meta
+
+        newMeta =
+            { oldMeta | sourceText = sourceText }
     in
-    { block | content = content, numberOfLines = block.numberOfLines, sourceText = sourceText }
+    -- TODO: is this correct?
+    { block | content = content, meta = newMeta }
+
+
+updateMeta : BlockMeta -> PrimitiveBlock -> PrimitiveBlock
+updateMeta meta block =
+    let
+        oldMeta =
+            block.meta
+    in
+    { block | meta = meta }
 
 
 {-|
@@ -121,21 +137,22 @@ init isVerbatimLine lines =
     }
 
 
-blockFromLine : Language -> Line -> PrimitiveBlock
-blockFromLine lang ({ indent, lineNumber, position, prefix, content } as line) =
-    { indent = indent
-    , lineNumber = lineNumber
-    , position = position
+blockFromLine : Line -> PrimitiveBlock
+blockFromLine ({ indent, lineNumber, position, prefix, content } as line) =
+    let
+        meta =
+            { emptyBlockMeta | lineNumber = lineNumber,
+                , position = position
+                , sourceText = ""
+                , numberOfLines = 1 }
+    in
+    { heading = Debug.todo "heading"
+    , indent = indent
     , content = [ prefix ++ content ]
-    , numberOfLines = 1
-    , name = Nothing
-    , args = []
-    , properties = Dict.empty -- TODO complete this
-    , sourceText = ""
-    , blockType = Line.getBlockType lang line.content
+    , blockType = Line.getHeading line.content
     , error = Nothing
     }
-        |> elaborate lang line
+        |> elaborate  line
 
 
 nextStep : State -> Step State (List PrimitiveBlock)

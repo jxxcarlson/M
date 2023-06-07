@@ -74,12 +74,12 @@ parHeading =
 
 ordinaryHeading : Heading
 ordinaryHeading =
-    Ordinary "quotation" Dict.empty
+    Ordinary "quotation"
 
 
 verbatimHeading : Heading
 verbatimHeading =
-    Verbatim "verbatim" Dict.empty
+    Verbatim "verbatim"
 
 
 
@@ -90,6 +90,8 @@ primitiveBlock1 : PrimitiveBlock
 primitiveBlock1 =
     { heading = parHeading
     , indent = 0
+    , args = []
+    , properties = Dict.empty
     , content = [ "This is a test" ]
     , meta = blockMetaExample
     }
@@ -99,6 +101,8 @@ primitiveBlock1Simplified : SimplePrimitiveBlock
 primitiveBlock1Simplified =
     { heading = parHeading
     , indent = 0
+    , args = []
+    , properties = Dict.empty
     , content = [ "This is a test" ]
     , meta = ()
     }
@@ -112,6 +116,8 @@ expressionBlock : ExpressionBlock
 expressionBlock =
     { heading = parHeading
     , indent = 0
+    , args = []
+    , properties = Dict.empty
     , content = Right [ Text "This is a test" exprMeta ]
     , meta = blockMetaExample
     }
@@ -121,6 +127,8 @@ expressionBlockSimplified : SimpleExpressionBlock
 expressionBlockSimplified =
     { heading = parHeading
     , indent = 0
+    , args = []
+    , properties = Dict.empty
     , content = Right [ Text "This is a test" () ]
     , meta = ()
     }

@@ -5,12 +5,10 @@ module M.Language exposing
     , Expression
     , ExpressionBlock
     , Heading(..)
-    , Name
     , PrimitiveBlock
-    , Properties
-    , Property(..)
     , SimpleExpressionBlock
     , SimplePrimitiveBlock
+    , emptyBlockMeta
     , primitiveBlockEmpty
     , simplifyBlock
     , simplifyExpr
@@ -41,6 +39,8 @@ type Expr metaData
 type alias Block content blockMetaData =
     { heading : Heading
     , indent : Int
+    , args : List String
+    , properties : Dict String String
     , content : content
     , meta : blockMetaData
     }
@@ -52,22 +52,8 @@ type alias Block content blockMetaData =
 
 type Heading
     = Paragraph
-    | Ordinary Name Properties
-    | Verbatim Name Properties
-
-
-type alias Name =
-    String
-
-
-type alias Properties =
-    Dict String Property
-
-
-type Property
-    = I Int
-    | S String
-    | B Bool
+    | Ordinary String -- block name
+    | Verbatim String -- block name
 
 
 
@@ -129,6 +115,8 @@ simplifyBlock : (contentA -> contentB) -> Block contentA blockMeta -> Block cont
 simplifyBlock simplifyContent block =
     { heading = block.heading
     , indent = block.indent
+    , args = block.args
+    , properties = block.properties
     , content = simplifyContent block.content
     , meta = ()
     }
@@ -179,20 +167,22 @@ primitiveBlockEmpty : PrimitiveBlock
 primitiveBlockEmpty =
     { heading = Paragraph
     , indent = 0
+    , args = []
+    , properties = Dict.empty
     , content = []
-    , meta = blockMeta
+    , meta = emptyBlockMeta
     }
 
 
-exprMeta =
-    { begin = 0, end = 0, index = 0, id = "abc" }
+emptyExprMeta =
+    { begin = 0, end = 0, index = 0, id = "" }
 
 
-blockMeta =
+emptyBlockMeta =
     { position = 0
     , lineNumber = 0
-    , numberOfLines = 1
-    , id = "abc"
+    , numberOfLines = 0
+    , id = ""
     , messages = []
     , sourceText = ""
     , error = Nothing

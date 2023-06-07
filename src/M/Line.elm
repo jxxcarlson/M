@@ -2,7 +2,7 @@ module M.Line exposing
     ( Line
     , PrimitiveBlockType(..)
     , classify
-    , getBlockType
+    , getHeading
     , getNameAndArgs
     , isEmpty
     , isNonEmptyBlank
@@ -11,6 +11,9 @@ module M.Line exposing
     , showBlockType
     )
 
+import Dict exposing (Dict)
+import List.Extra
+import M.Language exposing (Heading(..), Properties, Property(..))
 import Parser exposing ((|.), (|=), Parser)
 
 
@@ -107,26 +110,45 @@ classify position lineNumber str =
             result
 
 
-getBlockType : String -> PrimitiveBlockType
-getBlockType line_ =
+getArgs : String -> String -> List String
+getArgs prefix str =
+    str |> String.replace prefix "" |> String.trim |> String.words
+
+type HeadingError
+    = HEMissingName
+
+
+
+getHeading : String -> Result HeadingError M.Language.Heading
+getHeading line_ =
     let
         line =
             String.trim line_
     in
     if String.left 2 line == "||" then
-        PBVerbatim
+        case getArgs "||" line of
+            [] ->
+                Err HEMissingName
+
+            (name::args) ->
+                let
+
+               Ok Heading (String.toInt n |> Maybe.withDefault 1)
+
+
+        Verbatim "name" Dict.empty
 
     else if String.left 2 line == "$$" then
-        PBVerbatim
+        Verbatim "name" Dict.empty
 
     else if
         String.left 1 line
             == "|"
     then
-        PBOrdinary
+        Ordinary "name" Dict.empty
 
     else
-        PBParagraph
+        Paragraph
 
 
 prefixLength : Int -> Int -> String -> Int
