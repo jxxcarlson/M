@@ -320,7 +320,9 @@ commitBlock state currentLine =
         Just block__ ->
             let
                 block_ =
-                    updateMeta (\m -> { m | id = state.id ++ "-" ++ String.fromInt state.blocksCommitted }) block__
+                    block__
+                        |> updateMeta (\m -> { m | id = state.id ++ "-" ++ String.fromInt state.blocksCommitted })
+                        |> updateMeta (\m -> { m | numberOfLines = List.length block__.content })
 
                 block =
                     case block_.heading of

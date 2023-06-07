@@ -26,9 +26,7 @@ print block =
     , "    Line number: " ++ String.fromInt block.meta.lineNumber
     , "    Number of lines: " ++ String.fromInt block.meta.numberOfLines
     , "    messages: " ++ String.join ", " block.meta.messages
-    , "    Error: "
-        ++ showError block.meta.error
-        ++ Debug.toString block.content
+    , "    Error: " ++ showError block.meta.error
     , "    Source text:\n--------" ++ block.meta.sourceText
     , "--------"
     ]
