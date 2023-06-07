@@ -1,6 +1,6 @@
 module M.PrimitiveBlock exposing
     ( empty, parse
-    , argsAndProperties, elaborate, eq, length, listLength
+    , argsAndProperties, eq, length, listLength
     )
 
 {-| The main function is
@@ -82,12 +82,12 @@ empty =
 type alias State =
     { blocks : List PrimitiveBlock
     , currentBlock : Maybe PrimitiveBlock
-    , lines : List String
-    , id : String
+    , lines : List String -- the input
+    , idPrefix : String -- the prefix used for block ids
     , inBlock : Bool
     , indent : Int
     , lineNumber : Int
-    , position : Int
+    , position : Int -- the string position in the input text of the first character in the block (an "offset")
     , inVerbatim : Bool
     , isVerbatimLine : String -> Bool
     , count : Int
@@ -145,7 +145,7 @@ init initialId lines =
     { blocks = []
     , currentBlock = Nothing
     , lines = lines
-    , id = initialId
+    , idPrefix = initialId
     , indent = 0
     , lineNumber = 0
     , inBlock = False
@@ -227,26 +227,6 @@ nextStep state =
                 currentLine =
                     -- TODO: the below is wrong
                     Line.classify state.position (state.lineNumber + 1) rawLine
-
-                reportAction state_ currentLine_ =
-                    case ( state_.inBlock, Line.isEmpty currentLine_, Line.isNonEmptyBlank currentLine_ ) of
-                        ( False, True, _ ) ->
-                            String.fromInt state_.lineNumber ++ ": advance" ++ " ++ :: " ++ currentLine_.content
-
-                        ( False, False, True ) ->
-                            String.fromInt state_.lineNumber ++ ": advance2 (PASS)" ++ " ++ :: " ++ currentLine_.content
-
-                        ( False, False, False ) ->
-                            String.fromInt state_.lineNumber ++ ": createBlock" ++ " ++ :: " ++ currentLine_.content
-
-                        ( True, False, _ ) ->
-                            String.fromInt state_.lineNumber ++ ": addCurrentLine2" ++ " ++ :: " ++ currentLine_.content
-
-                        ( True, True, _ ) ->
-                            String.fromInt state_.lineNumber ++ ": commitBlock" ++ " ++ :: " ++ currentLine_.content
-
-                --_ =
-                --    Debug.log (reportAction state currentLine) 1
             in
             case ( state.inBlock, Line.isEmpty currentLine, Line.isNonEmptyBlank currentLine ) of
                 -- (in block, current line is empty, current line is blank but not empty)
@@ -325,7 +305,7 @@ commitBlock state currentLine =
             let
                 block_ =
                     block__
-                        |> updateMeta (\m -> { m | id = state.id ++ "-" ++ String.fromInt state.blocksCommitted })
+                        |> updateMeta (\m -> { m | id = state.idPrefix ++ "-" ++ String.fromInt state.blocksCommitted })
                         |> updateMeta (\m -> { m | numberOfLines = List.length block__.content })
 
                 block =
@@ -358,7 +338,7 @@ commitBlock state currentLine =
                     { state
                         | lines = List.drop 1 state.lines
                         , lineNumber = state.lineNumber + 1
-                        , position = state.position + String.length currentLine.content
+                        , position = state.position + String.length block.meta.sourceText
                         , count = state.count + 1
                         , blocksCommitted = state.blocksCommitted + 1
                         , blocks = newBlocks
@@ -368,6 +348,11 @@ commitBlock state currentLine =
                     }
 
 
+{-|
+
+    This function provides for certain conveniences (TODO: expand)
+
+-}
 adjustBlock : PrimitiveBlock -> PrimitiveBlock
 adjustBlock block =
     let
@@ -437,41 +422,6 @@ argsAndProperties words =
             namedArgs |> KV.prepareList |> KV.prepareKVData
     in
     ( words, properties )
-
-
-elaborate : Line -> PrimitiveBlock -> PrimitiveBlock
-elaborate line pb =
-    -- TODO: is this function still needed?
-    if pb.content == [ "" ] then
-        pb
-
-    else
-        let
-            --( name, args_ ) =
-            --    -- TODO: note this change: it needs to be verified
-            --    Line.getNameAndArgs lang line
-            --
-            --( args, properties ) =
-            --    argsAndProperties args_
-            content =
-                case pb.heading of
-                    M.Language.Verbatim a ->
-                        List.map String.trimLeft pb.content
-
-                    _ ->
-                        pb.content
-
-            --if pb.heading == M.Language.Verbatim a then
-            --    List.map String.trimLeft pb.content
-            --
-            --else
-            --    pb.content
-        in
-        { pb
-            | content = content
-
-            -- , name = name, args = args, properties = properties
-        }
 
 
 getName : PrimitiveBlock -> Maybe String
