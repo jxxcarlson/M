@@ -11,6 +11,7 @@ module M.Language exposing
     , Property(..)
     , SimpleExpressionBlock
     , SimplePrimitiveBlock
+    , primitiveBlockEmpty
     , simplifyBlock
     , simplifyExpr
     , simplifyExpressionBlock
@@ -105,7 +106,7 @@ type alias ExpressionBlock =
 {-| A block whose content is a String.
 -}
 type alias PrimitiveBlock =
-    Block String BlockMeta
+    Block (List String) BlockMeta
 
 
 
@@ -117,7 +118,7 @@ type alias SimpleExpressionBlock =
 
 
 type alias SimplePrimitiveBlock =
-    Block String ()
+    Block (List String) ()
 
 
 
@@ -168,3 +169,31 @@ simplifyExpressionBlock block =
 simplifyPrimitiveBlock : PrimitiveBlock -> SimplePrimitiveBlock
 simplifyPrimitiveBlock block =
     simplifyBlock identity block
+
+
+
+-- VALUES
+
+
+primitiveBlockEmpty : PrimitiveBlock
+primitiveBlockEmpty =
+    { heading = Paragraph
+    , indent = 0
+    , content = []
+    , meta = blockMeta
+    }
+
+
+exprMeta =
+    { begin = 0, end = 0, index = 0, id = "abc" }
+
+
+blockMeta =
+    { position = 0
+    , lineNumber = 0
+    , numberOfLines = 1
+    , id = "abc"
+    , messages = []
+    , sourceText = ""
+    , error = Nothing
+    }

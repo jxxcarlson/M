@@ -1,6 +1,6 @@
 module Parser.PrimitiveBlock exposing
-    ( PrimitiveBlock, empty, parse
-    , argsAndProperties, elaborate, eq, length, listLength, parse_, print, toPrimitiveBlock
+    ( empty, parse
+    , argsAndProperties, elaborate, eq, length, listLength, print
     )
 
 {-| The main function is
@@ -16,12 +16,22 @@ module Parser.PrimitiveBlock exposing
 import Dict exposing (Dict)
 import List.Extra
 import M.Language exposing (PrimitiveBlock)
-import Parser.Line as Line exposing (Line, PrimitiveBlockType(..), isEmpty, isNonEmptyBlank)
+import M.Line as Line exposing (Line, isEmpty, isNonEmptyBlank)
+
+
+{-| Parse a list of strings into a list of primitive blocks given a markup
+language and a function for determining when a string is the first line
+of a verbatim block
+-}
+parse : (String -> Bool) -> List String -> List PrimitiveBlock
+parse isVerbatimLine lines =
+    loop (init isVerbatimLine lines) nextStep
+        |> List.map (\block -> finalize block)
 
 
 length : PrimitiveBlock -> Int
 length block =
-    List.length block.content
+    String.length block.content
 
 
 listLength1 : List PrimitiveBlock -> Int
@@ -36,54 +46,29 @@ listLength blocks =
             0
 
         Just ( lastBlock, _ ) ->
-            lastBlock.lineNumber + length lastBlock - 1
+            lastBlock.meta.lineNumber + length lastBlock - 1
 
 
 eq : PrimitiveBlock -> PrimitiveBlock -> Bool
 eq b1 b2 =
-    if b1.sourceText /= b2.sourceText then
+    if b1.meta.sourceText /= b2.meta.sourceText then
         False
 
-    else if b1.name /= b2.name then
-        False
-
-    else if b1.args /= b2.args then
+    else if b1.heading /= b2.heading then
         False
 
     else
         True
 
 
-empty2 : PrimitiveBlock
-empty2 =
-    { indent = 0
-    , lineNumber = 0
-    , position = 0
-    , content = [ "???" ]
-    , numberOfLines = 1
-    , name = Nothing
-    , args = []
-    , properties = Dict.empty
-    , sourceText = "???"
-    , blockType = PBParagraph
-    , error = Nothing
-    }
-
-
 empty : PrimitiveBlock
 empty =
-    Block
-        { heading = parHeading
-        , indent = 0
-        , content = "This is a test"
-        , meta = blockMetaExample
-        }
+    M.Language.primitiveBlockEmpty
 
 
 type alias State =
     { blocks : List PrimitiveBlock
     , currentBlock : Maybe PrimitiveBlock
-    , lang : Language
     , lines : List String
     , inBlock : Bool
     , indent : Int
@@ -94,96 +79,6 @@ type alias State =
     , count : Int
     , label : String
     }
-
-
-{-| Parse a list of strings into a list of primitive blocks given a markup
-language and a function for determining when a string is the first line
-of a verbatim block
--}
-parse : Language -> (String -> Bool) -> List String -> List PrimitiveBlock
-parse lang isVerbatimLine lines =
-    case lang of
-        L0Lang ->
-            lines |> parse_ lang isVerbatimLine
-
-        MicroLaTeXLang ->
-            -- lines |> MicroLaTeX.Expression.TransformLaTeX.toL0 |> parse_ lang isVerbatimLine
-            lines |> Parser.PrimitiveLaTeXBlock.parse |> List.map toPrimitiveBlock
-
-        PlainTextLang ->
-            parsePlainText lines
-
-        XMarkdownLang ->
-            -- lines |> MicroLaTeX.Expression.TransformLaTeX.toL0 |> parse_ isVerbatimLine
-            lines |> parse_ lang isVerbatimLine
-
-
-toPrimitiveBlock : Parser.PrimitiveLaTeXBlock.PrimitiveLaTeXBlock -> PrimitiveBlock
-toPrimitiveBlock block =
-    { indent = block.level -- block.indent
-    , lineNumber = block.lineNumber
-    , position = block.position
-    , content = block.content
-    , numberOfLines = block.numberOfLines
-    , name = block.name
-    , args = block.args
-    , properties = block.properties
-    , sourceText = block.sourceText
-    , blockType = block.blockType
-    , error = block.error
-    }
-
-
-parsePlainText : List String -> List PrimitiveBlock
-parsePlainText lines =
-    let
-        firstLines =
-            List.take 2 lines
-
-        rest =
-            List.drop 2 lines
-
-        --  |> List.Extra.dropWhile (\line -> line == "")
-        title =
-            if String.contains "| title" (List.head firstLines |> Maybe.withDefault "") then
-                List.Extra.getAt 1 firstLines |> Maybe.withDefault "((no title))" |> String.trim
-
-            else
-                "((no title))"
-
-        titleBLock =
-            { empty
-                | name = Just "title"
-                , args = []
-                , content = [ "| title", title, "" ]
-                , sourceText = String.join "\n" lines
-                , blockType = PBOrdinary
-            }
-    in
-    titleBLock :: parsePlainText_ rest
-
-
-parsePlainText_ : List String -> List PrimitiveBlock
-parsePlainText_ lines =
-    [ { indent = 0
-      , lineNumber = 0
-      , position = 0
-      , content = lines
-      , numberOfLines = List.length lines
-      , name = Just "verbatim"
-      , args = []
-      , properties = Dict.empty
-      , sourceText = String.join "\n" lines
-      , blockType = PBVerbatim
-      , error = Nothing
-      }
-    ]
-
-
-parse_ : Language -> (String -> Bool) -> List String -> List PrimitiveBlock
-parse_ lang isVerbatimLine lines =
-    loop (init lang isVerbatimLine lines) nextStep
-        |> List.map (\block -> finalize block)
 
 
 
@@ -210,11 +105,10 @@ finalize block =
     and lineNumber is the index of the current line in the source
 
 -}
-init : Language -> (String -> Bool) -> List String -> State
-init lang isVerbatimLine lines =
+init : (String -> Bool) -> List String -> State
+init isVerbatimLine lines =
     { blocks = []
     , currentBlock = Nothing
-    , lang = lang
     , lines = lines
     , indent = 0
     , lineNumber = 0

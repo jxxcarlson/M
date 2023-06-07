@@ -90,7 +90,7 @@ primitiveBlock1 : PrimitiveBlock
 primitiveBlock1 =
     { heading = parHeading
     , indent = 0
-    , content = "This is a test"
+    , content = [ "This is a test" ]
     , meta = blockMetaExample
     }
 
@@ -99,7 +99,7 @@ primitiveBlock1Simplified : SimplePrimitiveBlock
 primitiveBlock1Simplified =
     { heading = parHeading
     , indent = 0
-    , content = "This is a test"
+    , content = [ "This is a test" ]
     , meta = ()
     }
 
