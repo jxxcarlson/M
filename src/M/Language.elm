@@ -1,6 +1,5 @@
 module M.Language exposing
-    ( Block(..)
-    , BlockMeta
+    ( BlockMeta
     , Expr(..)
     , ExprMeta
     , Expression
@@ -38,13 +37,12 @@ type Expr metaData
     ExpressionBlocks, content = Either String (List Expression)
 
 -}
-type Block content blockMetaData
-    = Block
-        { heading : Heading
-        , indent : Int
-        , content : content
-        , meta : blockMetaData
-        }
+type alias Block content blockMetaData =
+    { heading : Heading
+    , indent : Int
+    , content : content
+    , meta : blockMetaData
+    }
 
 
 
@@ -127,13 +125,12 @@ type alias SimplePrimitiveBlock =
 
 
 simplifyBlock : (contentA -> contentB) -> Block contentA blockMeta -> Block contentB ()
-simplifyBlock simplifyContent (Block block) =
-    Block
-        { heading = block.heading
-        , indent = block.indent
-        , content = simplifyContent block.content
-        , meta = ()
-        }
+simplifyBlock simplifyContent block =
+    { heading = block.heading
+    , indent = block.indent
+    , content = simplifyContent block.content
+    , meta = ()
+    }
 
 
 simplifyExpr : Expr meta -> Expr ()

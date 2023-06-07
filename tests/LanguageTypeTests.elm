@@ -5,8 +5,7 @@ import Either exposing (Either(..))
 import Expect exposing (Expectation)
 import M.Language
     exposing
-        ( Block(..)
-        , BlockMeta
+        ( BlockMeta
         , Expr(..)
         , Expression
         , ExpressionBlock
@@ -89,22 +88,20 @@ verbatimHeading =
 
 primitiveBlock1 : PrimitiveBlock
 primitiveBlock1 =
-    Block
-        { heading = parHeading
-        , indent = 0
-        , content = "This is a test"
-        , meta = blockMetaExample
-        }
+    { heading = parHeading
+    , indent = 0
+    , content = "This is a test"
+    , meta = blockMetaExample
+    }
 
 
 primitiveBlock1Simplified : SimplePrimitiveBlock
 primitiveBlock1Simplified =
-    Block
-        { heading = parHeading
-        , indent = 0
-        , content = "This is a test"
-        , meta = ()
-        }
+    { heading = parHeading
+    , indent = 0
+    , content = "This is a test"
+    , meta = ()
+    }
 
 
 
@@ -113,19 +110,17 @@ primitiveBlock1Simplified =
 
 expressionBlock : ExpressionBlock
 expressionBlock =
-    Block
-        { heading = parHeading
-        , indent = 0
-        , content = Right [ Text "This is a test" exprMeta ]
-        , meta = blockMetaExample
-        }
+    { heading = parHeading
+    , indent = 0
+    , content = Right [ Text "This is a test" exprMeta ]
+    , meta = blockMetaExample
+    }
 
 
 expressionBlockSimplified : SimpleExpressionBlock
 expressionBlockSimplified =
-    Block
-        { heading = parHeading
-        , indent = 0
-        , content = Right [ Text "This is a test" () ]
-        , meta = ()
-        }
+    { heading = parHeading
+    , indent = 0
+    , content = Right [ Text "This is a test" () ]
+    , meta = ()
+    }
