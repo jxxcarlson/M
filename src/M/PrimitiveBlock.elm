@@ -1,4 +1,4 @@
-module Parser.PrimitiveBlock exposing
+module M.PrimitiveBlock exposing
     ( empty, parse
     , argsAndProperties, elaborate, eq, length, listLength
     )
@@ -25,9 +25,9 @@ import Tools.Loop exposing (Step(..), loop)
 language and a function for determining when a string is the first line
 of a verbatim block
 -}
-parse : List String -> List PrimitiveBlock
-parse lines =
-    loop (init lines) nextStep
+parse : String -> List String -> List PrimitiveBlock
+parse initialId lines =
+    loop (init initialId lines) nextStep
         |> List.map (\block -> finalize block)
 
 
@@ -79,6 +79,7 @@ type alias State =
     { blocks : List PrimitiveBlock
     , currentBlock : Maybe PrimitiveBlock
     , lines : List String
+    , id : String
     , inBlock : Bool
     , indent : Int
     , lineNumber : Int
@@ -131,11 +132,12 @@ updateMeta meta block =
     and lineNumber is the index of the current line in the source
 
 -}
-init : List String -> State
-init lines =
+init : String -> List String -> State
+init initialId lines =
     { blocks = []
     , currentBlock = Nothing
     , lines = lines
+    , id = initialId
     , indent = 0
     , lineNumber = 0
     , inBlock = False
@@ -344,6 +346,7 @@ commitBlock state currentLine =
                         , lineNumber = state.lineNumber + 1
                         , position = state.position + String.length currentLine.content
                         , count = state.count + 1
+                        , id = state.id ++ String.fromInt (state.count + 1)
                         , blocks = newBlocks
                         , inBlock = False
                         , inVerbatim = state.isVerbatimLine currentLine.content
@@ -455,56 +458,6 @@ elaborate line pb =
 
             -- , name = name, args = args, properties = properties
         }
-
-
-{-| Used for debugging with CLI.LOPB
--}
-print : PrimitiveBlock -> String
-print block =
-    [ "BLOCK:"
-
-    --, "Type: " ++ Line.showBlockType block.blockType
-    , "Name: " ++ (getName block |> Maybe.withDefault "anonymous")
-    , "Indent: " ++ String.fromInt block.indent
-    , "Args: " ++ showArgs block.args
-    , "Properties: " ++ showProperties block.properties
-    , "Error: " ++ showError block.meta.error
-    , "Line number: " ++ String.fromInt block.meta.lineNumber
-    , "Content: " --                                                                                                                                                                                                                                                                                                                                   ++ Debug.toString block.content
-    , block.content |> List.indexedMap (\k s -> String.padLeft 3 ' ' (String.fromInt (k + 1 + block.meta.lineNumber)) ++ ": " ++ s) |> String.join "\n"
-    , "Source text:\n" ++ block.meta.sourceText
-    ]
-        |> String.join "\n"
-
-
-showProperties : Dict String String -> String
-showProperties dict =
-    dict |> Dict.toList |> List.map (\( k, v ) -> k ++ ": " ++ v) |> String.join ", "
-
-
-showArgs : List String -> String
-showArgs args =
-    args |> String.join ", "
-
-
-showError : Maybe String -> String
-showError mError =
-    case mError of
-        Nothing ->
-            "none"
-
-        Just error ->
-            error
-
-
-showName : Maybe String -> String
-showName mstr =
-    case mstr of
-        Nothing ->
-            "(anon)"
-
-        Just name ->
-            name
 
 
 getName : PrimitiveBlock -> Maybe String

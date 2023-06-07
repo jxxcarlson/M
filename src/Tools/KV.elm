@@ -1,10 +1,8 @@
-module Tools.KV exposing (argsAndProperties, prepareList, cleanArgs, prepareKVData)
-
-
+module Tools.KV exposing (argsAndProperties, cleanArgs, prepareKVData, prepareList)
 
 import Dict exposing (Dict)
 import List.Extra
-import Tools.Loop exposing (loop, Step(..))
+import Tools.Loop exposing (Step(..), loop)
 
 
 argsAndProperties : List String -> ( List String, Dict String String )
@@ -107,6 +105,7 @@ type KVStatus
     = KVInKey
     | KVInValue
 
+
 prepareList : List String -> List String
 prepareList strs =
     strs |> explode |> List.map fix |> List.concat
@@ -124,19 +123,20 @@ fix strs =
         [] ->
             []
 
+
 explode : List String -> List (List String)
 explode txt =
     List.map (String.split ":") txt
 
- {-| return all the elements in the list 'strs' up to the first element contaiing ':'
- This functio is used to return the positional arguments but not the named ones.
- -}
+
+{-| return all the elements in the list 'strs' up to the first element contaiing ':'
+This function is used to return the positional arguments but not the named ones.
+-}
 cleanArgs : List String -> List String
 cleanArgs strs =
-     case List.Extra.findIndex (\t -> String.contains ":" t) strs of
-         Nothing ->
-             strs
+    case List.Extra.findIndex (\t -> String.contains ":" t) strs of
+        Nothing ->
+            strs
 
-         Just k ->
-             List.take k strs
-
+        Just k ->
+            List.take k strs
