@@ -80,7 +80,8 @@ type alias ExprMeta =
 
 
 type alias BlockMeta =
-    { lineNumber : Int
+    { position : Int
+    , lineNumber : Int
     , numberOfLines : Int
     , id : String
     , messages : List String

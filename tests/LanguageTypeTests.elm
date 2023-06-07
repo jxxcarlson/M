@@ -54,7 +54,8 @@ exprMeta =
 
 
 blockMetaExample =
-    { lineNumber = 0
+    { position = 0
+    , lineNumber = 0
     , numberOfLines = 1
     , id = "abc"
     , messages = [ "Hello", "World" ]
