@@ -38,11 +38,11 @@ suite =
 
 
 expr1 =
-    Fun "bold" [ "Hello" ] exprMeta
+    Fun "bold" [ Text "Hello" exprMeta ] exprMeta
 
 
 expr2 =
-    Fun "bold" [ "Hello" ] ()
+    Fun "bold" [ Text "Hello" () ] ()
 
 
 

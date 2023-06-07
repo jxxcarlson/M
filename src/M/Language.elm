@@ -27,7 +27,7 @@ import Either exposing (Either(..))
 
 
 type Expr metaData
-    = Fun String (List String) metaData
+    = Fun String (List (Expr metaData)) metaData
     | VFun String String metaData
     | Text String metaData
 
@@ -139,7 +139,7 @@ simplifyExpr : Expr meta -> Expr ()
 simplifyExpr expr =
     case expr of
         Fun name args _ ->
-            Fun name args ()
+            Fun name (List.map simplifyExpr args) ()
 
         VFun name arg _ ->
             VFun name arg ()
