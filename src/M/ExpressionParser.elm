@@ -9,9 +9,10 @@ module M.ExpressionParser exposing
 import List.Extra
 import M.Language exposing (Expr(..), ExprMeta, Expression)
 import M.Match as M
-import M.ParserHelpers as Helpers exposing (Step(..), loop)
+import M.ParserHelpers as Helpers
 import M.Symbol as Symbol exposing (Symbol(..))
 import M.Tokenizer as Token exposing (Token, TokenType(..), Token_(..))
+import Tools.Loop exposing (Step(..), loop)
 
 
 

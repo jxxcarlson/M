@@ -1,9 +1,9 @@
 module M.Line exposing
-    ( Line
+    ( HeadingError(..)
+    , Line
     , PrimitiveBlockType(..)
     , classify
-    , getHeading
-    , getNameAndArgs
+    , getHeadingData
     , isEmpty
     , isNonEmptyBlank
     , prefixLength
@@ -12,9 +12,9 @@ module M.Line exposing
     )
 
 import Dict exposing (Dict)
-import List.Extra
-import M.Language exposing (Heading(..), Properties, Property(..))
+import M.Language exposing (Heading(..))
 import Parser exposing ((|.), (|=), Parser)
+import Tools.KV as KV
 
 
 getNameAndArgs : { a | content : String } -> ( Maybe String, List String )
@@ -71,6 +71,12 @@ type alias Line =
     { indent : Int, prefix : String, content : String, lineNumber : Int, position : Int }
 
 
+type HeadingError
+    = HEMissingPrefix
+    | HEMissingName
+    | HENoContent
+
+
 type PrimitiveBlockType
     = PBVerbatim
     | PBOrdinary
@@ -114,41 +120,43 @@ getArgs : String -> String -> List String
 getArgs prefix str =
     str |> String.replace prefix "" |> String.trim |> String.words
 
-type HeadingError
-    = HEMissingName
 
-
-
-getHeading : String -> Result HeadingError M.Language.Heading
-getHeading line_ =
+getHeadingData : String -> Result HeadingError { heading : M.Language.Heading, args : List String, properties : Dict String String }
+getHeadingData line_ =
     let
         line =
             String.trim line_
+
+        ( args1, properties ) =
+            KV.argsAndProperties (String.words line)
     in
-    if String.left 2 line == "||" then
-        case getArgs "||" line of
-            [] ->
-                Err HEMissingName
+    case args1 of
+        [] ->
+            Err <| HEMissingPrefix
 
-            (name::args) ->
-                let
+        prefix :: args ->
+            case prefix of
+                "||" ->
+                    case args1 of
+                        [] ->
+                            Err <| HEMissingName
 
-               Ok Heading (String.toInt n |> Maybe.withDefault 1)
+                        name :: args2 ->
+                            Ok <| { heading = Verbatim name, args = args2, properties = properties }
 
+                "|" ->
+                    case args1 of
+                        [] ->
+                            Err <| HEMissingName
 
-        Verbatim "name" Dict.empty
+                        name :: args2 ->
+                            Ok <| { heading = Ordinary name, args = args2, properties = properties }
 
-    else if String.left 2 line == "$$" then
-        Verbatim "name" Dict.empty
+                "$$" ->
+                    Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
 
-    else if
-        String.left 1 line
-            == "|"
-    then
-        Ordinary "name" Dict.empty
-
-    else
-        Paragraph
+                _ ->
+                    Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
 
 
 prefixLength : Int -> Int -> String -> Int
