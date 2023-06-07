@@ -87,6 +87,7 @@ type alias State =
     , inVerbatim : Bool
     , isVerbatimLine : String -> Bool
     , count : Int
+    , blocksCommitted : Int
     , label : String
     , error : Maybe HeadingError
     }
@@ -116,13 +117,16 @@ finalize block =
     { block | content = content, meta = newMeta }
 
 
-updateMeta : BlockMeta -> PrimitiveBlock -> PrimitiveBlock
-updateMeta meta block =
+updateMeta : (BlockMeta -> BlockMeta) -> PrimitiveBlock -> PrimitiveBlock
+updateMeta transformMeta block =
     let
         oldMeta =
             block.meta
+
+        newMeta =
+            transformMeta oldMeta
     in
-    { block | meta = meta }
+    { block | meta = newMeta }
 
 
 {-|
@@ -145,6 +149,7 @@ init initialId lines =
     , inVerbatim = False
     , isVerbatimLine = isVerbatimLine
     , count = 0
+    , blocksCommitted = 0
     , label = "0, START"
     , error = Nothing
     }
@@ -312,8 +317,11 @@ commitBlock state currentLine =
                 , indent = currentLine.indent
             }
 
-        Just block_ ->
+        Just block__ ->
             let
+                block_ =
+                    updateMeta (\m -> { m | id = state.id ++ "-" ++ String.fromInt state.blocksCommitted }) block__
+
                 block =
                     case block_.heading of
                         Paragraph ->
@@ -346,7 +354,7 @@ commitBlock state currentLine =
                         , lineNumber = state.lineNumber + 1
                         , position = state.position + String.length currentLine.content
                         , count = state.count + 1
-                        , id = state.id ++ String.fromInt (state.count + 1)
+                        , blocksCommitted = state.blocksCommitted + 1
                         , blocks = newBlocks
                         , inBlock = False
                         , inVerbatim = state.isVerbatimLine currentLine.content
