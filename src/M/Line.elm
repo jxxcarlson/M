@@ -6,15 +6,37 @@ module M.Line exposing
     , getHeadingData
     , isEmpty
     , isNonEmptyBlank
-    , prefixLength
-    , prefixLengths
-    , showBlockType
     )
 
 import Dict exposing (Dict)
 import M.Language exposing (Heading(..))
 import Parser exposing ((|.), (|=), Parser)
 import Tools.KV as KV
+
+
+{-|
+
+    - ident:      the number of blanks before the first non-blank
+    - prefix:     the string of blanks preceding the first non-blank
+    - content:    the original string with the prefix removed
+    - lineNumber: the line number in the source text
+    - position:   the position of the first character of the line in the source text
+
+-}
+type alias Line =
+    { indent : Int, prefix : String, content : String, lineNumber : Int, position : Int }
+
+
+type HeadingError
+    = HEMissingPrefix
+    | HEMissingName
+    | HENoContent
+
+
+type PrimitiveBlockType
+    = PBVerbatim
+    | PBOrdinary
+    | PBParagraph
 
 
 getNameAndArgs : { a | content : String } -> ( Maybe String, List String )
@@ -56,31 +78,6 @@ getNameAndArgs line =
 
     else
         ( Nothing, [] )
-
-
-{-|
-
-    - ident:      the number of blanks before the first non-blank
-    - prefix:     the string of blanks preceding the first non-blank
-    - content:    the original string with the prefix removed
-    - lineNumber: the line number in the source text
-    - position:   the position of the first character of the line in the source text
-
--}
-type alias Line =
-    { indent : Int, prefix : String, content : String, lineNumber : Int, position : Int }
-
-
-type HeadingError
-    = HEMissingPrefix
-    | HEMissingName
-    | HENoContent
-
-
-type PrimitiveBlockType
-    = PBVerbatim
-    | PBOrdinary
-    | PBParagraph
 
 
 showBlockType : PrimitiveBlockType -> String
@@ -176,7 +173,15 @@ prefixLengths position lineNumber strs =
 -}
 prefixParser : Int -> Int -> Parser Line
 prefixParser position lineNumber =
-    Parser.succeed (\prefixStart prefixEnd lineEnd content -> { indent = prefixEnd - prefixStart, prefix = String.slice 0 prefixEnd content, content = String.slice prefixEnd lineEnd content, position = position, lineNumber = lineNumber })
+    Parser.succeed
+        (\prefixStart prefixEnd lineEnd content ->
+            { indent = prefixEnd - prefixStart
+            , prefix = String.slice 0 prefixEnd content
+            , content = String.slice prefixEnd lineEnd content
+            , position = position
+            , lineNumber = lineNumber
+            }
+        )
         |= Parser.getOffset
         |. Parser.chompWhile (\c -> c == ' ')
         |= Parser.getOffset

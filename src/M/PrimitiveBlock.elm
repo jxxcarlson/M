@@ -5,7 +5,7 @@ module M.PrimitiveBlock exposing
 
 {-| The main function is
 
-    parse : Language -> (String -> Bool) -> List String -> List PrimitiveBlock
+    parse : String -> List String -> List PrimitiveBlock
 
 @docs PrimitiveBlock, empty, parse
 
@@ -16,14 +16,18 @@ module M.PrimitiveBlock exposing
 import Dict exposing (Dict)
 import List.Extra
 import M.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
-import M.Line as Line exposing (HeadingError(..), Line, isEmpty, isNonEmptyBlank)
+import M.Line as Line exposing (HeadingError(..), Line)
 import Tools.KV as KV
 import Tools.Loop exposing (Step(..), loop)
 
 
-{-| Parse a list of strings into a list of primitive blocks given a markup
-language and a function for determining when a string is the first line
+{-| Parse a list of strings into a list of primitive blocks given
+a function for determining when a string is the first line
 of a verbatim block
+
+NOTE (TODO) for the moment we assume that the input ends with
+a blank line.
+
 -}
 parse : String -> List String -> List PrimitiveBlock
 parse initialId lines =
@@ -225,7 +229,7 @@ nextStep state =
                     Line.classify state.position (state.lineNumber + 1) rawLine
 
                 reportAction state_ currentLine_ =
-                    case ( state_.inBlock, isEmpty currentLine_, isNonEmptyBlank currentLine_ ) of
+                    case ( state_.inBlock, Line.isEmpty currentLine_, Line.isNonEmptyBlank currentLine_ ) of
                         ( False, True, _ ) ->
                             String.fromInt state_.lineNumber ++ ": advance" ++ " ++ :: " ++ currentLine_.content
 
@@ -244,7 +248,7 @@ nextStep state =
                 --_ =
                 --    Debug.log (reportAction state currentLine) 1
             in
-            case ( state.inBlock, isEmpty currentLine, isNonEmptyBlank currentLine ) of
+            case ( state.inBlock, Line.isEmpty currentLine, Line.isNonEmptyBlank currentLine ) of
                 -- (in block, current line is empty, current line is blank but not empty)
                 -- not in a block, pass over empty line
                 ( False, True, _ ) ->
