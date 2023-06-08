@@ -14,6 +14,7 @@ module M.Language exposing
     , simplifyExpr
     , simplifyExpressionBlock
     , simplifyPrimitiveBlock
+    , toExpressionBlock
     )
 
 import Dict exposing (Dict)
@@ -90,10 +91,31 @@ type alias ExpressionBlock =
     Block (Either String (List Expression)) BlockMeta
 
 
-{-| A block whose content is a String.
+{-| A block whose content is a list of strings.
 -}
 type alias PrimitiveBlock =
     Block (List String) BlockMeta
+
+
+toExpressionBlock : (String -> List Expression) -> PrimitiveBlock -> ExpressionBlock
+toExpressionBlock parse block =
+    { heading = block.heading
+    , indent = block.indent
+    , args = block.args
+    , properties = block.properties
+    , firstLine = block.firstLine
+    , body =
+        case block.heading of
+            Paragraph ->
+                Right (parse <| String.join "\n" block.body)
+
+            Ordinary _ ->
+                Right (parse <| String.join "\n" block.body)
+
+            Verbatim _ ->
+                Left <| String.join "\n" block.body
+    , meta = block.meta
+    }
 
 
 

@@ -12,7 +12,8 @@
             "elm/parser": "1.1.0",
             "elm/regex": "1.0.0",
             "elm-community/list-extra": "8.7.0",
-            "toastal/either": "3.6.3"
+            "toastal/either": "3.6.3",
+            "zwilias/elm-rosetree": "1.5.0"
         },
         "indirect": {
             "elm/json": "1.1.3",
