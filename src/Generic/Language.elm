@@ -9,6 +9,10 @@ module Generic.Language exposing
     , SimpleExpressionBlock
     , SimplePrimitiveBlock
     , emptyBlockMeta
+    , getExpressionContent
+    , getFunctionName
+    , getName
+    , getVerbatimContent
     , primitiveBlockEmpty
     , simplifyBlock
     , simplifyExpr
@@ -208,3 +212,53 @@ emptyBlockMeta =
     , sourceText = ""
     , error = Nothing
     }
+
+
+
+-- HELPERS
+
+
+getName : ExpressionBlock -> Maybe String
+getName block =
+    case block.heading of
+        Paragraph ->
+            Nothing
+
+        Ordinary name ->
+            Just name
+
+        Verbatim name ->
+            Just name
+
+
+getExpressionContent : ExpressionBlock -> List Expression
+getExpressionContent block =
+    case block.body of
+        Left _ ->
+            []
+
+        Right exprs ->
+            exprs
+
+
+getVerbatimContent : ExpressionBlock -> Maybe String
+getVerbatimContent block =
+    case block.body of
+        Left str ->
+            Just str
+
+        Right _ ->
+            Nothing
+
+
+getFunctionName : Expression -> Maybe String
+getFunctionName expression =
+    case expression of
+        Fun name _ _ ->
+            Just name
+
+        VFun _ _ _ ->
+            Nothing
+
+        Text _ _ ->
+            Nothing
