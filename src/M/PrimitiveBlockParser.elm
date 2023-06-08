@@ -1,4 +1,4 @@
-module M.PrimitiveBlock exposing
+module M.PrimitiveBlockParser exposing
     ( empty, parse
     , argsAndProperties, eq, length, listLength
     )
@@ -14,8 +14,8 @@ module M.PrimitiveBlock exposing
 -- import MicroLaTeX.Expression.TransformLaTeX
 
 import Dict exposing (Dict)
+import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 import List.Extra
-import M.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 import M.Line as Line exposing (HeadingError(..), Line)
 import M.Regex
 import Tools.KV as KV
@@ -94,7 +94,7 @@ eq b1 b2 =
 
 empty : PrimitiveBlock
 empty =
-    M.Language.primitiveBlockEmpty
+    Generic.Language.primitiveBlockEmpty
 
 
 {-|

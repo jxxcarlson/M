@@ -3,7 +3,7 @@ module LanguageTypeTests exposing (..)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import M.Language
+import Generic.Language
     exposing
         ( BlockMeta
         , Expr(..)
@@ -26,9 +26,9 @@ testF label f input output =
 suite : Test
 suite =
     describe "M"
-        [ testF "simplifyExpr" M.Language.simplifyExpr expr1 expr2
-        , testF "simplifyPrimitiveBlock" M.Language.simplifyPrimitiveBlock primitiveBlock1 primitiveBlock1Simplified
-        , testF "simplifyExpressionBlock" M.Language.simplifyExpressionBlock expressionBlock expressionBlockSimplified
+        [ testF "simplifyExpr" Generic.Language.simplifyExpr expr1 expr2
+        , testF "simplifyPrimitiveBlock" Generic.Language.simplifyPrimitiveBlock primitiveBlock1 primitiveBlock1Simplified
+        , testF "simplifyExpressionBlock" Generic.Language.simplifyExpressionBlock expressionBlock expressionBlockSimplified
         ]
 
 

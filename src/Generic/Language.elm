@@ -1,4 +1,4 @@
-module M.Language exposing
+module Generic.Language exposing
     ( BlockMeta
     , Expr(..)
     , ExprMeta

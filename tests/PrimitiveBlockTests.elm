@@ -3,7 +3,7 @@ module PrimitiveBlockTests exposing (..)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import M.Language
+import Generic.Language
     exposing
         ( BlockMeta
         , Expr(..)
@@ -14,7 +14,7 @@ import M.Language
         , SimpleExpressionBlock
         , SimplePrimitiveBlock
         )
-import M.PrimitiveBlock
+import M.PrimitiveBlockParser
 import Test exposing (..)
 
 
@@ -27,8 +27,8 @@ testF label f input output =
 suite : Test
 suite =
     describe "PrimitiveBlock parser"
-        [ testF "test1" (M.PrimitiveBlock.parse "abc" << String.lines) input1 output1
-        , testF "test2" (M.PrimitiveBlock.parse "!!" << String.lines) input2 output2
+        [ testF "test1" (M.PrimitiveBlockParser.parse "abc" << String.lines) input1 output1
+        , testF "test2" (M.PrimitiveBlockParser.parse "!!" << String.lines) input2 output2
         ]
 
 

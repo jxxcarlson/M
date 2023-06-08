@@ -9,7 +9,7 @@ module M.Line exposing
     )
 
 import Dict exposing (Dict)
-import M.Language exposing (Heading(..))
+import Generic.Language exposing (Heading(..))
 import M.Regex
 import Parser exposing ((|.), (|=), Parser)
 import Tools.KV as KV
@@ -119,7 +119,7 @@ getArgs prefix str =
     str |> String.replace prefix "" |> String.trim |> String.words
 
 
-getHeadingData : String -> Result HeadingError { heading : M.Language.Heading, args : List String, properties : Dict String String }
+getHeadingData : String -> Result HeadingError { heading : Generic.Language.Heading, args : List String, properties : Dict String String }
 getHeadingData line_ =
     let
         line =
