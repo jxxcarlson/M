@@ -31,7 +31,7 @@ config =
     , NoUnused.Parameters.rule
 
     --, NoUnused.Patterns.rule
-    --, NoUnused.Variables.rule
+    , NoUnused.Variables.rule
     , NoExposingEverything.rule
     , NoDebug.Log.rule
     , CognitiveComplexity.rule 25

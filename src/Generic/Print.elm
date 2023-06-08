@@ -4,7 +4,7 @@ module Generic.Print exposing (print)
 -}
 
 import Dict exposing (Dict)
-import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
+import Generic.Language exposing (Heading(..), PrimitiveBlock)
 
 
 print : PrimitiveBlock -> String
@@ -64,26 +64,3 @@ showError mError =
 
         Just error ->
             error
-
-
-showName : Maybe String -> String
-showName mstr =
-    case mstr of
-        Nothing ->
-            "(anon)"
-
-        Just name ->
-            name
-
-
-getName : PrimitiveBlock -> Maybe String
-getName block =
-    case block.heading of
-        Paragraph ->
-            Nothing
-
-        Ordinary name ->
-            Just name
-
-        Verbatim name ->
-            Just name

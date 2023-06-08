@@ -16,7 +16,7 @@ module M.PrimitiveBlockParser exposing
 import Dict exposing (Dict)
 import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 import List.Extra
-import M.Line as Line exposing (HeadingError(..), Line)
+import M.Line as Line exposing (HeadingError, Line)
 import M.Regex
 import Tools.KV as KV
 import Tools.Loop exposing (Step(..), loop)
@@ -63,11 +63,6 @@ isVerbatimLine str =
 length : PrimitiveBlock -> Int
 length block =
     List.length block.body
-
-
-listLength1 : List PrimitiveBlock -> Int
-listLength1 blocks =
-    (List.map length blocks |> List.sum) + List.length blocks - 1
 
 
 listLength : List PrimitiveBlock -> Int

@@ -1,18 +1,10 @@
 module PrimitiveBlockTests exposing (suite)
 
-import Dict exposing (Dict)
-import Either exposing (Either(..))
-import Expect exposing (Expectation)
+import Dict
+import Expect
 import Generic.Language
     exposing
-        ( BlockMeta
-        , Expr(..)
-        , Expression
-        , ExpressionBlock
-        , Heading(..)
-        , PrimitiveBlock
-        , SimpleExpressionBlock
-        , SimplePrimitiveBlock
+        ( Heading(..)
         )
 import M.PrimitiveBlockParser
 import Test exposing (Test, describe, test)

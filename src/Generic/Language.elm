@@ -199,10 +199,6 @@ primitiveBlockEmpty =
     }
 
 
-emptyExprMeta =
-    { begin = 0, end = 0, index = 0, id = "" }
-
-
 emptyBlockMeta =
     { position = 0
     , lineNumber = 0

@@ -1,13 +1,11 @@
 module LanguageTypeTests exposing (suite)
 
-import Dict exposing (Dict)
+import Dict
 import Either exposing (Either(..))
-import Expect exposing (Expectation)
+import Expect
 import Generic.Language
     exposing
-        ( BlockMeta
-        , Expr(..)
-        , Expression
+        ( Expr(..)
         , ExpressionBlock
         , Heading(..)
         , PrimitiveBlock
@@ -70,16 +68,6 @@ blockMetaExample =
 parHeading : Heading
 parHeading =
     Paragraph
-
-
-ordinaryHeading : Heading
-ordinaryHeading =
-    Ordinary "quotation"
-
-
-verbatimHeading : Heading
-verbatimHeading =
-    Verbatim "verbatim"
 
 
 

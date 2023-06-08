@@ -1,9 +1,9 @@
 module ExpressionBlockParserTests exposing (suite)
 
-import Dict exposing (Dict)
+import Dict
 import Either exposing (Either(..))
-import Expect exposing (Expectation)
-import Generic.Language exposing (BlockMeta, Expr(..), Expression, ExpressionBlock, Heading(..), PrimitiveBlock, SimpleExpressionBlock, SimplePrimitiveBlock, simplifyExpr, simplifyExpressionBlock)
+import Expect
+import Generic.Language exposing (Expr(..), Heading(..), simplifyExpressionBlock)
 import M.Parser
 import Test exposing (Test, describe, test)
 

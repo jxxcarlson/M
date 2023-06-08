@@ -93,18 +93,6 @@ dropLast list =
 
 {-|
 
-> deleteAt 1 [0, 1, 2]
-
-     [0,2] : List number
-
--}
-deleteAt : Int -> List a -> List a
-deleteAt k list =
-    List.take k list ++ List.drop (k + 1) list
-
-
-{-|
-
     > splitAt 2 [0, 1, 2, 3, 4]
       ([0,1],[3,4])
 

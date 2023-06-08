@@ -1,6 +1,6 @@
 module ExpressionForestTests exposing (suite)
 
-import Expect exposing (Expectation)
+import Expect
 import M.Parser
 import Test exposing (Test, describe, test)
 
