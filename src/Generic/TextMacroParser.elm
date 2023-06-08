@@ -12,10 +12,6 @@ import Parser.Advanced as PA
         )
 
 
-type Context
-    = CArg String
-
-
 type Problem
     = ExpectingInt
     | InvalidNumber
