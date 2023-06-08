@@ -6,13 +6,63 @@ module M.ExpressionParser exposing
     , parseWithMessages
     )
 
+import Generic.Language exposing (Expr(..), ExprMeta, Expression)
 import List.Extra
-import M.Language exposing (Expr(..), ExprMeta, Expression)
 import M.Match as M
 import M.ParserHelpers as Helpers
 import M.Symbol as Symbol exposing (Symbol(..))
 import M.Tokenizer as Token exposing (Token, TokenType(..), Token_(..))
 import Tools.Loop exposing (Step(..), loop)
+
+
+
+-- EXPOSED FUNCTIONS
+
+
+{-|
+
+    > import Generic.Language exposing(..)
+    > p str = parse 0 str |> List.map simplifyExpr
+      <function> : String -> List (Expr ())
+
+    > p "hello"
+    [Text "hello" ()] : List (Expr ())
+
+    > p "This is [b important]"
+    [Text ("This is ") (),Fun "b" [Text (" important") ()] ()]
+
+    > p "I like $a^2 + b^2 = c^2$"
+    [Text ("I like ") (),VFun "math" ("a^2 + b^2 = c^2") ()]
+
+-}
+parse : Int -> String -> List Expression
+parse lineNumber str =
+    let
+        state =
+            parseToState lineNumber str
+    in
+    state.committed
+
+
+parseWithMessages : Int -> String -> ( List Expression, List String )
+parseWithMessages lineNumber str =
+    let
+        state =
+            parseToState lineNumber str
+    in
+    ( state.committed, state.messages )
+
+
+extractMessages : State -> List String
+extractMessages state =
+    state.messages
+
+
+parseToState : Int -> String -> State
+parseToState lineNumber str =
+    str
+        |> Token.run
+        |> parseTokenListToState lineNumber
 
 
 
@@ -46,40 +96,6 @@ initWithTokens lineNumber tokens =
     , messages = []
     , lineNumber = lineNumber
     }
-
-
-
--- EXPOSED FUNCTIONS
-
-
-parse : Int -> String -> List Expression
-parse lineNumber str =
-    let
-        state =
-            parseToState lineNumber str
-    in
-    state.committed
-
-
-parseWithMessages : Int -> String -> ( List Expression, List String )
-parseWithMessages lineNumber str =
-    let
-        state =
-            parseToState lineNumber str
-    in
-    ( state.committed, state.messages )
-
-
-extractMessages : State -> List String
-extractMessages state =
-    state.messages
-
-
-parseToState : Int -> String -> State
-parseToState lineNumber str =
-    str
-        |> Token.run
-        |> parseTokenListToState lineNumber
 
 
 
