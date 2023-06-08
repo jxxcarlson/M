@@ -1,22 +1,35 @@
-module Generic.Pipeline exposing (toExpressionBlock, toExpressionBlocksFromString)
+module Generic.Pipeline exposing (toExpressionBlock, toExpressionBlockForestFromStringlist)
 
+import Generic.Forest exposing (Forest)
+import Generic.ForestTransform exposing (Error(..))
 import Generic.Language exposing (Expression, ExpressionBlock, Heading(..), PrimitiveBlock)
 import M.ExpressionParser
 import M.PrimitiveBlockParser
 
 
-toExpressionBlock : String -> Int -> (Int -> String -> List Expression) -> PrimitiveBlock -> ExpressionBlock
-toExpressionBlock idPrefix lineNumber parser block =
+toExpressionBlockForestFromStringlist : (Int -> String -> List Expression) -> List String -> Result Error (Forest ExpressionBlock)
+toExpressionBlockForestFromStringlist parser lines =
+    lines
+        |> M.PrimitiveBlockParser.parse "!!"
+        |> toPrimitiveBlockForest
+        |> Result.map (Generic.Forest.map (toExpressionBlock 0 parser))
+
+
+toExpressionBlock : Int -> (Int -> String -> List Expression) -> PrimitiveBlock -> ExpressionBlock
+toExpressionBlock lineNumber parser block =
     Generic.Language.toExpressionBlock (parser lineNumber) block
 
 
+toPrimitiveBlockForest : List PrimitiveBlock -> Result Error (Forest PrimitiveBlock)
+toPrimitiveBlockForest blocks =
+    Generic.ForestTransform.forestFromBlocks { emptyBlock | indent = -2 } .indent blocks
 
--- NOT GENERIC
+
+emptyBlock : PrimitiveBlock
+emptyBlock =
+    { emptyBlock_ | indent = -2 }
 
 
-toExpressionBlocksFromString : String -> List ExpressionBlock
-toExpressionBlocksFromString str =
-    str
-        |> String.lines
-        |> M.PrimitiveBlockParser.parse "!!"
-        |> List.map (toExpressionBlock "!!" 0 M.ExpressionParser.parse)
+emptyBlock_ : PrimitiveBlock
+emptyBlock_ =
+    Generic.Language.primitiveBlockEmpty
