@@ -15,9 +15,9 @@ module M.Tokenizer exposing
     , type_
     )
 
-import M.ParserHelpers exposing (Step(..), loop)
-import M.ParserTools as PT exposing (Context, Problem)
 import Parser.Advanced as Parser exposing ((|.), (|=), DeadEnd, Parser)
+import Tools.ParserHelpers exposing (Step(..), loop)
+import Tools.ParserTools as PT exposing (Context, Problem)
 
 
 idem : String -> String

@@ -1,8 +1,8 @@
 module M.Match exposing (getSegment, isReducible, match, splitAt)
 
 import List.Extra
-import M.ParserHelpers exposing (Step(..), loop)
 import M.Symbol exposing (Symbol(..), value)
+import Tools.ParserHelpers exposing (Step(..), loop)
 
 
 isReducible : List Symbol -> Bool

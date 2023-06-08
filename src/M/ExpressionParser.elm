@@ -9,10 +9,10 @@ module M.ExpressionParser exposing
 import Generic.Language exposing (Expr(..), ExprMeta, Expression)
 import List.Extra
 import M.Match as M
-import M.ParserHelpers as Helpers
 import M.Symbol as Symbol exposing (Symbol(..))
 import M.Tokenizer as Token exposing (Token, TokenType(..), Token_(..))
 import Tools.Loop exposing (Step(..), loop)
+import Tools.ParserHelpers as Helpers
 
 
 
@@ -66,7 +66,7 @@ parseToState lineNumber str =
 
 
 
--- TYPES
+-- STATE FOR THE PARSER
 
 
 type alias State =
@@ -79,10 +79,6 @@ type alias State =
     , messages : List String
     , lineNumber : Int
     }
-
-
-
--- STATE FOR THE PARSER
 
 
 initWithTokens : Int -> List Token -> State

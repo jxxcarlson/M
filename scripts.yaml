@@ -7,5 +7,7 @@ scripts:
 
   cloc-g: cloc --by-file src/Generic
 
+  cloc-t: cloc --by-file src/Tools
+
 
 

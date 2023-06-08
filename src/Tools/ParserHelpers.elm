@@ -1,4 +1,4 @@
-module M.ParserHelpers exposing
+module Tools.ParserHelpers exposing
     ( Step(..)
     , getFirstOccurrence
     , loop

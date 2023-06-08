@@ -1,4 +1,4 @@
-module M.ParserTools exposing
+module Tools.ParserTools exposing
     ( Context(..)
     , Problem(..)
     , StringData
