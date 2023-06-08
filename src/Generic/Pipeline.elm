@@ -1,4 +1,4 @@
-module Generic.ExpressionBlockParser exposing (toExpressionBlock, toExpressionBlocksFromString)
+module Generic.Pipeline exposing (toExpressionBlock, toExpressionBlocksFromString)
 
 import Generic.Language exposing (Expression, ExpressionBlock, Heading(..), PrimitiveBlock)
 import M.ExpressionParser

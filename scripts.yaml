@@ -2,3 +2,10 @@
 scripts:
 
   cloc: cloc --by-file src
+
+  cloc-m: cloc --by-file src/M
+
+  cloc-g: cloc --by-file src/Generic
+
+
+

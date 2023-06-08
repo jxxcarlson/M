@@ -3,13 +3,13 @@ module ExpressionBlockParserTests exposing (..)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import Generic.ExpressionBlockParser as GEBP
 import Generic.Language exposing (BlockMeta, Expr(..), Expression, ExpressionBlock, Heading(..), PrimitiveBlock, SimpleExpressionBlock, SimplePrimitiveBlock, simplifyExpr, simplifyExpressionBlock)
+import Generic.Pipeline as Pipeline
 import Test exposing (..)
 
 
 p str =
-    GEBP.toExpressionBlocksFromString "hello\n\n" |> List.map simplifyExpressionBlock
+    Pipeline.toExpressionBlocksFromString str |> List.map simplifyExpressionBlock
 
 
 testF : String -> (a -> b) -> a -> b -> Test
