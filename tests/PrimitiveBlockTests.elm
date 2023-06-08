@@ -1,4 +1,4 @@
-module PrimitiveBlockTests exposing (..)
+module PrimitiveBlockTests exposing (suite)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -15,7 +15,7 @@ import Generic.Language
         , SimplePrimitiveBlock
         )
 import M.PrimitiveBlockParser
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 testF : String -> (a -> b) -> a -> b -> Test

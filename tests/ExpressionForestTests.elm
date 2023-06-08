@@ -1,8 +1,8 @@
-module ExpressionForestTests exposing (..)
+module ExpressionForestTests exposing (suite)
 
 import Expect exposing (Expectation)
 import M.Parser
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 p str =

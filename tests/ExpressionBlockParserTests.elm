@@ -1,11 +1,11 @@
-module ExpressionBlockParserTests exposing (..)
+module ExpressionBlockParserTests exposing (suite)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Expect exposing (Expectation)
 import Generic.Language exposing (BlockMeta, Expr(..), Expression, ExpressionBlock, Heading(..), PrimitiveBlock, SimpleExpressionBlock, SimplePrimitiveBlock, simplifyExpr, simplifyExpressionBlock)
 import M.Parser
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 p str =

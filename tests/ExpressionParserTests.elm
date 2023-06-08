@@ -1,4 +1,4 @@
-module ExpressionParserTests exposing (..)
+module ExpressionParserTests exposing (suite)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -16,7 +16,7 @@ import Generic.Language
         , simplifyExpr
         )
 import M.ExpressionParser exposing (parse)
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 p str =

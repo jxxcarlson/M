@@ -1,4 +1,4 @@
-module LanguageTypeTests exposing (..)
+module LanguageTypeTests exposing (suite)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -14,7 +14,7 @@ import Generic.Language
         , SimpleExpressionBlock
         , SimplePrimitiveBlock
         )
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 
 
 testF : String -> (a -> b) -> a -> b -> Test
