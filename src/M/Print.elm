@@ -15,7 +15,7 @@ print block =
     , "Args: " ++ showArgs block.args
     , "Properties: " ++ showProperties block.properties
     , "Content: "
-        ++ (block.content
+        ++ (block.body
                 |> List.indexedMap (\k s -> String.padLeft 3 ' ' (String.fromInt (k + 1 + block.meta.lineNumber)) ++ ": " ++ s)
                 |> String.join "\n"
            )
@@ -40,15 +40,15 @@ displayHeading heading =
             "Paragraph"
 
         Ordinary name ->
-            "OrdinaryBlock: " ++ name
+            "OrdinaryBlock " ++ name
 
         Verbatim name ->
-            "VerbatimBlock: " ++ name
+            "VerbatimBlock " ++ name
 
 
 showProperties : Dict String String -> String
 showProperties dict =
-    dict |> Dict.toList |> List.map (\( k, v ) -> k ++ ": " ++ v) |> String.join ", "
+    dict |> Dict.toList |> List.map (\( k, v ) -> k ++ "=" ++ v) |> String.join ", "
 
 
 showArgs : List String -> String

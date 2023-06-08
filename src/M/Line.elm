@@ -125,7 +125,7 @@ getHeadingData line_ =
             String.trim line_
 
         ( args1, properties ) =
-            KV.argsAndProperties (String.words line)
+            KV.argsAndProperties (String.words line) |> Debug.log "( args1, properties )"
     in
     case args1 of
         [] ->
@@ -134,7 +134,7 @@ getHeadingData line_ =
         prefix :: args ->
             case prefix of
                 "||" ->
-                    case args1 of
+                    case args of
                         [] ->
                             Err <| HEMissingName
 
@@ -142,12 +142,42 @@ getHeadingData line_ =
                             Ok <| { heading = Verbatim name, args = args2, properties = properties }
 
                 "|" ->
-                    case args1 of
+                    case args of
                         [] ->
                             Err <| HEMissingName
 
                         name :: args2 ->
                             Ok <| { heading = Ordinary name, args = args2, properties = properties }
+
+                "-" ->
+                    let
+                        reducedLine =
+                            String.replace "- " "" line
+                    in
+                    if String.isEmpty reducedLine then
+                        Err HENoContent
+
+                    else
+                        Ok <|
+                            { heading = Ordinary "item"
+                            , args = []
+                            , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
+                            }
+
+                "." ->
+                    let
+                        reducedLine =
+                            String.replace ". " "" line
+                    in
+                    if String.isEmpty reducedLine then
+                        Err HENoContent
+
+                    else
+                        Ok <|
+                            { heading = Ordinary "numbered"
+                            , args = []
+                            , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
+                            }
 
                 "$$" ->
                     Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }

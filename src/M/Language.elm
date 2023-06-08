@@ -41,7 +41,8 @@ type alias Block content blockMetaData =
     , indent : Int
     , args : List String
     , properties : Dict String String
-    , content : content
+    , firstLine : String
+    , body : content
     , meta : blockMetaData
     }
 
@@ -117,7 +118,8 @@ simplifyBlock simplifyContent block =
     , indent = block.indent
     , args = block.args
     , properties = block.properties
-    , content = simplifyContent block.content
+    , firstLine = block.firstLine
+    , body = simplifyContent block.body
     , meta = ()
     }
 
@@ -169,7 +171,8 @@ primitiveBlockEmpty =
     , indent = 0
     , args = []
     , properties = Dict.empty
-    , content = []
+    , firstLine = ""
+    , body = []
     , meta = emptyBlockMeta
     }
 

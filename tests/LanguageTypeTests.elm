@@ -92,7 +92,8 @@ primitiveBlock1 =
     , indent = 0
     , args = []
     , properties = Dict.empty
-    , content = [ "This is a test" ]
+    , firstLine = ""
+    , body = [ "This is a test" ]
     , meta = blockMetaExample
     }
 
@@ -103,7 +104,8 @@ primitiveBlock1Simplified =
     , indent = 0
     , args = []
     , properties = Dict.empty
-    , content = [ "This is a test" ]
+    , firstLine = ""
+    , body = [ "This is a test" ]
     , meta = ()
     }
 
@@ -118,7 +120,8 @@ expressionBlock =
     , indent = 0
     , args = []
     , properties = Dict.empty
-    , content = Right [ Text "This is a test" exprMeta ]
+    , firstLine = ""
+    , body = Right [ Text "This is a test" exprMeta ]
     , meta = blockMetaExample
     }
 
@@ -129,6 +132,7 @@ expressionBlockSimplified =
     , indent = 0
     , args = []
     , properties = Dict.empty
-    , content = Right [ Text "This is a test" () ]
+    , firstLine = ""
+    , body = Right [ Text "This is a test" () ]
     , meta = ()
     }

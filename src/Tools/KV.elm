@@ -17,7 +17,7 @@ argsAndProperties words =
         properties =
             namedArgs |> prepareList |> prepareKVData
     in
-    ( words, properties )
+    ( args, properties )
 
 
 prepareKVData : List String -> Dict String String

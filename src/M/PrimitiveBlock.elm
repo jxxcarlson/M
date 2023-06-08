@@ -35,6 +35,24 @@ parse initialId lines =
         |> List.map (\block -> finalize block)
 
 
+type alias State =
+    { blocks : List PrimitiveBlock
+    , currentBlock : Maybe PrimitiveBlock
+    , lines : List String -- the input
+    , idPrefix : String -- the prefix used for block ids
+    , inBlock : Bool
+    , indent : Int
+    , lineNumber : Int
+    , position : Int -- the string position in the input text of the first character in the block (an "offset")
+    , inVerbatim : Bool
+    , isVerbatimLine : String -> Bool
+    , count : Int
+    , blocksCommitted : Int
+    , label : String
+    , error : Maybe HeadingError
+    }
+
+
 isVerbatimLine : String -> Bool
 isVerbatimLine str =
     (String.left 2 str == "||")
@@ -44,7 +62,7 @@ isVerbatimLine str =
 
 length : PrimitiveBlock -> Int
 length block =
-    List.length block.content
+    List.length block.body
 
 
 listLength1 : List PrimitiveBlock -> Int
@@ -79,24 +97,6 @@ empty =
     M.Language.primitiveBlockEmpty
 
 
-type alias State =
-    { blocks : List PrimitiveBlock
-    , currentBlock : Maybe PrimitiveBlock
-    , lines : List String -- the input
-    , idPrefix : String -- the prefix used for block ids
-    , inBlock : Bool
-    , indent : Int
-    , lineNumber : Int
-    , position : Int -- the string position in the input text of the first character in the block (an "offset")
-    , inVerbatim : Bool
-    , isVerbatimLine : String -> Bool
-    , count : Int
-    , blocksCommitted : Int
-    , label : String
-    , error : Maybe HeadingError
-    }
-
-
 
 -- TODO: think about the below
 
@@ -105,7 +105,7 @@ finalize : PrimitiveBlock -> PrimitiveBlock
 finalize block =
     let
         content =
-            List.reverse block.content
+            List.reverse block.body
 
         sourceText =
             -- TODO: maybe this should be set at the Primitive block level
@@ -118,7 +118,7 @@ finalize block =
             { oldMeta | sourceText = sourceText }
     in
     -- TODO: is this correct?
-    { block | content = content, meta = newMeta }
+    { block | body = content, meta = newMeta }
 
 
 updateMeta : (BlockMeta -> BlockMeta) -> PrimitiveBlock -> PrimitiveBlock
@@ -131,6 +131,19 @@ updateMeta transformMeta block =
             transformMeta oldMeta
     in
     { block | meta = newMeta }
+
+
+
+--updateSubRecord : (record -> a) -> (a -> a) -> record -> record
+--updateSubRecord fieldF transformSubrecord record =
+--    let
+--        oldSubRecord =
+--            fieldF record
+--
+--        newSubRecord =
+--            transformSubrecord oldSubRecord
+--    in
+--    { record | meta = newSubRecord }
 
 
 {-|
@@ -180,7 +193,8 @@ blockFromLine ({ indent, lineNumber, position, prefix, content } as line) =
                 , indent = indent
                 , args = args
                 , properties = properties
-                , content = [ prefix ++ content ]
+                , firstLine = content
+                , body = [ prefix ++ content ]
                 , meta = meta
                 }
 
@@ -201,10 +215,10 @@ nextStep state =
                 Just block_ ->
                     let
                         block =
-                            { block_ | content = dropLast block_.content }
+                            { block_ | body = dropLast block_.body }
 
                         blocks =
-                            if block.content == [ "" ] then
+                            if block.body == [ "" ] then
                                 -- Debug.log (Tools.cyan "****, DONE" 13)
                                 List.reverse state.blocks
 
@@ -217,11 +231,7 @@ nextStep state =
         Just rawLine ->
             let
                 newPosition =
-                    if rawLine == "" then
-                        state.position + 1
-
-                    else
-                        state.position + String.length rawLine + 1
+                    state.position + String.length rawLine + 1
 
                 currentLine : Line
                 currentLine =
@@ -241,16 +251,16 @@ nextStep state =
                 -- create a new block: we are not in a block, but
                 -- the current line is nonempty and nonblank
                 ( False, False, False ) ->
-                    Loop (createBlock { state | label = "3, NEW" } currentLine)
+                    Loop (createBlock { state | position = newPosition, label = "3, NEW" } currentLine)
 
                 -- A nonempty line was encountered inside a block, so add it
                 ( True, False, _ ) ->
-                    Loop (addCurrentLine2 { state | label = "4, ADD" } currentLine)
+                    Loop (addCurrentLine2 { state | position = newPosition, label = "4, ADD" } currentLine)
 
                 -- commit the current block: we are in a block and the
                 -- current line is empty
                 ( True, True, _ ) ->
-                    Loop (commitBlock { state | label = "5, COMMIT" } currentLine)
+                    Loop (commitBlock { state | position = newPosition, label = "5, COMMIT" } currentLine)
 
 
 advance : Int -> State -> State
@@ -273,7 +283,6 @@ addCurrentLine2 state currentLine =
             { state
                 | lines = List.drop 1 state.lines
                 , lineNumber = state.lineNumber + 1
-                , position = state.position + String.length currentLine.content
                 , count = state.count + 1
                 , currentBlock =
                     Just (addCurrentLine_ currentLine block)
@@ -289,7 +298,7 @@ addCurrentLine_ ({ prefix, content } as line) block =
         newMeta =
             { oldMeta | sourceText = block.meta.sourceText ++ "\n" ++ prefix ++ content }
     in
-    { block | content = line.content :: block.content, meta = newMeta }
+    { block | body = line.content :: block.body, meta = newMeta }
 
 
 commitBlock : State -> Line -> State
@@ -306,7 +315,7 @@ commitBlock state currentLine =
                 block_ =
                     block__
                         |> updateMeta (\m -> { m | id = state.idPrefix ++ "-" ++ String.fromInt state.blocksCommitted })
-                        |> updateMeta (\m -> { m | numberOfLines = List.length block__.content })
+                        |> updateMeta (\m -> { m | numberOfLines = List.length block__.body })
 
                 block =
                     case block_.heading of
@@ -314,47 +323,37 @@ commitBlock state currentLine =
                             block_
 
                         Ordinary _ ->
-                            { block_ | content = block_.content |> dropLast } |> adjustBlock
+                            { block_ | body = block_.body |> dropLast } |> transformBlock
 
                         Verbatim _ ->
-                            if List.head block_.content == Just "```" then
-                                { block_ | content = List.filter (\l -> l /= "```") block_.content }
+                            if List.head block_.body == Just "```" then
+                                { block_ | body = List.filter (\l -> l /= "```") block_.body }
 
                             else
-                                { block_ | content = dropLast block_.content }
-
-                ( rCurrentBlock, newBlocks ) =
-                    if block.content == [ "" ] then
-                        ( Err HENoContent, state.blocks )
-
-                    else
-                        ( blockFromLine currentLine, block :: state.blocks )
+                                { block_ | body = dropLast block_.body }
             in
-            case rCurrentBlock of
-                Err err ->
-                    { state | error = Just err }
-
-                Ok currentBlock ->
-                    { state
-                        | lines = List.drop 1 state.lines
-                        , lineNumber = state.lineNumber + 1
-                        , position = state.position + String.length block.meta.sourceText
-                        , count = state.count + 1
-                        , blocksCommitted = state.blocksCommitted + 1
-                        , blocks = newBlocks
-                        , inBlock = False
-                        , inVerbatim = state.isVerbatimLine currentLine.content
-                        , currentBlock = Just currentBlock
-                    }
+            { state
+                | lines = List.drop 1 state.lines
+                , lineNumber = state.lineNumber + 1
+                , count = state.count + 1
+                , blocksCommitted = state.blocksCommitted + 1
+                , blocks = block :: state.blocks
+                , inBlock = False
+                , inVerbatim = state.isVerbatimLine currentLine.content
+                , currentBlock = Nothing
+            }
 
 
 {-|
 
-    This function provides for certain conveniences (TODO: expand)
+    transformBlock provides for certain notational conveniences, e.g.:
+
+       - write "| section" instead of "| section\n1"
+        - write "| subsection" instead of "| section\n2"
 
 -}
-adjustBlock : PrimitiveBlock -> PrimitiveBlock
-adjustBlock block =
+transformBlock : PrimitiveBlock -> PrimitiveBlock
+transformBlock block =
     let
         name =
             getName block
@@ -363,10 +362,10 @@ adjustBlock block =
         { block | args = [ "1" ] }
 
     else if name == Just "subsection" && block.args == [] then
-        { block | args = [ "2" ] }
+        { block | args = [ "2" ], heading = Ordinary "section" }
 
     else if name == Just "subsubsection" && block.args == [] then
-        { block | args = [ "3" ] }
+        { block | args = [ "3" ], heading = Ordinary "section" }
 
     else
         block
@@ -383,7 +382,7 @@ createBlock state currentLine =
                 -- When creating a new block push the current block onto state.blocks
                 -- only if its content is nontrivial (not == [""])
                 Just block ->
-                    if block.content == [ "" ] then
+                    if block.body == [ "" ] then
                         state.blocks
 
                     else
@@ -400,7 +399,7 @@ createBlock state currentLine =
             { state
                 | lines = List.drop 1 state.lines
                 , lineNumber = state.lineNumber + 1
-                , position = state.position + String.length currentLine.content
+                , position = state.position
                 , count = state.count + 1
                 , indent = currentLine.indent
                 , inBlock = True
