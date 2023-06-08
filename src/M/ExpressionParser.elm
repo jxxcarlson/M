@@ -486,7 +486,7 @@ recoverFromUnknownError state =
 
 
 errorMessageInvisible : String -> Expression
-errorMessageInvisible message =
+errorMessageInvisible _ =
     Fun "invisible" [ Text "foo" dummyLocWithId ] dummyLocWithId
 
 

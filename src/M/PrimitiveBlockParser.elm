@@ -178,7 +178,7 @@ init initialId lines =
 
 
 blockFromLine : Line -> Result Line.HeadingError PrimitiveBlock
-blockFromLine ({ indent, lineNumber, position, prefix, content } as line) =
+blockFromLine { indent, lineNumber, position, prefix, content } =
     case Line.getHeadingData content of
         Err error ->
             Err error
