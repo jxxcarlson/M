@@ -12,6 +12,7 @@ module Generic.Language exposing
     , getExpressionContent
     , getFunctionName
     , getName
+    , getNameFromHeading
     , getVerbatimContent
     , primitiveBlockEmpty
     , simplifyBlock
@@ -220,7 +221,12 @@ emptyBlockMeta =
 
 getName : ExpressionBlock -> Maybe String
 getName block =
-    case block.heading of
+    getNameFromHeading block.heading
+
+
+getNameFromHeading : Heading -> Maybe String
+getNameFromHeading heading =
+    case heading of
         Paragraph ->
             Nothing
 
