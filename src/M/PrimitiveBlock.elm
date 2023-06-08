@@ -17,6 +17,7 @@ import Dict exposing (Dict)
 import List.Extra
 import M.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 import M.Line as Line exposing (HeadingError(..), Line)
+import M.Regex
 import Tools.KV as KV
 import Tools.Loop exposing (Step(..), loop)
 
@@ -349,6 +350,16 @@ commitBlock state currentLine =
             }
 
 
+fixMarkdownTitleBlock : PrimitiveBlock -> PrimitiveBlock
+fixMarkdownTitleBlock block =
+    case M.Regex.findTitlePrefix block.firstLine of
+        Nothing ->
+            block
+
+        Just prefix ->
+            { block | body = String.replace prefix "" block.firstLine :: block.body }
+
+
 {-|
 
     transformBlock provides for certain notational conveniences, e.g.:
@@ -361,12 +372,16 @@ transformBlock : PrimitiveBlock -> PrimitiveBlock
 transformBlock block =
     case getName block of
         Just "section" ->
+            let
+                fixedBlock =
+                    fixMarkdownTitleBlock block
+            in
             case List.head block.args of
                 Nothing ->
-                    { block | properties = Dict.insert "level" "1" block.properties }
+                    { fixedBlock | properties = Dict.insert "level" "1" block.properties }
 
                 Just level ->
-                    { block | properties = Dict.insert "level" level block.properties }
+                    { fixedBlock | properties = Dict.insert "level" level block.properties }
 
         Just "subsection" ->
             { block | properties = Dict.insert "level" "2" block.properties, heading = Ordinary "section" }

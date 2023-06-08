@@ -127,10 +127,15 @@ getHeadingData line_ =
 
         ( args1, properties ) =
             KV.argsAndProperties (String.words line) |> Debug.log "( args1, properties )"
+
+        _ =
+            M.Regex.findTitlePrefix line |> Debug.log "findTitlePrefix line"
     in
     case M.Regex.findTitlePrefix line of
         Just prefix ->
-            Ok <| { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.empty }
+            { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.empty }
+                |> Debug.log "FTP"
+                |> Ok
 
         Nothing ->
             case args1 of

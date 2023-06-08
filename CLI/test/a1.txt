@@ -1,9 +1,8 @@
-| section
-Introduction
+# Magnum Opus
 
+## Introduction
 
-| subsection
-Lesson Plan
+### Lesson Plan
 
 - Biology
 is cool

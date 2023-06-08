@@ -6,7 +6,7 @@ import Regex
 titlePrefixRegex : Regex.Regex
 titlePrefixRegex =
     Maybe.withDefault Regex.never <|
-        Regex.fromString "^#. "
+        Regex.fromString "^#+\\s*"
 
 
 findTitlePrefix : String -> Maybe String
