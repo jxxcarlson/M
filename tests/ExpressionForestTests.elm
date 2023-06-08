@@ -1,12 +1,8 @@
 module ExpressionForestTests exposing (..)
 
-import Dict exposing (Dict)
-import Either exposing (Either(..))
 import Expect exposing (Expectation)
-import Generic.Language exposing (BlockMeta, Expr(..), Expression, ExpressionBlock, Heading(..), PrimitiveBlock, SimpleExpressionBlock, SimplePrimitiveBlock, simplifyExpr, simplifyExpressionBlock)
 import M.Parser
 import Test exposing (..)
-import Tree exposing (Tree)
 
 
 p str =

@@ -9,5 +9,7 @@ scripts:
 
   cloc-t: cloc --by-file src/Tools
 
+  review: npx elm-review
+
 
 
