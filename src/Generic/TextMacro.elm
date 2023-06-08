@@ -16,19 +16,17 @@ module Generic.TextMacro exposing
     , toString
     )
 
-import Compiler.ASTTools as AT
-import Compiler.TextMacroParser
 import Dict exposing (Dict)
-import L0.Parser.Expression
-import L0.Test
+import Generic.ASTTools as AT
+import Generic.Language exposing (Expr(..), Expression)
+import Generic.Print
+import Generic.TextMacroParser
 import List.Extra
-import MicroLaTeX.Parser.Expression
-import Parser.Expr exposing (Expr(..))
-import Parser.Meta
+import M.ExpressionParser
 
 
 type alias Macro =
-    { name : String, vars : List String, body : List Expr }
+    { name : String, vars : List String, body : List Expression }
 
 
 macroFromString : String -> Maybe Macro
@@ -52,7 +50,7 @@ macroFromString str =
 macroFromL0String : String -> Maybe Macro
 macroFromL0String str =
     str
-        |> L0.Parser.Expression.parse 0
+        |> M.ExpressionParser.parse 0
         |> List.head
         |> Maybe.andThen extract
 
@@ -69,7 +67,7 @@ printMacro macro =
         ++ ", vars: ["
         ++ String.join ", " macro.vars
         ++ "], expr:  "
-        ++ L0.Test.toStringFromList macro.body
+        ++ Generic.Print.toStringFromList macro.body
 
 
 printLaTeXMacro : Macro -> String
@@ -92,7 +90,7 @@ printLaTeXMacro macro =
             ++ "}"
 
 
-toLaTeXString : Expr -> String
+toLaTeXString : Expression -> String
 toLaTeXString expr =
     case expr of
         Fun name expressions _ ->
@@ -118,7 +116,7 @@ toLaTeXString expr =
         Text str _ ->
             str
 
-        Verbatim name str _ ->
+        VFun name str _ ->
             case name of
                 "math" ->
                     "$" ++ str ++ "$"
@@ -130,7 +128,7 @@ toLaTeXString expr =
                     "error: verbatim " ++ name ++ " not recognized"
 
 
-extract2 : Expr -> Maybe Macro
+extract2 : Expression -> Maybe Macro
 extract2 expr =
     case expr of
         Fun name body meta ->
@@ -144,12 +142,12 @@ extract2 expr =
             Nothing
 
 
-getVars : List Expr -> List String
+getVars : List Expression -> List String
 getVars exprs =
     List.map getVars_ exprs |> List.concat |> List.Extra.unique |> List.sort
 
 
-getVars_ : Expr -> List String
+getVars_ : Expression -> List String
 getVars_ expr =
     case expr of
         Text str _ ->
@@ -164,7 +162,7 @@ getVars_ expr =
 
 getParam : String -> List String
 getParam str =
-    case Compiler.TextMacroParser.getParam str of
+    case Generic.TextMacroParser.getParam str of
         Just result ->
             [ result ]
 
@@ -185,12 +183,12 @@ extract2Aux body meta =
 -- extract3Aux : String -> List String -> meta -> Lambda
 
 
-extract3Aux : String -> List Expr -> c -> { name : String, vars : List String, body : List Expr }
+extract3Aux : String -> List Expression -> c -> { name : String, vars : List String, body : List Expression }
 extract3Aux name rest meta =
     { name = name, vars = getVars rest, body = rest }
 
 
-extract : Expr -> Maybe Macro
+extract : Expression -> Maybe Macro
 extract expr_ =
     case expr_ of
         Fun "macro" ((Text argString _) :: exprs) _ ->
@@ -236,12 +234,12 @@ getTextMacroFunctionNames str =
         |> List.sort
 
 
-functionNames : List Expr -> List String
+functionNames : List Expression -> List String
 functionNames exprs =
     List.map functionNames_ exprs |> List.concat
 
 
-functionNames_ : Expr -> List String
+functionNames_ : Expression -> List String
 functionNames_ expr =
     case expr of
         Fun name body _ ->
@@ -250,7 +248,7 @@ functionNames_ expr =
         Text _ _ ->
             []
 
-        Verbatim _ _ _ ->
+        VFun _ _ _ ->
             []
 
 
@@ -267,7 +265,7 @@ exportTexMacros str =
 
 {-| Expand the given expression using the given dictionary of lambdas.
 -}
-expand : Dict String Macro -> Expr -> Expr
+expand : Dict String Macro -> Expression -> Expression
 expand dict expr =
     case expr of
         Fun name _ _ ->
@@ -284,7 +282,7 @@ expand dict expr =
 
 {-| Substitute a for all occurrences of (Text var ..) in e
 -}
-subst : Expr -> String -> Expr -> Expr
+subst : Expression -> String -> Expression -> Expression
 subst a var body =
     case body of
         Text str _ ->
@@ -295,7 +293,7 @@ subst a var body =
             else if String.contains var str then
                 let
                     parts =
-                        String.split var str |> List.map (\s -> Text s Parser.Meta.dummy)
+                        String.split var str |> List.map (\s -> Text s dummy)
                 in
                 List.intersperse a parts |> group
 
@@ -309,7 +307,7 @@ subst a var body =
             body
 
 
-listSubst : List Expr -> List String -> List Expr -> List Expr
+listSubst : List Expression -> List String -> List Expression -> List Expression
 listSubst as_ vars exprs =
     if List.length as_ /= List.length vars then
         exprs
@@ -322,7 +320,7 @@ listSubst as_ vars exprs =
         List.foldl (\func acc -> func acc) exprs funcs
 
 
-expandWithMacro : Macro -> Expr -> Expr
+expandWithMacro : Macro -> Expression -> Expression
 expandWithMacro macro expr =
     case expr of
         Fun name fArgs _ ->
@@ -338,17 +336,17 @@ expandWithMacro macro expr =
 
 {-| Apply a lambda to an expression.
 -}
-group : List Expr -> Expr
+group : List Expression -> Expression
 group exprs =
-    Fun "group" exprs Parser.Meta.dummy
+    Fun "group" exprs dummy
 
 
-makeF : Expr -> String -> (List Expr -> List Expr)
+makeF : Expression -> String -> (List Expression -> List Expression)
 makeF a var =
     List.map (subst a var)
 
 
-toString : (Expr -> String) -> Macro -> String
+toString : (Expression -> String) -> Macro -> String
 toString exprToString macro =
     [ "\\newcommand{\\"
     , macro.name
@@ -365,9 +363,9 @@ toString exprToString macro =
 -- FOR TESTING --
 
 
-parseExpr : String -> Maybe Expr
+parseExpr : String -> Maybe Expression
 parseExpr str =
-    L0.Parser.Expression.parse 0 str |> List.head
+    M.ExpressionParser.parse 0 str |> List.head
 
 
 parseMacro : String -> Maybe Macro
@@ -375,32 +373,36 @@ parseMacro str =
     str |> parseExpr |> Maybe.andThen extract
 
 
-applyMacro : Maybe Macro -> Maybe Expr -> Maybe Expr
+applyMacro : Maybe Macro -> Maybe Expression -> Maybe Expression
 applyMacro macro_ expr_ =
     Maybe.map2 expandWithMacro macro_ expr_
 
 
 applyMacroS : String -> String -> Maybe String
 applyMacroS macroS exprS =
-    applyMacro (parseMacro macroS) (parseExpr exprS) |> Maybe.map L0.Test.toString
+    applyMacro (parseMacro macroS) (parseExpr exprS) |> Maybe.map Generic.Print.toString
 
 
 applyMacroS2 : String -> String -> Maybe String
 applyMacroS2 macroS exprS =
     applyMacro (Maybe.andThen extract2 (parseMicroLaTeX macroS |> List.head))
         (parseMicroLaTeX exprS |> List.head)
-        |> Maybe.map L0.Test.toString
+        |> Maybe.map Generic.Print.toString
 
 
-parseMicroLaTeX : String -> List Expr
+parseMicroLaTeX : String -> List Expression
 parseMicroLaTeX str =
-    MicroLaTeX.Parser.Expression.parse 0 str |> Tuple.first
+    M.ExpressionParser.parse 0 str
 
 
 
 -- HELPERS
 
 
-filterOutBlanks : List Expr -> List Expr
+filterOutBlanks : List Expression -> List Expression
 filterOutBlanks =
     AT.filterExprs (\e -> not (AT.isBlank e))
+
+
+dummy =
+    { begin = 0, end = 0, index = 0, id = "dummyId" }

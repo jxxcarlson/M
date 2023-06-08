@@ -7,9 +7,9 @@ module Compiler.Acc exposing
     , transformST
     )
 
-import Compiler.ASTTools
 import Dict exposing (Dict)
 import Either exposing (Either(..))
+import Generic.ASTTools
 import Generic.Forest exposing (Forest)
 import Generic.Language exposing (Expr(..), Expression, ExpressionBlock, Heading(..))
 import Generic.MathMacro
@@ -227,20 +227,6 @@ transformBlock acc block =
                         )
                             |> expand acc.textMacroDict
 
-                _ ->
-                    expand acc.textMacroDict block
-
-
-{-|
-
-    Remove any items from 'list' if they contain the ssring
-    'alreadyThere', then prepend 'item' to the result
-
--}
-prependAsNew : String -> String -> List String -> List String
-prependAsNew alreadyThere str list =
-    str :: List.filter (\item -> not <| String.contains alreadyThere item) list
-
 
 vectorPrefix : Vector -> String
 vectorPrefix headingIndex =
@@ -270,18 +256,6 @@ reduceName str =
 
     else
         str
-
-
-insertInStringList : String -> List String -> List String
-insertInStringList str list =
-    if str == "" then
-        list
-
-    else if List.Extra.notMember str list then
-        str :: list
-
-    else
-        list
 
 
 expand : Dict String Macro -> ExpressionBlock -> ExpressionBlock
@@ -360,20 +334,6 @@ updateReferenceWithBlock block acc =
 
         Nothing ->
             acc
-
-
-putReferenceData : String -> String -> ExpressionBlock -> ExpressionBlock
-putReferenceData tag numRef block =
-    let
-        dict =
-            block.properties
-
-        newDict =
-            dict
-                |> (\d -> Dict.insert "tag" tag d)
-                |> (\d -> Dict.insert "numRef" numRef d)
-    in
-    { block | properties = newDict }
 
 
 getNameContentId : ExpressionBlock -> Maybe { name : String, content : Either String (List Expression), id : String }
@@ -560,19 +520,6 @@ updateAccumulator ({ heading, indent, args, body, meta } as block) accumulator =
                 Just { name, content, id, tag } ->
                     accumulator |> updateWithParagraph Nothing content id
 
-        _ ->
-            -- TODO: take care of numberedItemIndex
-            case Generic.Language.getName block of
-                Nothing ->
-                    accumulator
-
-                Just name ->
-                    let
-                        ( inList, _ ) =
-                            listData accumulator (Just name)
-                    in
-                    { accumulator | inList = inList }
-
 
 normalzeLines : List String -> List String
 normalzeLines lines =
@@ -591,7 +538,7 @@ updateWithOrdinarySectionBlock accumulator name content level id =
                     [ Utility.compressWhitespace str ]
 
                 Right expr ->
-                    List.map Compiler.ASTTools.getText expr |> Maybe.Extra.values |> List.map Utility.compressWhitespace
+                    List.map Generic.ASTTools.getText expr |> Maybe.Extra.values |> List.map Utility.compressWhitespace
 
         sectionTag =
             -- TODO: the below is a bad solution
@@ -628,7 +575,7 @@ updateWithOrdinaryDocumentBlock accumulator name content level id =
                     str
 
                 Right expr ->
-                    List.map Compiler.ASTTools.getText expr |> Maybe.Extra.values |> String.join " "
+                    List.map Generic.ASTTools.getText expr |> Maybe.Extra.values |> String.join " "
 
         sectionTag =
             title |> String.toLower |> String.replace " " "-"
@@ -733,16 +680,6 @@ updateWithOrdinaryBlock name content tag id indent accumulator =
             else if List.member name_ Generic.Settings.numberedBlockNames then
                 --- TODO: fix thereom labels
                 let
-                    prefix =
-                        Vector.toString accumulator.headingIndex
-
-                    equationProp =
-                        if prefix == "" then
-                            getCounterAsString "equation" accumulator.counter
-
-                        else
-                            Vector.toString accumulator.headingIndex ++ "." ++ String.fromInt (accumulator.blockCounter + 1)
-
                     level =
                         indent // indentationQuantum
 
@@ -789,9 +726,6 @@ updateWithMathMacros content accumulator =
 updateWithVerbatimBlock : Maybe String -> List String -> String -> String -> Accumulator -> Accumulator
 updateWithVerbatimBlock name_ args tag_ id accumulator =
     let
-        _ =
-            ( name_, tag, id )
-
         ( inList, _ ) =
             listData accumulator name_
 
@@ -815,13 +749,6 @@ updateWithVerbatimBlock name_ args tag_ id accumulator =
 
             else
                 accumulator.counter
-
-        _ =
-            if isSimple then
-                id
-
-            else
-                " "
 
         referenceDatum =
             makeReferenceDatum id tag (verbatimBlockReference isSimple accumulator.headingIndex name newCounter)
@@ -875,7 +802,7 @@ getTerms : String -> Either String (List Expression) -> List TermData
 getTerms id content_ =
     case content_ of
         Right expressionList ->
-            Compiler.ASTTools.filterExpressionsOnName_ "term" expressionList
+            Generic.ASTTools.filterExpressionsOnName_ "term" expressionList
                 |> List.map (extract id)
                 |> Maybe.Extra.values
 
@@ -923,7 +850,7 @@ getFootnotes : String -> Either String (List Expression) -> List TermData
 getFootnotes id content_ =
     case content_ of
         Right expressionList ->
-            Compiler.ASTTools.filterExpressionsOnName_ "footnote" expressionList
+            Generic.ASTTools.filterExpressionsOnName_ "footnote" expressionList
                 |> List.map (extractFootnote id)
                 |> Maybe.Extra.values
 

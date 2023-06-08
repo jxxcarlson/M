@@ -15,13 +15,3 @@ findTitlePrefix string =
         |> List.map .match
         |> List.head
         |> Maybe.map String.trim
-
-
-userReplace : String -> (Regex.Match -> String) -> String -> String
-userReplace userRegex replacer string =
-    case Regex.fromString userRegex of
-        Nothing ->
-            string
-
-        Just regex ->
-            Regex.replace regex replacer string

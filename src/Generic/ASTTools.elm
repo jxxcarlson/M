@@ -1,4 +1,4 @@
-module Compiler.ASTTools exposing
+module Generic.ASTTools exposing
     ( banner
     , blockNameInList
     , blockNames

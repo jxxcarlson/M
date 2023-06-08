@@ -54,10 +54,6 @@ evalStr : MathMacroDict -> String -> String
 evalStr dict str =
     case parseMany (String.trim str) of
         Ok result ->
-            let
-                _ =
-                    result
-            in
             List.map (expandMacroWithDict dict) result |> printList
 
         Err _ ->
