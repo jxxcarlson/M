@@ -32,7 +32,6 @@ a blank line.
 parse : String -> List String -> List PrimitiveBlock
 parse initialId lines =
     loop (init initialId lines) nextStep
-        |> List.map (\block -> finalize block)
 
 
 type alias State =
@@ -111,8 +110,11 @@ finalize block =
             List.reverse block.body
 
         sourceText =
-            -- TODO: maybe this should be set at the Primitive block level
-            String.join "\n" (block.firstLine :: content)
+            if block.heading /= Paragraph then
+                String.join "\n" (block.firstLine :: content)
+
+            else
+                String.join "\n" content
 
         oldMeta =
             block.meta
@@ -322,17 +324,18 @@ commitBlock state currentLine =
                 block =
                     case block_.heading of
                         Paragraph ->
-                            block_
+                            block_ |> finalize
 
                         Ordinary _ ->
-                            { block_ | body = block_.body |> dropLast } |> transformBlock
+                            { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock
 
                         Verbatim _ ->
                             if List.head block_.body == Just "```" then
                                 { block_ | body = List.filter (\l -> l /= "```") block_.body }
+                                    |> finalize
 
                             else
-                                { block_ | body = dropLast block_.body }
+                                { block_ | body = dropLast block_.body } |> finalize
             in
             { state
                 | lines = List.drop 1 state.lines
@@ -369,7 +372,16 @@ transformBlock block =
             { block | properties = Dict.insert "level" "2" block.properties, heading = Ordinary "section" }
 
         Just "subsubsection" ->
-            { block | properties = Dict.insert "level" "2" block.properties, heading = Ordinary "section" }
+            { block | properties = Dict.insert "level" "3" block.properties, heading = Ordinary "section" }
+
+        Just "subheading" ->
+            { block | properties = Dict.insert "level" "4" block.properties, heading = Ordinary "section" }
+
+        Just "item" ->
+            { block | body = String.replace "- " "" block.firstLine :: block.body }
+
+        Just "numbered" ->
+            { block | body = String.replace ". " "" block.firstLine :: block.body }
 
         _ ->
             block

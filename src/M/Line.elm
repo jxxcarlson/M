@@ -10,6 +10,7 @@ module M.Line exposing
 
 import Dict exposing (Dict)
 import M.Language exposing (Heading(..))
+import M.Regex
 import Parser exposing ((|.), (|=), Parser)
 import Tools.KV as KV
 
@@ -127,63 +128,68 @@ getHeadingData line_ =
         ( args1, properties ) =
             KV.argsAndProperties (String.words line) |> Debug.log "( args1, properties )"
     in
-    case args1 of
-        [] ->
-            Err <| HEMissingPrefix
+    case M.Regex.findTitlePrefix line of
+        Just prefix ->
+            Ok <| { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.empty }
 
-        prefix :: args ->
-            case prefix of
-                "||" ->
-                    case args of
-                        [] ->
-                            Err <| HEMissingName
+        Nothing ->
+            case args1 of
+                [] ->
+                    Err <| HEMissingPrefix
 
-                        name :: args2 ->
-                            Ok <| { heading = Verbatim name, args = args2, properties = properties }
+                prefix :: args ->
+                    case prefix of
+                        "||" ->
+                            case args of
+                                [] ->
+                                    Err <| HEMissingName
 
-                "|" ->
-                    case args of
-                        [] ->
-                            Err <| HEMissingName
+                                name :: args2 ->
+                                    Ok <| { heading = Verbatim name, args = args2, properties = properties }
 
-                        name :: args2 ->
-                            Ok <| { heading = Ordinary name, args = args2, properties = properties }
+                        "|" ->
+                            case args of
+                                [] ->
+                                    Err <| HEMissingName
 
-                "-" ->
-                    let
-                        reducedLine =
-                            String.replace "- " "" line
-                    in
-                    if String.isEmpty reducedLine then
-                        Err HENoContent
+                                name :: args2 ->
+                                    Ok <| { heading = Ordinary name, args = args2, properties = properties }
 
-                    else
-                        Ok <|
-                            { heading = Ordinary "item"
-                            , args = []
-                            , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
-                            }
+                        "-" ->
+                            let
+                                reducedLine =
+                                    String.replace "- " "" line
+                            in
+                            if String.isEmpty reducedLine then
+                                Err HENoContent
 
-                "." ->
-                    let
-                        reducedLine =
-                            String.replace ". " "" line
-                    in
-                    if String.isEmpty reducedLine then
-                        Err HENoContent
+                            else
+                                Ok <|
+                                    { heading = Ordinary "item"
+                                    , args = []
+                                    , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
+                                    }
 
-                    else
-                        Ok <|
-                            { heading = Ordinary "numbered"
-                            , args = []
-                            , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
-                            }
+                        "." ->
+                            let
+                                reducedLine =
+                                    String.replace ". " "" line
+                            in
+                            if String.isEmpty reducedLine then
+                                Err HENoContent
 
-                "$$" ->
-                    Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
+                            else
+                                Ok <|
+                                    { heading = Ordinary "numbered"
+                                    , args = []
+                                    , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
+                                    }
 
-                _ ->
-                    Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
+                        "$$" ->
+                            Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
+
+                        _ ->
+                            Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
 
 
 prefixLength : Int -> Int -> String -> Int
