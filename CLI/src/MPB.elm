@@ -1,7 +1,7 @@
 module MPB exposing (..)
 
+import Generic.Print
 import M.PrimitiveBlockParser exposing (parse)
-import M.Print
 import Posix.IO as IO exposing (IO, Process)
 import Posix.IO.File as File
 import Posix.IO.Process as Proc
@@ -23,7 +23,7 @@ program process =
 
                         blockString =
                             "\n----------------\nBLOCKS\n----------------\n\n"
-                                ++ (List.map M.Print.print parsed |> String.join "\n\n")
+                                ++ (List.map Generic.Print.print parsed |> String.join "\n\n")
                     in
                     IO.do (Proc.print blockString) <|
                         \_ ->

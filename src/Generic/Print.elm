@@ -1,10 +1,10 @@
-module M.Print exposing (print)
+module Generic.Print exposing (print)
 
 {-| Used for debugging with CLI.LOPB
 -}
 
 import Dict exposing (Dict)
-import M.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
+import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 
 
 print : PrimitiveBlock -> String
