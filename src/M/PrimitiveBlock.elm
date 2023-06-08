@@ -97,10 +97,13 @@ empty =
     M.Language.primitiveBlockEmpty
 
 
+{-|
 
--- TODO: think about the below
+    Reverse the order of the strings in the body.
+    Then prepend the first line, and concatenate the result.
+    This is the source text of the block.
 
-
+-}
 finalize : PrimitiveBlock -> PrimitiveBlock
 finalize block =
     let
@@ -109,7 +112,7 @@ finalize block =
 
         sourceText =
             -- TODO: maybe this should be set at the Primitive block level
-            String.join "\n" content
+            String.join "\n" (block.firstLine :: content)
 
         oldMeta =
             block.meta
@@ -117,7 +120,6 @@ finalize block =
         newMeta =
             { oldMeta | sourceText = sourceText }
     in
-    -- TODO: is this correct?
     { block | body = content, meta = newMeta }
 
 
@@ -354,21 +356,23 @@ commitBlock state currentLine =
 -}
 transformBlock : PrimitiveBlock -> PrimitiveBlock
 transformBlock block =
-    let
-        name =
-            getName block
-    in
-    if name == Just "section" && block.args == [] then
-        { block | args = [ "1" ] }
+    case getName block of
+        Just "section" ->
+            case List.head block.args of
+                Nothing ->
+                    { block | properties = Dict.insert "level" "1" block.properties }
 
-    else if name == Just "subsection" && block.args == [] then
-        { block | args = [ "2" ], heading = Ordinary "section" }
+                Just level ->
+                    { block | properties = Dict.insert "level" level block.properties }
 
-    else if name == Just "subsubsection" && block.args == [] then
-        { block | args = [ "3" ], heading = Ordinary "section" }
+        Just "subsection" ->
+            { block | properties = Dict.insert "level" "2" block.properties, heading = Ordinary "section" }
 
-    else
-        block
+        Just "subsubsection" ->
+            { block | properties = Dict.insert "level" "2" block.properties, heading = Ordinary "section" }
+
+        _ ->
+            block
 
 
 createBlock : State -> Line -> State
