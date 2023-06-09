@@ -1,1 +1,1 @@
-elm make src/Main.elm --output=./assets/main.js  --optimize
+elm make src/Main.elm --output=./assets/main.js

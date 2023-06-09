@@ -142,7 +142,7 @@ mainColumn model =
             [ -- title "Compiler Demo"
               row [ spacing 18 ]
                 [ inputText model
-                , displayRenderedText model
+                , displayRenderedText model |> Element.map Render
                 ]
             ]
         ]
@@ -168,7 +168,7 @@ displayRenderedText model =
             , paddingXY 16 32
             , scrollbarY
             ]
-            (Compiler.compileMF model.sourceText |> )
+            (Compiler.render Compiler.defaultRenderData (String.lines model.sourceText))
 
         --|> List.map (Element.map Render))
         ]

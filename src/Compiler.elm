@@ -4,6 +4,7 @@ module Compiler exposing
     , compileMF
     , compileML
     , defaultRenderData
+    , render
     )
 
 import Element exposing (Element)
@@ -77,7 +78,7 @@ render : RenderData -> List String -> List (Element MarkupMsg)
 render renderData lines =
     case compileMF renderData.idPrefix lines of
         Err err ->
-            [ Element.text (Debug.toString err) ]
+            [ Element.text "Oops something went wrong" ]
 
         Ok forest_ ->
             let
