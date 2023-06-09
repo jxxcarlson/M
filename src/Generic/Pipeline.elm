@@ -1,4 +1,8 @@
-module Generic.Pipeline exposing (toExpressionBlock, toExpressionBlockForestFromStringlist)
+module Generic.Pipeline exposing
+    ( toExpressionBlock
+    , toExpressionBlockForestFromStringlist
+    , toPrimitiveBlockForest
+    )
 
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)

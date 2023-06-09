@@ -1,4 +1,4 @@
-module Compiler.Acc exposing
+module Generic.Acc exposing
     ( Accumulator
     , InitialAccumulatorData
     , init

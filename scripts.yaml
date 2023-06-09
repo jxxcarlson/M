@@ -7,6 +7,8 @@ scripts:
 
   cloc-g: cloc --by-file src/Generic
 
+  cloc-r: cloc --by-file src/Render
+
   cloc-t: cloc --by-file src/Tools
 
   review: npx elm-review
