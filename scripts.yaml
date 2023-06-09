@@ -13,5 +13,4 @@ scripts:
 
   review: npx elm-review
 
-
-
+  review-debug: npx elm-review --ignore-dirs src/Tools --fix-all --rules NoDebug.Log

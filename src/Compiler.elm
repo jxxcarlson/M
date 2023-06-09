@@ -84,6 +84,9 @@ render renderData lines =
             let
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
+
+                _ =
+                    accumulator
             in
             Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
                 |> List.map Render.Tree.unravel

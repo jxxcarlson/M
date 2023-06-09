@@ -3,15 +3,19 @@ module Data exposing (initialText)
 
 initialText =
     """
+| title
+Testing M
 
-# Testing M
-
-## section
+##
 Some text
 
 This is [b really] a [i good] test.
 
-## section
+|| code
+a := 1
+  b := 2
+
+##
 Some math
 
 $a^2 + b^2 = c^2$

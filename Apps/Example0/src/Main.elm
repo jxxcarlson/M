@@ -135,10 +135,20 @@ view model =
         (mainColumn model)
 
 
+appWidth : Int
+appWidth =
+    800
+
+
+panelWidth : Int
+panelWidth =
+    (appWidth // 2) - 30
+
+
 mainColumn : Model -> Element Msg
 mainColumn model =
     column mainColumnStyle
-        [ column [ spacing 18, width (px 1200), height (px 650) ]
+        [ column [ spacing 18, width (px appWidth), height (px 650) ]
             [ -- title "Compiler Demo"
               row [ spacing 18 ]
                 [ inputText model
@@ -163,7 +173,7 @@ displayRenderedText model =
         , column
             [ spacing 18
             , Background.color (Element.rgb 1.0 1.0 1.0)
-            , width (px 500)
+            , width (px panelWidth)
             , height (px 600)
             , paddingXY 16 32
             , scrollbarY
@@ -176,7 +186,7 @@ displayRenderedText model =
 
 inputText : Model -> Element Msg
 inputText model =
-    Input.multiline [ width (px 500), height (px 600), Font.size 14 ]
+    Input.multiline [ width (px panelWidth), height (px 600), Font.size 14 ]
         { onChange = InputText
         , text = model.sourceText
         , placeholder = Nothing

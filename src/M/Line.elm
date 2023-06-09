@@ -85,7 +85,7 @@ getHeadingData line_ =
     in
     case M.Regex.findTitlePrefix line of
         Just prefix ->
-            { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.empty }
+            { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.singleton "section-type" "markdown" }
                 |> Ok
 
         Nothing ->

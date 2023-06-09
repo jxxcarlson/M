@@ -362,15 +362,16 @@ updateReferenceWithBlock block acc =
 getNameContentId : ExpressionBlock -> Maybe { name : String, content : Either String (List Expression), id : String }
 getNameContentId block =
     let
+        name : Maybe String
         name =
-            Dict.get "name" block.properties
+            Generic.Language.getNameFromHeading block.heading
 
         content : Maybe (Either String (List Expression))
         content =
             Just block.body
 
         id =
-            Dict.get "id" block.properties
+            Just block.meta.id
     in
     case ( name, content, id ) of
         ( Just name_, Just content_, Just id_ ) ->

@@ -238,7 +238,7 @@ nextStep state =
         Just rawLine ->
             let
                 _ =
-                    Debug.log state.label rawLine
+                    rawLine
 
                 newPosition =
                     state.position + String.length rawLine + 1
@@ -333,7 +333,12 @@ commitBlock state currentLine =
                             block_ |> finalize
 
                         Ordinary _ ->
-                            { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock
+                            case Dict.get "section-style" block_.properties of
+                                Just "markdown" ->
+                                    { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock |> fixMarkdownTitleBlock
+
+                                _ ->
+                                    { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock
 
                         Verbatim _ ->
                             if List.head block_.body == Just "```" then
