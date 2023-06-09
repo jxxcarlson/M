@@ -1,8 +1,8 @@
 module Render.Tabular exposing (render)
 
-import Compiler.Acc exposing (Accumulator)
 import Dict exposing (Dict)
 import Element exposing (Element)
+import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
 import M.ExpressionParser

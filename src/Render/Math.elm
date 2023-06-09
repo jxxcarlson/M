@@ -6,11 +6,11 @@ module Render.Math exposing
     , mathText
     )
 
-import Compiler.Acc exposing (Accumulator)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Element exposing (Element)
 import Element.Font as Font
+import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.MathMacro
 import Generic.PTextMacro

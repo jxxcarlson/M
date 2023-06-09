@@ -3,13 +3,11 @@ module Render.PUtility exposing
     , getLeadingBlanks
     , l0TitleParser
     , leadingBlanks
-    , microLaTeXTitleParser
     , parseItem
-    , parseTitle
     )
 
+import Generic.Language
 import Parser exposing ((|.), (|=), Parser)
-import Scripta.Language exposing (Language(..))
 
 
 getLeadingBlanks : String -> String
@@ -107,37 +105,4 @@ parseItem item str =
             Just output
 
         Err _ ->
-            Nothing
-
-
-microLaTeXTitleParser : Parser String
-microLaTeXTitleParser =
-    Parser.succeed (\start end src -> String.slice start end src |> String.dropLeft 7)
-        |. Parser.chompUntil "\\title{"
-        |= Parser.getOffset
-        |. Parser.chompUntil "}"
-        |= Parser.getOffset
-        |= Parser.getSource
-
-
-parseTitle : Language -> String -> Maybe String
-parseTitle lang src =
-    case lang of
-        L0Lang ->
-            case Parser.run l0TitleParser src of
-                Ok title ->
-                    Just title
-
-                Err _ ->
-                    Nothing
-
-        MicroLaTeXLang ->
-            case Parser.run microLaTeXTitleParser src of
-                Ok title ->
-                    Just title
-
-                Err _ ->
-                    Nothing
-
-        _ ->
             Nothing
