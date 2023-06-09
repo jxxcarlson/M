@@ -1,21 +1,21 @@
 module Render.IFrame exposing (render)
 
 import Bool.Extra
-import Compiler.Acc exposing (Accumulator)
 import Dict exposing (Dict)
 import Element exposing (Element)
+import Generic.Acc exposing (Accumulator)
+import Generic.Language exposing (ExpressionBlock)
 import Html
 import Html.Attributes
-import Parser.Block exposing (BlockType(..), ExpressionBlock(..))
-import Parser.Utility
 import Render.Msg exposing (MarkupMsg(..))
+import Render.PUtility
 import Render.Settings exposing (Settings)
 import Render.Sync
 import Render.Utility
 
 
 render : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-render count acc settings ((ExpressionBlock { lineNumber, numberOfLines, properties }) as block) =
+render count acc settings block =
     case parseIFrame (Render.Utility.getVerbatimContent block) of
         Nothing ->
             Element.el [] (Element.text "Error parsing iframe or unregistered src")
@@ -26,10 +26,10 @@ render count acc settings ((ExpressionBlock { lineNumber, numberOfLines, propert
                     String.toInt iframeProperties.width |> Maybe.withDefault 400
 
                 caption_ =
-                    Dict.get "caption" properties
+                    Dict.get "caption" block.properties
 
                 label_ =
-                    Dict.get "figure" properties
+                    Dict.get "figure" block.properties
 
                 figureLabel =
                     case ( label_, caption_ ) of
@@ -46,8 +46,8 @@ render count acc settings ((ExpressionBlock { lineNumber, numberOfLines, propert
                             ""
             in
             Element.column
-                [ Render.Sync.rightLeftSyncHelper lineNumber numberOfLines
-                , Render.Utility.idAttribute lineNumber
+                [ Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                , Render.Utility.idAttribute block.meta.lineNumber
                 , Element.width (Element.px w)
                 ]
                 [ Html.iframe
@@ -66,13 +66,13 @@ parseIFrame : String -> Maybe { width : String, height : String, src : String }
 parseIFrame str =
     let
         src_ =
-            Parser.Utility.parseItem "src" str
+            Render.PUtility.parseItem "src" str
 
         width_ =
-            Parser.Utility.parseItem "width" str
+            Render.PUtility.parseItem "width" str
 
         height_ =
-            Parser.Utility.parseItem "height" str
+            Render.PUtility.parseItem "height" str
     in
     case ( src_, width_, height_ ) of
         ( Just src, Just width, Just height ) ->

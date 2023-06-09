@@ -1,7 +1,5 @@
 module Render.Expression exposing (nonstandardElements, render)
 
-import Compiler.ASTTools as ASTTools
-import Compiler.Acc exposing (Accumulator)
 import Dict exposing (Dict)
 import Element exposing (Element, column, el, newTabLink, spacing)
 import Element.Background as Background
@@ -9,13 +7,15 @@ import Element.Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import Generic.ASTTools as ASTTools
+import Generic.Acc exposing (Accumulator)
+import Generic.Language exposing (Expr(..), Expression)
+import Generic.MathMacro
 import Html
 import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import MicroScheme.Interpreter
-import Parser.Expr exposing (Expr(..))
-import Parser.MathMacro
 import Render.Graphics
 import Render.Math
 import Render.Msg exposing (MarkupMsg(..))
@@ -23,7 +23,7 @@ import Render.Settings exposing (Settings)
 import Render.Utility as Utility
 
 
-render : Int -> Accumulator -> Settings -> Expr -> Element MarkupMsg
+render : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
 render generation acc settings expr =
     case expr of
         Text string meta ->
@@ -32,7 +32,7 @@ render generation acc settings expr =
         Fun name exprList meta ->
             Element.el [ htmlId meta.id ] (renderMarked name generation acc settings exprList)
 
-        Verbatim name str meta ->
+        VFun name str meta ->
             renderVerbatim name generation acc settings meta str
 
 
@@ -62,7 +62,7 @@ errorBackgroundColor =
 -- DICTIONARIES
 
 
-markupDict : Dict String (Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg)
+markupDict : Dict String (Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg)
 markupDict =
     Dict.fromList
         [ ( "bibitem", \_ _ _ exprList -> bibitem exprList )
@@ -187,12 +187,12 @@ abstract g acc s exprList =
     Element.paragraph [] [ Element.el [ Font.size 18 ] (Element.text "Abstract."), simpleElement [] g acc s exprList ]
 
 
-large : Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg
+large : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
 large g acc s exprList =
     simpleElement [ Font.size 18 ] g acc s exprList
 
 
-link : Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg
+link : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
 link _ _ _ exprList =
     case List.head <| ASTTools.exprListToStringList exprList of
         Nothing ->
@@ -236,7 +236,7 @@ link _ _ _ exprList =
                     }
 
 
-href : Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg
+href : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
 href _ _ _ exprList =
     let
         url =
@@ -341,12 +341,12 @@ cslink _ _ _ exprList =
                 }
 
 
-bibitem : List Expr -> Element MarkupMsg
+bibitem : List Expression -> Element MarkupMsg
 bibitem exprs =
     Element.paragraph [ Element.width Element.fill ] [ Element.text (ASTTools.exprListToStringList exprs |> String.join " " |> (\s -> "[" ++ s ++ "]")) ]
 
 
-cite : Accumulator -> List Expr -> Element MarkupMsg
+cite : Accumulator -> List Expression -> Element MarkupMsg
 cite acc str =
     let
         tag : String
@@ -374,12 +374,12 @@ math g a m str =
     mathElement g a m str
 
 
-table : Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg
+table : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
 table g acc s rows =
     Element.column [ Element.spacing 8 ] (List.map (tableRow g acc s) rows)
 
 
-tableRow : Int -> Accumulator -> Settings -> Expr -> Element MarkupMsg
+tableRow : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
 tableRow g acc s expr =
     case expr of
         Fun "tableRow" items _ ->
@@ -389,7 +389,7 @@ tableRow g acc s expr =
             Element.none
 
 
-tableItem : Int -> Accumulator -> Settings -> Expr -> Element MarkupMsg
+tableItem : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
 tableItem g acc s expr =
     case expr of
         Fun "tableItem" exprList _ ->
@@ -438,7 +438,7 @@ renderScheme g acc s exprList =
     Element.text (MicroScheme.Interpreter.runProgram ";" inputText)
 
 
-renderButton : a -> b -> c -> List Expr -> Element MarkupMsg
+renderButton : a -> b -> c -> List Expression -> Element MarkupMsg
 renderButton _ _ _ exprList =
     let
         arguments : List String
@@ -600,7 +600,7 @@ colorDict =
         ]
 
 
-ref : Accumulator -> List Expr -> Element MarkupMsg
+ref : Accumulator -> List Expression -> Element MarkupMsg
 ref acc exprList =
     let
         key =
@@ -630,7 +630,7 @@ ref acc exprList =
     \reflink{LINK_TEXT LABEL}
 
 -}
-reflink : Accumulator -> List Expr -> Element MarkupMsg
+reflink : Accumulator -> List Expression -> Element MarkupMsg
 reflink acc exprList =
     let
         argString =
@@ -665,7 +665,7 @@ reflink acc exprList =
         }
 
 
-eqref : Accumulator -> List Expr -> Element MarkupMsg
+eqref : Accumulator -> List Expression -> Element MarkupMsg
 eqref acc exprList =
     let
         key =
@@ -718,14 +718,14 @@ errorHighlight g acc s exprList =
 -- HELPERS
 
 
-simpleElement : List (Element.Attribute MarkupMsg) -> Int -> Accumulator -> Settings -> List Expr -> Element MarkupMsg
+simpleElement : List (Element.Attribute MarkupMsg) -> Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
 simpleElement formatList g acc s exprList =
     Element.paragraph formatList (List.map (render g acc s) exprList)
 
 
 {-| For one-element functions
 -}
-f1 : (String -> Element MarkupMsg) -> List Expr -> Element MarkupMsg
+f1 : (String -> Element MarkupMsg) -> List Expression -> Element MarkupMsg
 f1 f exprList =
     case ASTTools.exprListToStringList exprList of
         -- TODO: temporary fix: parse is producing the args in reverse order
@@ -754,7 +754,7 @@ errorText_ str =
 
 mathElement generation acc meta str =
     -- "width" is not used for inline math, but some string needs to be there
-    Render.Math.mathText generation "width" meta.id Render.Math.InlineMathMode (Parser.MathMacro.evalStr acc.mathMacroDict str)
+    Render.Math.mathText generation "width" meta.id Render.Math.InlineMathMode (Generic.MathMacro.evalStr acc.mathMacroDict str)
 
 
 

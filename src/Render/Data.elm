@@ -3,14 +3,14 @@ module Render.Data exposing (chart, prepareTable, table)
 import Chart
 import Chart.Attributes as CA
 import Chart.Svg exposing (Axis)
-import Compiler.Acc exposing (Accumulator)
 import Dict
 import Either exposing (Either(..))
 import Element exposing (Element)
 import Element.Font as Font
+import Generic.Acc exposing (Accumulator)
+import Generic.Language exposing (ExpressionBlock)
 import List.Extra
 import Maybe.Extra
-import Parser.Block exposing (ExpressionBlock(..))
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (Settings)
 import Render.Utility
@@ -42,19 +42,19 @@ fontWidth =
 
 
 chart : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-chart count acc settings ((ExpressionBlock { id, args, properties }) as block) =
+chart count acc settings block =
     let
         options : Options
         options =
-            { timeseries = getArg "timeseries" args
-            , reverse = getArg "reverse" args
-            , columns = Dict.get "columns" properties |> Maybe.map (String.split "," >> List.map String.trim >> List.map String.toInt >> Maybe.Extra.values)
-            , lowest = Dict.get "lowest" properties |> Maybe.andThen String.toFloat
-            , caption = Dict.get "caption" properties
-            , label = Dict.get "figure" properties
-            , kind = Dict.get "kind" properties
-            , domain = Dict.get "domain" properties |> Maybe.andThen getRange
-            , range = Dict.get "range" properties |> Maybe.andThen getRange
+            { timeseries = getArg "timeseries" block.args
+            , reverse = getArg "reverse" block.args
+            , columns = Dict.get "columns" block.properties |> Maybe.map (String.split "," >> List.map String.trim >> List.map String.toInt >> Maybe.Extra.values)
+            , lowest = Dict.get "lowest" block.properties |> Maybe.andThen String.toFloat
+            , caption = Dict.get "caption" block.properties
+            , label = Dict.get "figure" block.properties
+            , kind = Dict.get "kind" block.properties
+            , domain = Dict.get "domain" block.properties |> Maybe.andThen getRange
+            , range = Dict.get "range" block.properties |> Maybe.andThen getRange
             }
 
         data : Maybe ChartData
@@ -485,11 +485,11 @@ prepareTable : Int -> ExpressionBlock -> TableData
 prepareTable fontWidth_ ((ExpressionBlock { id, args, properties }) as block) =
     let
         title =
-            Dict.get "title" properties
+            Dict.get "title" block.properties
 
         columnsToDisplay : List Int
         columnsToDisplay =
-            Dict.get "columns" properties
+            Dict.get "columns" block.properties
                 |> Maybe.map (String.split ",")
                 |> Maybe.withDefault []
                 |> List.map (String.trim >> String.toInt)

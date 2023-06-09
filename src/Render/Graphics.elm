@@ -1,13 +1,12 @@
 module Render.Graphics exposing (image, image2, quiver, svg, tikz)
 
-import Compiler.ASTTools as ASTTools
-import Compiler.Acc exposing (Accumulator)
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Element exposing (Element, alignLeft, alignRight, centerX, column, el, px, rgb255, spacing)
 import Element.Font as Font
-import Parser.Block exposing (ExpressionBlock(..))
-import Parser.Expr exposing (Expr)
+import Generic.ASTTools as ASTTools
+import Generic.Acc exposing (Accumulator)
+import Generic.Language exposing (Expression, ExpressionBlock)
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (Settings)
 import Render.Sync
@@ -31,7 +30,7 @@ type alias ImageParameters msg =
     }
 
 
-image : Render.Settings.Settings -> List Expr -> Element msg
+image : Render.Settings.Settings -> List Expression -> Element msg
 image settings body =
     let
         params =
@@ -61,13 +60,13 @@ image settings body =
 {-| For \\image and [image ...]
 -}
 image2 : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-image2 _ _ settings (ExpressionBlock { lineNumber, numberOfLines, id, args, properties, content }) =
+image2 _ _ settings block =
     let
         caption =
-            getCaption properties
+            getCaption block.properties
 
         ypadding =
-            case Dict.get "yPadding" properties of
+            case Dict.get "yPadding" block.properties of
                 Nothing ->
                     18
 
@@ -77,16 +76,16 @@ image2 _ _ settings (ExpressionBlock { lineNumber, numberOfLines, id, args, prop
         label =
             case caption of
                 "*" ->
-                    "Figure " ++ getFigureLabel properties
+                    "Figure " ++ getFigureLabel block.properties
 
                 "none" ->
                     ""
 
                 _ ->
-                    "Figure " ++ getFigureLabel properties ++ ". " ++ caption
+                    "Figure " ++ getFigureLabel block.properties ++ ". " ++ caption
 
         url =
-            case content of
+            case block.body of
                 Left str ->
                     str
 
@@ -94,7 +93,7 @@ image2 _ _ settings (ExpressionBlock { lineNumber, numberOfLines, id, args, prop
                     "bad block"
 
         params =
-            parameters settings properties
+            parameters settings block.properties
 
         inner =
             column
@@ -103,13 +102,13 @@ image2 _ _ settings (ExpressionBlock { lineNumber, numberOfLines, id, args, prop
                 , Element.centerX
                 ]
                 [ Element.image [ Element.width params.width ]
-                    { src = url, description = getDescription properties }
+                    { src = url, description = getDescription block.properties }
                 ]
 
         figureLabel =
             Element.el
-                (Render.Sync.rightLeftSyncHelper lineNumber numberOfLines
-                    :: Render.Sync.highlighter args [ Element.width params.width, Render.Utility.elementAttribute "id" id, Element.paddingXY 12 4 ]
+                (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                    :: Render.Sync.highlighter block.args [ Element.width params.width, Render.Utility.elementAttribute "id" block.meta.id, Element.paddingXY 12 4 ]
                 )
                 (Element.el [ Element.centerX ] (Element.text label))
 
@@ -153,8 +152,8 @@ getPlacement properties =
 
 
 getVerbatimContent : ExpressionBlock -> String
-getVerbatimContent (ExpressionBlock { content }) =
-    case content of
+getVerbatimContent { body } =
+    case body of
         Left str ->
             str
 
@@ -163,7 +162,7 @@ getVerbatimContent (ExpressionBlock { content }) =
 
 
 svg : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-svg ount acc settings ((ExpressionBlock { id, args }) as block) =
+svg count acc settings block =
     case SvgParser.parse (getVerbatimContent block) of
         Ok html_ ->
             Element.column
@@ -180,9 +179,9 @@ svg ount acc settings ((ExpressionBlock { id, args }) as block) =
 {-| Create elements from HTML markup. On parsing error, output no elements.
 -}
 tikz : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-tikz count acc settings ((ExpressionBlock { id, args }) as block) =
+tikz count acc settings block =
     let
-        maybePair =
+        maybePair_ =
             case String.split "---" (getVerbatimContent block) of
                 a :: b :: [] ->
                     Just ( a, b )
@@ -190,7 +189,7 @@ tikz count acc settings ((ExpressionBlock { id, args }) as block) =
                 _ ->
                     Nothing
     in
-    case maybePair of
+    case maybePair_ of
         Nothing ->
             Element.el [ Font.size 16, Font.color red ] (Element.text "Something is wrong")
 
@@ -207,12 +206,12 @@ tikz count acc settings ((ExpressionBlock { id, args }) as block) =
 
 
 quiver : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
-quiver _ _ settings ((ExpressionBlock { lineNumber, numberOfLines, id, args, properties }) as block) =
+quiver _ _ settings block =
     let
         -- arguments: ["width:250","caption:Fig","1"]
         qArgs : { caption : String, description : String, placement : Element.Attribute a, width : Element.Length }
         qArgs =
-            parameters settings properties
+            parameters settings block.properties
 
         maybePair =
             case String.split "---" (getVerbatimContent block) of
@@ -234,10 +233,10 @@ quiver _ _ settings ((ExpressionBlock { lineNumber, numberOfLines, id, args, pro
                 desc =
                     case qArgs.caption of
                         "*" ->
-                            "Figure " ++ getFigureLabel properties
+                            "Figure " ++ getFigureLabel block.properties
 
                         _ ->
-                            "Figure " ++ getFigureLabel properties ++ ". " ++ qArgs.caption
+                            "Figure " ++ getFigureLabel block.properties ++ ". " ++ qArgs.caption
             in
             Element.column
                 [ Element.spacing 8
@@ -246,14 +245,14 @@ quiver _ _ settings ((ExpressionBlock { lineNumber, numberOfLines, id, args, pro
                 [ Element.image [ Element.width qArgs.width, params.placement ]
                     { src = params.url, description = desc }
                 , Element.el
-                    (Render.Sync.rightLeftSyncHelper lineNumber numberOfLines
-                        :: Render.Sync.highlighter args [ params.placement, params.placement, Element.paddingXY 12 4, Render.Utility.elementAttribute "id" id ]
+                    (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                        :: Render.Sync.highlighter block.args [ params.placement, params.placement, Element.paddingXY 12 4, Render.Utility.elementAttribute "id" block.meta.id ]
                     )
                     (Element.text desc)
                 ]
 
 
-argumentsFromAST : List Expr -> List String
+argumentsFromAST : List Expression -> List String
 argumentsFromAST body =
     ASTTools.exprListToStringList body |> List.map String.words |> List.concat
 
