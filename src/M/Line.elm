@@ -3,6 +3,7 @@ module M.Line exposing
     , Line
     , PrimitiveBlockType(..)
     , classify
+    , errorToString
     , getHeadingData
     , isEmpty
     , isNonEmptyBlank
@@ -32,6 +33,19 @@ type HeadingError
     = HEMissingPrefix
     | HEMissingName
     | HENoContent
+
+
+errorToString : HeadingError -> String
+errorToString error =
+    case error of
+        HEMissingPrefix ->
+            "Missing prefix"
+
+        HEMissingName ->
+            "Missing name"
+
+        HENoContent ->
+            "No content"
 
 
 type PrimitiveBlockType

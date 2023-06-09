@@ -1,6 +1,6 @@
 module M.PrimitiveBlockParser exposing
     ( empty, parse
-    , argsAndProperties, eq, length, listLength
+    , argsAndProperties, bogusBlockFromLine, eq, length, listLength
     )
 
 {-| The main function is
@@ -133,19 +133,6 @@ updateMeta transformMeta block =
     { block | meta = newMeta }
 
 
-
---updateSubRecord : (record -> a) -> (a -> a) -> record -> record
---updateSubRecord fieldF transformSubrecord record =
---    let
---        oldSubRecord =
---            fieldF record
---
---        newSubRecord =
---            transformSubrecord oldSubRecord
---    in
---    { record | meta = newSubRecord }
-
-
 {-|
 
     Recall: classify position lineNumber, where position
@@ -173,10 +160,10 @@ init initialId lines =
 
 
 blockFromLine : Line -> Result Line.HeadingError PrimitiveBlock
-blockFromLine { indent, lineNumber, position, prefix, content } =
+blockFromLine ({ indent, lineNumber, position, prefix, content } as line) =
     case Line.getHeadingData content of
-        Err error ->
-            Err error
+        Err _ ->
+            Ok (bogusBlockFromLine "<= something missing" line)
 
         Ok { heading, args, properties } ->
             let
@@ -199,8 +186,28 @@ blockFromLine { indent, lineNumber, position, prefix, content } =
                 }
 
 
+bogusBlockFromLine : String -> Line -> PrimitiveBlock
+bogusBlockFromLine message_ { indent, lineNumber, position, prefix, content } =
+    let
+        message =
+            "[b [red " ++ content ++ "]] [blue [i " ++ message_ ++ "]]"
 
--- |> elaborate line
+        meta =
+            { emptyBlockMeta
+                | lineNumber = lineNumber
+                , position = position
+                , sourceText = message
+                , numberOfLines = 1
+            }
+    in
+    { heading = Paragraph
+    , indent = indent
+    , args = []
+    , properties = Dict.empty
+    , firstLine = ""
+    , body = [ message ]
+    , meta = meta
+    }
 
 
 nextStep : State -> Step State (List PrimitiveBlock)
@@ -230,6 +237,9 @@ nextStep state =
 
         Just rawLine ->
             let
+                _ =
+                    Debug.log state.label rawLine
+
                 newPosition =
                     state.position + String.length rawLine + 1
 
@@ -419,7 +429,16 @@ createBlock state currentLine =
     in
     case rNewBlock of
         Err err ->
-            { state | error = Just err }
+            { state
+                | lines = List.drop 1 state.lines
+                , lineNumber = state.lineNumber + 1
+                , position = state.position
+                , count = state.count + 1
+                , indent = currentLine.indent
+                , inBlock = True
+                , currentBlock = Just <| bogusBlockFromLine "error" currentLine
+                , blocks = blocks
+            }
 
         Ok newBlock ->
             { state
