@@ -2,6 +2,7 @@ module Generic.Acc exposing
     ( Accumulator
     , InitialAccumulatorData
     , init
+    , initialAccumulator
     , initialData
     , transformAccumulate
     , transformST
@@ -52,6 +53,28 @@ type alias Accumulator =
     , keyValueDict : Dict String String
     , qAndAList : List ( String, String )
     , qAndADict : Dict String String
+    }
+
+
+initialAccumulator : Accumulator
+initialAccumulator =
+    { headingIndex = Vector.init 4
+    , documentIndex = Vector.init 4
+    , counter = Dict.empty
+    , blockCounter = 0
+    , itemVector = Vector.init 4
+    , numberedItemDict = Dict.empty
+    , numberedBlockNames = Generic.Settings.numberedBlockNames
+    , inList = False
+    , reference = Dict.empty
+    , terms = Dict.empty
+    , footnotes = Dict.empty
+    , footnoteNumbers = Dict.empty
+    , mathMacroDict = Dict.empty
+    , textMacroDict = Dict.empty
+    , keyValueDict = Dict.empty
+    , qAndAList = []
+    , qAndADict = Dict.empty
     }
 
 

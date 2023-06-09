@@ -206,24 +206,6 @@ rawExport settings ast =
         |> String.join "\n\n"
 
 
-
---unravel : Tree (Element MarkupMsg) -> Element MarkupMsg
---unravel tree =
---    let
---        children =
---            Tree.children tree
---    in
---    if List.isEmpty children then
---        Tree.label tree
---
---    else
---        Element.column []
---            --  Render.Settings.leftIndentation,
---            [ Tree.label tree
---            , Element.column [ Element.paddingEach { top = Render.Settings.topMarginForChildren, left = Render.Settings.leftIndent, right = 0, bottom = 0 } ] (List.map unravel children)
---            ]
-
-
 type Status
     = InsideItemizedList
     | InsideNumberedList
