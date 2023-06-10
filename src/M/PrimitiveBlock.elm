@@ -1,6 +1,6 @@
-module M.PrimitiveBlockParser exposing
+module M.PrimitiveBlock exposing
     ( empty, parse
-    , argsAndProperties, bogusBlockFromLine, eq, length, listLength
+    , bogusBlockFromLine, eq, length, listLength
     )
 
 {-| The main function is
@@ -14,11 +14,11 @@ module M.PrimitiveBlockParser exposing
 -- import MicroLaTeX.Expression.TransformLaTeX
 
 import Dict exposing (Dict)
+import Generic.BlockUtilities
 import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
 import List.Extra
 import M.Line as Line exposing (HeadingError, Line)
 import M.Regex
-import Tools.KV as KV
 import Tools.Loop exposing (Step(..), loop)
 
 
@@ -121,18 +121,6 @@ finalize block =
     { block | body = content, meta = newMeta }
 
 
-updateMeta : (BlockMeta -> BlockMeta) -> PrimitiveBlock -> PrimitiveBlock
-updateMeta transformMeta block =
-    let
-        oldMeta =
-            block.meta
-
-        newMeta =
-            transformMeta oldMeta
-    in
-    { block | meta = newMeta }
-
-
 {-|
 
     Recall: classify position lineNumber, where position
@@ -222,7 +210,7 @@ nextStep state =
                 Just block_ ->
                     let
                         block =
-                            { block_ | body = dropLast block_.body }
+                            { block_ | body = Generic.BlockUtilities.dropLast block_.body }
 
                         blocks =
                             if block.body == [ "" ] then
@@ -324,8 +312,8 @@ commitBlock state currentLine =
             let
                 block_ =
                     block__
-                        |> updateMeta (\m -> { m | id = state.idPrefix ++ "-" ++ String.fromInt state.blocksCommitted })
-                        |> updateMeta (\m -> { m | numberOfLines = List.length block__.body })
+                        |> Generic.BlockUtilities.updateMeta (\m -> { m | id = state.idPrefix ++ "-" ++ String.fromInt state.blocksCommitted })
+                        |> Generic.BlockUtilities.updateMeta (\m -> { m | numberOfLines = List.length block__.body })
 
                 block =
                     case block_.heading of
@@ -335,10 +323,10 @@ commitBlock state currentLine =
                         Ordinary _ ->
                             case Dict.get "section-style" block_.properties of
                                 Just "markdown" ->
-                                    { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock |> fixMarkdownTitleBlock
+                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast } |> finalize |> transformBlock |> fixMarkdownTitleBlock
 
                                 _ ->
-                                    { block_ | body = block_.body |> dropLast } |> finalize |> transformBlock
+                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast } |> finalize |> transformBlock
 
                         Verbatim _ ->
                             if List.head block_.body == Just "```" then
@@ -346,7 +334,7 @@ commitBlock state currentLine =
                                     |> finalize
 
                             else
-                                { block_ | body = dropLast block_.body } |> finalize
+                                { block_ | body = Generic.BlockUtilities.dropLast block_.body } |> finalize
             in
             { state
                 | lines = List.drop 1 state.lines
@@ -380,7 +368,7 @@ fixMarkdownTitleBlock block =
 -}
 transformBlock : PrimitiveBlock -> PrimitiveBlock
 transformBlock block =
-    case getName block of
+    case Generic.BlockUtilities.getName block of
         Just "section" ->
             let
                 fixedBlock =
@@ -456,40 +444,3 @@ createBlock state currentLine =
                 , currentBlock = Just newBlock
                 , blocks = blocks
             }
-
-
-argsAndProperties : List String -> ( List String, Dict String String )
-argsAndProperties words =
-    let
-        args =
-            KV.cleanArgs words
-
-        namedArgs =
-            List.drop (List.length args) words
-
-        properties =
-            namedArgs |> KV.prepareList |> KV.prepareKVData
-    in
-    ( words, properties )
-
-
-getName : PrimitiveBlock -> Maybe String
-getName block =
-    case block.heading of
-        Paragraph ->
-            Nothing
-
-        Ordinary name ->
-            Just name
-
-        Verbatim name ->
-            Just name
-
-
-dropLast : List a -> List a
-dropLast list =
-    let
-        n =
-            List.length list
-    in
-    List.take (n - 1) list
