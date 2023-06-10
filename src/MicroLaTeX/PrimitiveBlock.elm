@@ -1,4 +1,4 @@
-module MicroLaTeX.PrimitiveBlock exposing (parse, parseLoop, print, printErr)
+module MicroLaTeX.PrimitiveBlock exposing (getLevel, parse, parseLoop, print, printErr)
 
 {-|
 
@@ -20,8 +20,8 @@ import Generic.BlockUtilities
 import Generic.Language exposing (Heading(..), PrimitiveBlock)
 import Generic.Print
 import List.Extra
+import MicroLaTeX.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
 import MicroLaTeX.Line as Line exposing (Line)
-import MicroLaTeX.Parser.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
 import MicroLaTeX.Util
 
 
@@ -629,14 +629,12 @@ newBlockWithError classifier content block =
         CSpecialBlock LXItem ->
             { block
                 | body = List.reverse content |> List.filter (\line_ -> line_ /= "")
-                , properties = Dict.empty
                 , properties = statusFinished
             }
 
         CSpecialBlock LXNumbered ->
             { block
                 | body = List.reverse content |> List.filter (\line_ -> line_ /= "")
-                , properties = Dict.empty
                 , properties = statusFinished
             }
 
@@ -1227,14 +1225,14 @@ setLevel level block =
     { block | properties = Dict.insert "level" (String.fromInt level) block.properties }
 
 
-getLevel : PrimitiveBlock -> Int
+getLevel : PrimitiveBlock -> Maybe Int
 getLevel block =
     case Dict.get "level" block.properties of
         Nothing ->
-            0
+            Nothing
 
         Just str ->
-            String.toInt str |> Maybe.withDefault 0
+            String.toInt str |> Maybe.withDefault 0 |> Just
 
 
 statusFinished =

@@ -1,4 +1,4 @@
-module MicroLaTeX.Parser.ClassifyBlock exposing
+module MicroLaTeX.ClassifyBlock exposing
     ( Classification(..)
     , LXSpecial(..)
     , classificationString

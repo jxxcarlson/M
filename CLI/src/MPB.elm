@@ -1,7 +1,7 @@
 module MPB exposing (..)
 
 import Generic.Print
-import M.PrimitiveBlockParser exposing (parse)
+import M.PrimitiveBlock exposing (parse)
 import Posix.IO as IO exposing (IO, Process)
 import Posix.IO.File as File
 import Posix.IO.Process as Proc

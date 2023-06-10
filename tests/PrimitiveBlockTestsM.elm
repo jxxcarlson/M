@@ -1,4 +1,4 @@
-module PrimitiveBlockTests exposing (suite)
+module PrimitiveBlockTestsM exposing (suite)
 
 import Dict
 import Expect
