@@ -1,4 +1,4 @@
-module Compiler.Util exposing
+module MicroLaTeX.Util exposing
     ( depth
     , dropLast
     , eraseItem
@@ -19,7 +19,6 @@ module Compiler.Util exposing
 
 import Parser exposing ((|.), (|=), Parser, Step(..), loop, map, oneOf, spaces, succeed)
 import Regex
-import Scripta.Language exposing (Language(..))
 import Tree exposing (Tree)
 import Utility
 
@@ -115,21 +114,9 @@ size t =
     "bar" : String
 
 -}
-getItem : Language -> String -> String -> String
-getItem language key str =
-    -- TODO: fix this
-    case language of
-        L0Lang ->
-            runParser (keyValParser key) str ""
-
-        MicroLaTeXLang ->
-            runParser (macroValParser key) str ""
-
-        PlainTextLang ->
-            runParser (keyValParser key) str ""
-
-        XMarkdownLang ->
-            runParser (keyValParser key) str ""
+getItem : String -> String -> String
+getItem key str =
+    runParser (macroValParser key) str ""
 
 
 getMicroLaTeXItem : String -> String -> Maybe String
@@ -187,29 +174,13 @@ getBracedItems str =
     "... whatever, whatever else ..." : String
 
 -}
-eraseItem : Language -> String -> String -> String -> String
-eraseItem language key value str =
-    case language of
-        L0Lang ->
-            let
-                target =
-                    "[" ++ key ++ " " ++ value ++ "]\n"
-            in
-            String.replace target "" str
-
-        PlainTextLang ->
-            str
-
-        MicroLaTeXLang ->
-            let
-                target =
-                    "\\" ++ key ++ "{" ++ value ++ "}\n"
-            in
-            String.replace target "" str
-
-        XMarkdownLang ->
-            -- TODO: implement this
-            "((unimplemented))"
+eraseItem : String -> String -> String -> String
+eraseItem key value str =
+    let
+        target =
+            "\\" ++ key ++ "{" ++ value ++ "}\n"
+    in
+    String.replace target "" str
 
 
 runParser stringParser str default =

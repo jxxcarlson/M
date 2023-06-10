@@ -1,4 +1,4 @@
-module Parser.PrimitiveLaTeXBlock exposing (PrimitiveLaTeXBlock, parse, parseLoop, print, printErr)
+module MicroLaTeX.PrimitiveBlock exposing (parse, parseLoop, print, printErr)
 
 {-|
 
@@ -15,40 +15,18 @@ module Parser.PrimitiveLaTeXBlock exposing (PrimitiveLaTeXBlock, parse, parseLoo
 
 -}
 
-import Compiler.Util
 import Dict exposing (Dict)
+import Generic.Language exposing (Heading(..), PrimitiveBlock)
 import List.Extra
+import MicroLaTeX.Line as Line exposing (Line)
 import MicroLaTeX.Parser.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
-import MicroLaTeX.Parser.Line
-import Parser.Line as Line exposing (Line, PrimitiveBlockType(..))
-
-
-type alias PrimitiveLaTeXBlock =
-    { indent : Int
-    , lineNumber : Int
-    , position : Int
-    , level : Int
-    , content : List String
-    , numberOfLines : Int
-    , firstLine : String
-    , name : Maybe String
-    , args : List String
-    , properties : Dict String String
-    , sourceText : String
-    , blockType : PrimitiveBlockType
-    , status : Status
-    , error : Maybe PrimitiveBlockError
-    }
-
-
-type alias PrimitiveBlockError =
-    { error : String }
+import MicroLaTeX.Util
 
 
 type alias State =
-    { committedBlocks : List PrimitiveLaTeXBlock
-    , stack : List PrimitiveLaTeXBlock
-    , holdingStack : List PrimitiveLaTeXBlock
+    { committedBlocks : List PrimitiveBlock
+    , stack : List PrimitiveBlock
+    , holdingStack : List PrimitiveBlock
     , labelStack : List Label
     , lines : List String
     , sourceText : String
@@ -78,10 +56,10 @@ type Status
 
 
 type alias ParserOutput =
-    { blocks : List PrimitiveLaTeXBlock, stack : List PrimitiveLaTeXBlock, holdingStack : List PrimitiveLaTeXBlock }
+    { blocks : List PrimitiveBlock, stack : List PrimitiveBlock, holdingStack : List PrimitiveBlock }
 
 
-parse : List String -> List PrimitiveLaTeXBlock
+parse : List String -> List PrimitiveBlock
 parse lines =
     lines |> parseLoop |> .blocks
 
@@ -311,28 +289,26 @@ handleSpecial_ classifier line state =
             case classifier of
                 CSpecialBlock LXItem ->
                     { newBlock_
-                        | name = Just "item"
-                        , blockType = PBOrdinary
+                        | heading = Ordinary "item"
+
+                        -- TODO: Do we really need to set the firstLine property?
                         , properties = Dict.fromList [ ( "firstLine", String.replace "\\item" "" line.content ) ]
                     }
 
                 CSpecialBlock LXNumbered ->
                     { newBlock_
-                        | name = Just "numbered"
-                        , blockType = PBOrdinary
+                        | heading = Ordinary "numbered"
                         , properties = Dict.fromList [ ( "firstLine", String.replace "\\numbered" "" line.content ) ]
                     }
 
                 CSpecialBlock (LXOrdinaryBlock name) ->
                     { newBlock_
-                        | name = Just name
-                        , blockType = PBOrdinary
+                        | heading = Ordinary name
                     }
 
                 CSpecialBlock (LXVerbatimBlock name) ->
                     { newBlock_
-                        | name = Just name
-                        , blockType = PBVerbatim
+                        | heading = Verbatim name
                     }
 
                 _ ->
@@ -362,7 +338,7 @@ handleSpecial_ classifier line state =
     stack to Filled if status = Started.
 
 -}
-changeStatusOfStackTop : PrimitiveLaTeXBlock -> List PrimitiveLaTeXBlock -> State -> List PrimitiveLaTeXBlock
+changeStatusOfStackTop : PrimitiveBlock -> List PrimitiveBlock -> State -> List PrimitiveBlock
 changeStatusOfStackTop block rest state =
     if (List.head state.labelStack |> Maybe.map .status) == Just Filled then
         state.stack
@@ -383,7 +359,7 @@ changeStatusOfStackTop block rest state =
                 -- set the status to Filled and grab lines from state.lines to fill the content field of the block
                 { block
                     | status = Filled
-                    , content = slice (firstBlockLine + 1) (state.lineNumber - 1) state.lines
+                    , body = slice (firstBlockLine + 1) (state.lineNumber - 1) state.lines
                     , numberOfLines = numberOfLines
                 }
         in
@@ -560,7 +536,7 @@ endBlockOnMatch labelHead classifier line state =
                     |> resolveIfStackEmpty
 
 
-addSource : String -> PrimitiveLaTeXBlock -> PrimitiveLaTeXBlock
+addSource : String -> PrimitiveBlock -> PrimitiveBlock
 addSource lastLine block =
     case block.name of
         Nothing ->
@@ -621,7 +597,7 @@ getSource line state =
     slice state.firstBlockLine line.lineNumber state.lines |> String.join "\n"
 
 
-newBlockWithOutError : List String -> PrimitiveLaTeXBlock -> PrimitiveLaTeXBlock
+newBlockWithOutError : List String -> PrimitiveBlock -> PrimitiveBlock
 newBlockWithOutError content block =
     { block
         | content = List.reverse content
@@ -629,7 +605,7 @@ newBlockWithOutError content block =
     }
 
 
-newBlockWithError : Classification -> List String -> PrimitiveLaTeXBlock -> PrimitiveLaTeXBlock
+newBlockWithError : Classification -> List String -> PrimitiveBlock -> PrimitiveBlock
 newBlockWithError classifier content block =
     case classifier of
         CMathBlockDelim ->
@@ -700,7 +676,7 @@ handleComment line state =
     }
 
 
-elaborate : Line -> PrimitiveLaTeXBlock -> PrimitiveLaTeXBlock
+elaborate : Line -> PrimitiveBlock -> PrimitiveBlock
 elaborate line pb =
     if pb.content == [ "" ] then
         pb
@@ -1139,14 +1115,14 @@ transfer state =
 --- PRINT
 
 
-printErr : PrimitiveLaTeXBlock -> String
+printErr : PrimitiveBlock -> String
 printErr block =
     showError block.error
 
 
 {-| Used for debugging with CLI.LXPB
 -}
-print : PrimitiveLaTeXBlock -> String
+print : PrimitiveBlock -> String
 print block =
     [ "BLOCK:"
     , "Type: " ++ Line.showBlockType block.blockType
@@ -1217,11 +1193,11 @@ showStatus status =
         \begin{equation}
 
 -}
-blockFromLine : Int -> Line -> PrimitiveLaTeXBlock
+blockFromLine : Int -> Line -> PrimitiveBlock
 blockFromLine level ({ indent, lineNumber, position, prefix, content } as line) =
     let
         ( blockType, label ) =
-            getBlockTypeAndLabel line.content
+            getHeading line.content
     in
     { indent = indent
     , lineNumber = lineNumber
@@ -1264,24 +1240,24 @@ verbatimBlockNames =
     ]
 
 
-getBlockTypeAndLabel : String -> ( PrimitiveBlockType, Maybe String )
-getBlockTypeAndLabel str =
+getHeading : String -> Generic.Language.Heading
+getHeading str =
     case ClassifyBlock.classify str of
         CBeginBlock label ->
             if List.member label verbatimBlockNames then
-                ( PBVerbatim, Just label )
+                Verbatim label
 
             else
-                ( PBOrdinary, Just label )
+                Ordinary label
 
         CMathBlockDelim ->
-            ( PBVerbatim, Just "math" )
+            Verbatim "math"
 
         CVerbatimBlockDelim ->
-            ( PBVerbatim, Just "code" )
+            Verbatim "code"
 
         _ ->
-            ( PBParagraph, Nothing )
+            Paragraph
 
 
 type Step state a
