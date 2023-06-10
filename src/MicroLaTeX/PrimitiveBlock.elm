@@ -16,7 +16,9 @@ module MicroLaTeX.PrimitiveBlock exposing (parse, parseLoop, print, printErr)
 -}
 
 import Dict exposing (Dict)
+import Generic.BlockUtilities
 import Generic.Language exposing (Heading(..), PrimitiveBlock)
+import Generic.Print
 import List.Extra
 import MicroLaTeX.Line as Line exposing (Line)
 import MicroLaTeX.Parser.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
@@ -350,18 +352,18 @@ changeStatusOfStackTop block rest state =
 
             newBlock =
                 let
-                    content =
+                    body =
                         slice (firstBlockLine + 1) (state.lineNumber - 1) state.lines
 
                     numberOfLines =
-                        List.length content
+                        List.length body
                 in
                 -- set the status to Filled and grab lines from state.lines to fill the content field of the block
                 { block
-                    | status = Filled
-                    , body = slice (firstBlockLine + 1) (state.lineNumber - 1) state.lines
-                    , numberOfLines = numberOfLines
+                    | body = slice (firstBlockLine + 1) (state.lineNumber - 1) state.lines
+                    , properties = statusFilled
                 }
+                    |> Generic.BlockUtilities.updateMeta (\m -> { m | numberOfLines = numberOfLines })
         in
         newBlock :: rest
 
@@ -404,50 +406,51 @@ endBlockOnMismatch label_ classifier line state =
 
                 Just ( label, _ ) ->
                     let
-                        name =
-                            case block.name of
-                                Nothing ->
-                                    "--"
+                        ( heading, name__ ) =
+                            case block.heading of
+                                Paragraph ->
+                                    ( Paragraph, "-" )
 
-                                Just name_ ->
+                                Ordinary name_ ->
+                                    ( Ordinary name_, name_ )
+
+                                Verbatim name_ ->
                                     if List.member name_ [ "math", "equation", "aligned" ] then
-                                        "code"
+                                        ( Verbatim "code", "code" )
 
                                     else
-                                        name_
+                                        ( Verbatim name_, name_ )
 
-                        content =
+                        body =
                             --- TODO: WTF!?
-                            if List.member name verbatimBlockNames then
+                            if List.member name__ verbatimBlockNames then
                                 getContent label_.classification line state |> List.reverse
 
                             else
                                 getContent label_.classification line state |> List.reverse
 
                         newBlock =
-                            { block
-                                | name = Just name
-                                , content = content
-                                , numberOfLines = List.length content
-                                , args =
-                                    if List.member name [ "item", "numbered" ] then
-                                        block.content
-
-                                    else
-                                        block.args
-                                , status = Finished
-                                , error =
+                            let
+                                error =
                                     case ( label.classification, classifier ) of
                                         ( CBeginBlock a, CEndBlock b ) ->
-                                            Just { error = "Mismatch: \\begin{" ++ a ++ "} ≠ \\end{" ++ b ++ "}" }
+                                            Just <| "Mismatch: \\begin{" ++ a ++ "} ≠ \\end{" ++ b ++ "}"
 
                                         ( CBeginBlock a, _ ) ->
-                                            Just { error = "Missing \\end{" ++ a ++ "}" }
+                                            Just <| "Missing \\end{" ++ a ++ "}"
 
                                         _ ->
                                             -- TODO: Is this the right thing to do?
                                             Nothing
+                            in
+                            { block
+                                | heading = heading
+                                , body = body
+                                , args = block.args
+                                , properties = statusFinished
                             }
+                                |> Generic.BlockUtilities.updateMeta
+                                    (\m -> { m | numberOfLines = List.length body, error = error })
                                 |> addSource line.content
                     in
                     { state
@@ -478,7 +481,9 @@ finishBlock lastLine state =
         Just ( block, _ ) ->
             let
                 updatedBlock =
-                    { block | status = Finished, numberOfLines = List.length block.content } |> addSource lastLine
+                    { block | properties = statusFinished }
+                        |> Generic.BlockUtilities.updateMeta (\m -> { m | numberOfLines = state.lineNumber - state.firstBlockLine })
+                        |> addSource lastLine
             in
             { state
                 | committedBlocks = updatedBlock :: state.committedBlocks
@@ -498,7 +503,7 @@ endBlockOnMatch labelHead classifier line state =
 
         Just ( block, rest ) ->
             if (labelHead |> Maybe.map .status) == Just Filled then
-                { state | level = state.level - 1, committedBlocks = ({ block | status = Finished } |> addSource line.content) :: state.committedBlocks, stack = rest } |> resolveIfStackEmpty
+                { state | level = state.level - 1, committedBlocks = ({ block | properties = statusFinished } |> addSource line.content) :: state.committedBlocks, stack = rest } |> resolveIfStackEmpty
 
             else
                 let
@@ -513,10 +518,10 @@ endBlockOnMatch labelHead classifier line state =
                             in
                             newBlockWithError classifier
                                 (getContent classifier line state)
-                                { block
-                                    | numberOfLines = List.length block.content
-                                    , sourceText = sourceText
-                                }
+                                (block
+                                    |> Generic.BlockUtilities.updateMeta
+                                        (\m -> { m | numberOfLines = List.length block.body, sourceText = sourceText })
+                                )
 
                         else
                             newBlockWithOutError (getContent classifier line state) block |> addSource line.content
@@ -538,15 +543,14 @@ endBlockOnMatch labelHead classifier line state =
 
 addSource : String -> PrimitiveBlock -> PrimitiveBlock
 addSource lastLine block =
-    case block.name of
-        Nothing ->
-            { block | sourceText = String.join "\n" block.content, numberOfLines = List.length block.content }
-
-        _ ->
-            { block
-                | sourceText = block.firstLine ++ "\n" ++ String.join "\n" block.content ++ "\n" ++ lastLine
-                , numberOfLines = List.length block.content + 2
-            }
+    block
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = block.firstLine ++ "\n" ++ String.join "\n" block.body ++ "\n" ++ lastLine
+                    , numberOfLines = List.length block.body + 2 -- TODO: problem here?
+                }
+            )
 
 
 getError label classifier =
@@ -600,8 +604,8 @@ getSource line state =
 newBlockWithOutError : List String -> PrimitiveBlock -> PrimitiveBlock
 newBlockWithOutError content block =
     { block
-        | content = List.reverse content
-        , status = Finished
+        | body = List.reverse content
+        , properties = statusFinished
     }
 
 
@@ -610,34 +614,34 @@ newBlockWithError classifier content block =
     case classifier of
         CMathBlockDelim ->
             { block
-                | content = List.reverse content
-                , status = Finished
-                , error = Just { error = "Missing $$ at end" }
+                | body = List.reverse content
+                , properties = statusFinished
             }
+                |> setError (Just "Missing $$ at end")
 
         CVerbatimBlockDelim ->
             { block
-                | content = List.reverse content
-                , status = Finished
-                , error = Just { error = "Missing ``` at end" }
+                | body = List.reverse content
+                , properties = statusFinished
             }
+                |> setError (Just "Missing ``` at end")
 
         CSpecialBlock LXItem ->
             { block
-                | content = List.reverse content |> List.filter (\line_ -> line_ /= "")
+                | body = List.reverse content |> List.filter (\line_ -> line_ /= "")
                 , properties = Dict.empty
-                , status = Finished
+                , properties = statusFinished
             }
 
         CSpecialBlock LXNumbered ->
             { block
-                | content = List.reverse content |> List.filter (\line_ -> line_ /= "")
+                | body = List.reverse content |> List.filter (\line_ -> line_ /= "")
                 , properties = Dict.empty
-                , status = Finished
+                , properties = statusFinished
             }
 
         _ ->
-            { block | content = List.reverse content, status = Finished }
+            { block | body = List.reverse content, properties = statusFinished }
 
 
 plainText state currentLine =
@@ -656,7 +660,10 @@ handleComment : Line -> State -> State
 handleComment line state =
     let
         newBlock =
-            blockFromLine 0 line |> (\b -> { b | numberOfLines = 1, name = Just "texComment", blockType = PBVerbatim })
+            blockFromLine 0 line
+                |> (\b -> { b | heading = Verbatim "texComment" })
+                |> Generic.BlockUtilities.updateMeta
+                    (\m -> { m | numberOfLines = 1 })
 
         labelStack =
             case List.Extra.uncons state.labelStack of
@@ -678,13 +685,13 @@ handleComment line state =
 
 elaborate : Line -> PrimitiveBlock -> PrimitiveBlock
 elaborate line pb =
-    if pb.content == [ "" ] then
+    if pb.body == [ "" ] then
         pb
 
     else
         let
             ( name, args_ ) =
-                MicroLaTeX.Parser.Line.getNameAndArgString line
+                Line.getNameAndArgString line
 
             namedArgs =
                 getKVData args_
@@ -704,19 +711,20 @@ elaborate line pb =
                             adjustedLine =
                                 String.replace prefix "" line.content
                         in
-                        Compiler.Util.getBracedItems adjustedLine
+                        MicroLaTeX.Util.getBracedItems adjustedLine
 
             properties =
                 namedArgs |> prepareList |> prepareKVData
 
-            content =
-                if pb.blockType == PBVerbatim then
-                    List.map String.trimLeft pb.content
+            body =
+                case pb.heading of
+                    Verbatim _ ->
+                        List.map String.trimLeft pb.body
 
-                else
-                    pb.content
+                    _ ->
+                        pb.body
         in
-        { pb | content = content, name = name, args = simpleArgs, properties = properties }
+        { pb | body = body, heading = updateHeadingWithName name pb.heading, args = simpleArgs, properties = properties }
 
 
 {-| return all the comma-separated elements of the given Maybe String that contain
@@ -962,11 +970,13 @@ handleMathBlock line state =
 
                         Just ( topLabel, otherLabels ) ->
                             let
-                                content =
+                                body =
                                     slice (topLabel.lineNumber + 1) (state.lineNumber - 1) state.lines
 
                                 newBlock =
-                                    { block | content = content, numberOfLines = List.length content, status = Finished } |> addSource "$$"
+                                    { block | body = body, properties = statusFinished }
+                                        |> addSource "$$"
+                                        |> Generic.BlockUtilities.updateMeta (\m -> { m | numberOfLines = List.length body })
                             in
                             { state | committedBlocks = newBlock :: state.committedBlocks, labelStack = otherLabels, stack = rest, level = state.level - 1 }
 
@@ -996,7 +1006,7 @@ handleVerbatimBlock line state =
                         Just ( topLabel, otherLabels ) ->
                             let
                                 newBlock =
-                                    { block | content = slice (topLabel.lineNumber + 1) (state.lineNumber - 1) state.lines, status = Finished } |> addSource line.content
+                                    { block | body = slice (topLabel.lineNumber + 1) (state.lineNumber - 1) state.lines, properties = statusFinished } |> addSource line.content
                             in
                             { state | committedBlocks = newBlock :: state.committedBlocks, labelStack = otherLabels, stack = rest, level = state.level - 1 }
 
@@ -1028,42 +1038,42 @@ recoverFromError state =
                             case topLabel.status of
                                 Filled ->
                                     -- the block is Filled, so its content is already set
-                                    block.content
+                                    block.body
 
                                 _ ->
                                     -- the block is not filled, so we grab it content from state.lines
                                     slice (firstLineNumber + 1) lastLineNumber state.lines
 
-                        content =
+                        body =
                             -- remove blank lines
                             -- TODO: is this the right thing to do?
                             List.Extra.takeWhile (\item -> item /= "") provisionalContent
 
                         revisedContent =
                             -- drop the last line if it is "\\end{...}"
-                            case List.Extra.last content of
+                            case List.Extra.last body of
                                 Nothing ->
-                                    content
+                                    body
 
                                 Just str ->
                                     if String.left 4 str == "\\end" then
-                                        Compiler.Util.dropLast content
+                                        MicroLaTeX.Util.dropLast body
 
                                     else
-                                        content
+                                        body
 
                         lineNumber =
                             -- set the line number to be just past the current block
-                            firstLineNumber + List.length content + 1
+                            firstLineNumber + List.length body + 1
 
                         newBlock =
                             -- set the content of the block, declare it to be finished,
                             -- and add and error message
                             { block
-                                | content = revisedContent
-                                , status = Finished
-                                , error = missingTagError block
+                                | body = revisedContent
+                                , properties = statusFinished
                             }
+                                |> setError (missingTagError block)
                                 |> addSource ""
                     in
                     { state
@@ -1076,29 +1086,20 @@ recoverFromError state =
                     }
 
 
-missingTagError : { b | name : Maybe String } -> Maybe { error : String }
+missingTagError : PrimitiveBlock -> Maybe String
 missingTagError block =
-    case block.name of
-        Just "item" ->
+    case block.heading of
+        Ordinary "item" ->
             Nothing
 
-        Nothing ->
-            Nothing
+        Verbatim "math" ->
+            Just "Missing \\end{math}"
+
+        Verbatim "code" ->
+            Just "Missing \\end{code}"
 
         _ ->
-            let
-                name =
-                    case block.name of
-                        Just "math" ->
-                            "$$"
-
-                        Just "code" ->
-                            "code"
-
-                        _ ->
-                            block.name |> Maybe.withDefault "(anon)"
-            in
-            Just { error = "Missing \\end{" ++ name ++ "}" }
+            Nothing
 
 
 slice : Int -> Int -> List a -> List a
@@ -1117,28 +1118,14 @@ transfer state =
 
 printErr : PrimitiveBlock -> String
 printErr block =
-    showError block.error
+    showError block.meta.error
 
 
 {-| Used for debugging with CLI.LXPB
 -}
 print : PrimitiveBlock -> String
 print block =
-    [ "BLOCK:"
-    , "Type: " ++ Line.showBlockType block.blockType
-    , "Name: " ++ showName block.name
-    , "Level: " ++ String.fromInt block.level
-    , "Status: " ++ showStatus block.status
-    , "Args: " ++ showArgs block.args
-    , "Properties: " ++ showProperties block.properties
-    , "Error: " ++ showError block.error
-    , "Line number: " ++ String.fromInt block.lineNumber
-    , "Number of lines: " ++ String.fromInt block.numberOfLines
-    , "Content:"
-    , block.content |> List.indexedMap (\k s -> String.padLeft 3 ' ' (String.fromInt (k + 1 + block.lineNumber)) ++ ": " ++ s) |> String.join "\n"
-    , "Source text:\n" ++ block.sourceText
-    ]
-        |> String.join "\n"
+    Generic.Print.print block
 
 
 showProperties : Dict String String -> String
@@ -1151,14 +1138,9 @@ showArgs args =
     args |> String.join ", "
 
 
-showError : Maybe PrimitiveBlockError -> String
+showError : Maybe String -> String
 showError mError =
-    case mError of
-        Nothing ->
-            ""
-
-        Just { error } ->
-            error
+    Generic.Print.showError mError
 
 
 showName : Maybe String -> String
@@ -1195,25 +1177,76 @@ showStatus status =
 -}
 blockFromLine : Int -> Line -> PrimitiveBlock
 blockFromLine level ({ indent, lineNumber, position, prefix, content } as line) =
-    let
-        ( blockType, label ) =
-            getHeading line.content
-    in
-    { indent = indent
-    , lineNumber = lineNumber
-    , position = position
-    , content = []
-    , numberOfLines = 1
-    , firstLine = line.content
-    , level = level
-    , name = label
+    { heading = getHeading line.content
+    , indent = indent
     , args = []
-    , properties = Dict.empty -- TODO complete this
-    , sourceText = ""
-    , blockType = blockType
-    , status = Started
-    , error = Nothing
+    , properties = statusStarted |> Dict.insert "level" (String.fromInt level)
+    , firstLine = line.content
+    , body = []
+    , meta =
+        { position = 0
+        , lineNumber = 1
+        , numberOfLines = 0
+        , id = ""
+        , messages = []
+        , sourceText = ""
+        , error = Nothing
+        }
     }
+
+
+
+-- HELPERS
+
+
+updateHeadingWithName : Maybe String -> Generic.Language.Heading -> Generic.Language.Heading
+updateHeadingWithName name_ heading =
+    case name_ of
+        Nothing ->
+            heading
+
+        Just name ->
+            case heading of
+                Paragraph ->
+                    Paragraph
+
+                Ordinary _ ->
+                    Ordinary name
+
+                Verbatim _ ->
+                    Verbatim name
+
+
+setError : Maybe String -> PrimitiveBlock -> PrimitiveBlock
+setError error =
+    Generic.BlockUtilities.updateMeta (\m -> { m | error = error })
+
+
+setLevel : Int -> PrimitiveBlock -> PrimitiveBlock
+setLevel level block =
+    { block | properties = Dict.insert "level" (String.fromInt level) block.properties }
+
+
+getLevel : PrimitiveBlock -> Int
+getLevel block =
+    case Dict.get "level" block.properties of
+        Nothing ->
+            0
+
+        Just str ->
+            String.toInt str |> Maybe.withDefault 0
+
+
+statusFinished =
+    Dict.singleton "status" "finished"
+
+
+statusStarted =
+    Dict.singleton "status" "started"
+
+
+statusFilled =
+    Dict.singleton "status" "filled"
 
 
 verbatimBlockNames =

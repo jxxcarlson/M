@@ -1,4 +1,4 @@
-module Generic.Print exposing (print, toString, toStringFromList)
+module Generic.Print exposing (print, showError, toString, toStringFromList)
 
 {-| Used for debugging with CLI.LOPB
 -}
