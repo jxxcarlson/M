@@ -6,7 +6,7 @@ import Generic.Language
     exposing
         ( Heading(..)
         )
-import M.PrimitiveBlockParser
+import M.PrimitiveBlock
 import Test exposing (Test, describe, test)
 
 
@@ -19,8 +19,8 @@ testF label f input output =
 suite : Test
 suite =
     describe "PrimitiveBlock parser"
-        [ testF "test1" (M.PrimitiveBlockParser.parse "abc" << String.lines) input1 output1
-        , testF "test2" (M.PrimitiveBlockParser.parse "!!" << String.lines) input2 output2
+        [ testF "test1" (M.PrimitiveBlock.parse "abc" << String.lines) input1 output1
+        , testF "test2" (M.PrimitiveBlock.parse "!!" << String.lines) input2 output2
         ]
 
 

@@ -211,7 +211,7 @@ nonExportableOrdinaryBlocks =
 
 
 -- IMPORTANT NOTE: all of the verbatim block names listed below
--- must be present in Parser.PrimitiveLaTeXBlock.verbatimNames
+-- must be present in Parser.PrimitiveBlock.verbatimNames
 
 
 verbatimDict : Dict String (Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg)

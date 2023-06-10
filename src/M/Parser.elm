@@ -5,7 +5,7 @@ import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import M.ExpressionParser
-import M.PrimitiveBlockParser
+import M.PrimitiveBlock
 
 
 {-|
@@ -31,5 +31,5 @@ toExpressionBlocksFromString : Int -> String -> List ExpressionBlock
 toExpressionBlocksFromString lineNumber str =
     str
         |> String.lines
-        |> M.PrimitiveBlockParser.parse "!!"
+        |> M.PrimitiveBlock.parse "!!"
         |> List.map (Generic.Pipeline.toExpressionBlock lineNumber M.ExpressionParser.parse)

@@ -7,13 +7,13 @@ module Generic.Pipeline exposing
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (Expression, ExpressionBlock, PrimitiveBlock)
-import M.PrimitiveBlockParser
+import M.PrimitiveBlock
 
 
 toExpressionBlockForestFromStringlist : (Int -> String -> List Expression) -> List String -> Result Error (Forest ExpressionBlock)
 toExpressionBlockForestFromStringlist parser lines =
     lines
-        |> M.PrimitiveBlockParser.parse "!!"
+        |> M.PrimitiveBlock.parse "!!"
         |> toPrimitiveBlockForest
         |> Result.map (Generic.Forest.map (toExpressionBlock 0 parser))
 
