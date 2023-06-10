@@ -214,11 +214,11 @@ nextStep state =
 
                         blocks =
                             if block.body == [ "" ] then
-                                -- Debug.log (Tools.cyan "****, DONE" 13)
+                                -- Debug.log (LogTools.cyan "****, DONE" 13)
                                 List.reverse state.blocks
 
                             else
-                                -- Debug.log (Tools.cyan "****, DONE" 13)
+                                -- Debug.log (LogTools.cyan "****, DONE" 13)
                                 List.reverse (block :: state.blocks)
                     in
                     Done blocks

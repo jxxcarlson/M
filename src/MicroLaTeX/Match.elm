@@ -1,9 +1,9 @@
-module MicroLaTeX.Parser.Match exposing (deleteAt, getSegment, hasReducibleArgs, match, reducible, split, splitAt)
+module MicroLaTeX.Match exposing (deleteAt, getSegment, hasReducibleArgs, match, reducible, split, splitAt)
 
-import Compiler.Util
 import List.Extra
-import MicroLaTeX.Parser.Symbol exposing (Symbol(..), value)
-import Parser.Helpers exposing (Step(..), loop)
+import MicroLaTeX.Symbol exposing (Symbol(..), value)
+import MicroLaTeX.Util
+import Tools.Loop exposing (Step(..), loop)
 
 
 reducible : List Symbol -> Bool
@@ -44,7 +44,7 @@ hasReducibleArgs symbols =
                     False
 
                 Just ( a, b ) ->
-                    hasReducibleArgs (Compiler.Util.middle a) && hasReducibleArgs b
+                    hasReducibleArgs (MicroLaTeX.Util.middle a) && hasReducibleArgs b
 
         L :: _ ->
             --if List.Extra.last rest == Just R then
@@ -53,7 +53,7 @@ hasReducibleArgs symbols =
                     False
 
                 Just ( a, b ) ->
-                    hasReducibleArgs (Compiler.Util.middle a) && hasReducibleArgs b
+                    hasReducibleArgs (MicroLaTeX.Util.middle a) && hasReducibleArgs b
 
         --else
         --    False

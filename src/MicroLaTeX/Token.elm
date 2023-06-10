@@ -1,4 +1,4 @@
-module MicroLaTeX.Parser.Token exposing
+module MicroLaTeX.Token exposing
     ( Token(..)
     , TokenType(..)
     , backslashParser2
@@ -9,10 +9,10 @@ module MicroLaTeX.Parser.Token exposing
     , type_
     )
 
+import Generic.Language exposing (ExprMeta)
+import MicroLaTeX.Helpers exposing (Step(..), loop)
+import MicroLaTeX.Tools as PT exposing (Context, Problem)
 import Parser.Advanced as Parser exposing (DeadEnd, Parser)
-import Parser.Helpers exposing (Step(..), loop)
-import Parser.Meta exposing (Meta)
-import Parser.Tools as PT exposing (Context, Problem)
 
 
 
@@ -20,17 +20,17 @@ import Parser.Tools as PT exposing (Context, Problem)
 
 
 type Token
-    = BS Meta
-    | LB Meta
-    | RB Meta
-    | F String Meta
-    | LMathBracket Meta
-    | RMathBracket Meta
-    | S String Meta
-    | W String Meta
-    | MathToken Meta
-    | CodeToken Meta
-    | TokenError (List (DeadEnd Context Problem)) Meta
+    = BS ExprMeta
+    | LB ExprMeta
+    | RB ExprMeta
+    | F String ExprMeta
+    | LMathBracket ExprMeta
+    | RMathBracket ExprMeta
+    | S String ExprMeta
+    | W String ExprMeta
+    | MathToken ExprMeta
+    | CodeToken ExprMeta
+    | TokenError (List (DeadEnd Context Problem)) ExprMeta
 
 
 type alias State a =
@@ -215,8 +215,8 @@ type_ token =
             TTokenError
 
 
-getMeta : Token -> Meta
-getMeta token =
+getExprMeta : Token -> ExprMeta
+getExprMeta token =
     case token of
         BS m ->
             m
@@ -375,7 +375,7 @@ length token =
 
 {-|
 
-    NOTES. In the computation of the end field of the Meta component of a Token,
+    NOTES. In the computation of the end field of the ExprMeta component of a Token,
     one must use the code `end = start + data.end - data.begin  - 1`.  The
     `-1` is because the data.end comes from the position of the scanPointer,
     which is at this juncture pointing one character beyond the string chomped.
@@ -462,20 +462,20 @@ isTextToken token =
 mergeToken : Token -> Token -> Token
 mergeToken lastToken currentToken =
     let
-        lastTokenMeta =
-            getMeta lastToken
+        lastTokenExprMeta =
+            getExprMeta lastToken
 
-        currentTokenMeta =
-            getMeta currentToken
+        currentTokenExprMeta =
+            getExprMeta currentToken
 
         meta =
-            { begin = lastTokenMeta.begin, end = currentTokenMeta.end, index = -1 }
+            { begin = lastTokenExprMeta.begin, end = currentTokenExprMeta.end, index = -1 }
     in
-    S (stringValue lastToken ++ stringValue currentToken) (boostMeta meta.begin meta.end meta)
+    S (stringValue lastToken ++ stringValue currentToken) (boostExprMeta meta.begin meta.end meta)
 
 
-boostMeta : Int -> Int -> { begin : Int, end : Int, index : Int } -> { begin : Int, end : Int, index : Int, id : String }
-boostMeta lineNumber tokenIndex { begin, end, index } =
+boostExprMeta : Int -> Int -> { begin : Int, end : Int, index : Int } -> { begin : Int, end : Int, index : Int, id : String }
+boostExprMeta lineNumber tokenIndex { begin, end, index } =
     { begin = begin, end = end, index = index, id = makeId lineNumber tokenIndex }
 
 

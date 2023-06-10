@@ -40,4 +40,4 @@ config =
             (Review.Rule.ignoreErrorsForFiles
                 []
             )
-        |> List.map (Review.Rule.ignoreErrorsForDirectories [ "src/Tools" ])
+        |> List.map (Review.Rule.ignoreErrorsForDirectories [ "src/LogTools" ])

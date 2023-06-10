@@ -1,6 +1,6 @@
-module MicroLaTeX.Parser.Symbol exposing (Symbol(..), balance, convertTokens2, toString, value)
+module MicroLaTeX.Symbol exposing (Symbol(..), balance, convertTokens2, toString, value)
 
-import MicroLaTeX.Parser.Token exposing (Token(..))
+import MicroLaTeX.Token exposing (Token(..))
 
 
 type Symbol

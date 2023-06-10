@@ -1,4 +1,4 @@
-module MicroLaTeX.Parser.Expression exposing
+module MicroLaTeX.Expression exposing
     ( State
     , extractMessages
     , isReducible
@@ -9,14 +9,13 @@ module MicroLaTeX.Parser.Expression exposing
     , reduceTokens
     )
 
+import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
-import MicroLaTeX.Parser.Match
-import MicroLaTeX.Parser.Symbol as Symbol exposing (Symbol(..))
-import MicroLaTeX.Parser.Token as Token exposing (Token(..), TokenType(..))
-import Parser.Expr exposing (Expr(..))
-import Parser.Helpers as Helpers exposing (Step(..), loop)
-import Parser.Meta
-import Tools
+import MicroLaTeX.Helpers as Helpers exposing (Step(..), loop)
+import MicroLaTeX.LogTools as Tools
+import MicroLaTeX.Match
+import MicroLaTeX.Symbol as Symbol exposing (Symbol(..))
+import MicroLaTeX.Token as Token exposing (Token(..), TokenType(..))
 
 
 
@@ -28,7 +27,7 @@ type alias State =
     , tokens : List Token
     , numberOfTokens : Int
     , tokenIndex : Int
-    , committed : List Expr
+    , committed : List Expression
     , stack : List Token
     , messages : List String
     , lineNumber : Int
@@ -57,11 +56,21 @@ initWithTokens lineNumber tokens =
     }
 
 
+{-|
+
+    > p "This is \\strong{good}"
+    [Text ("This is ") (),Fun "strong" [Text "good" ()] ()]
+
+-}
+p str =
+    parse 0 str |> Tuple.first |> List.map Generic.Language.simplifyExpr
+
+
 
 -- Exposed functions
 
 
-parseTokens : List Token -> List Expr
+parseTokens : List Token -> List Expression
 parseTokens tokens =
     let
         state =
@@ -73,7 +82,7 @@ parseTokens tokens =
     exprs
 
 
-parse : Int -> String -> ( List Expr, List String )
+parse : Int -> String -> ( List Expression, List String )
 parse lineNumber str =
     let
         state =
@@ -126,7 +135,7 @@ nextStep state =
 
 
 show state =
-    ( state.stack |> List.reverse |> Token.toString2, state.committed |> List.map Parser.Expr.simplify )
+    ( state.stack |> List.reverse |> Token.toString2, state.committed |> List.map Generic.Language.simplifyExpr )
 
 
 
@@ -194,7 +203,7 @@ commit token state =
             { state | committed = expr :: state.committed }
 
 
-exprOfToken : Int -> Token -> Maybe Expr
+exprOfToken : Int -> Token -> Maybe Expression
 exprOfToken lineNumber token =
     case token of
         F str meta ->
@@ -283,11 +292,11 @@ handleBracketedMath state =
 
         committed =
             if trailing == "]" then
-                Verbatim "math" (content |> String.dropLeft 2 |> String.dropRight 2) (boostMeta_ state.tokenIndex 2 { begin = 0, end = 0, index = 0 }) :: state.committed
+                VFun "math" (content |> String.dropLeft 2 |> String.dropRight 2) (boostMeta_ state.tokenIndex 2 { begin = 0, end = 0, index = 0 }) :: state.committed
 
             else
                 Fun "red" [ Text "$" dummyLocWithId ] dummyLocWithId
-                    :: Verbatim "math" (String.replace "$" "" content) { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
+                    :: VFun "math" (String.replace "$" "" content) { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
                     :: state.committed
     in
     { state | stack = [], committed = committed }
@@ -298,7 +307,7 @@ handleMath state =
     case state.stack of
         (MathToken _) :: (S str m2) :: (MathToken _) :: [] ->
             { state
-                | committed = Verbatim "math" str (boostMeta state.lineNumber m2) :: state.committed
+                | committed = VFun "math" str (boostMeta state.lineNumber m2) :: state.committed
                 , stack = []
             }
 
@@ -329,18 +338,18 @@ handleCode state =
                 first_ :: Fun "red" [ Text "`" (boostMeta_ state.lineNumber state.tokenIndex dummyLoc) ] dummyLocWithId :: rest_
 
             else if trailing == "`" then
-                Verbatim "code" (String.replace "`" "" content) (boostMeta_ state.lineNumber state.tokenIndex { begin = 0, end = 0, index = 0 }) :: state.committed
+                VFun "code" (String.replace "`" "" content) (boostMeta_ state.lineNumber state.tokenIndex { begin = 0, end = 0, index = 0 }) :: state.committed
 
             else
-                Fun "red" [ Text "`" dummyLocWithId ] dummyLocWithId :: Verbatim "code" (String.replace "`" "" content) (boostMeta_ state.lineNumber state.tokenIndex { begin = 0, end = 0, index = 0 }) :: state.committed
+                Fun "red" [ Text "`" dummyLocWithId ] dummyLocWithId :: VFun "code" (String.replace "`" "" content) (boostMeta_ state.lineNumber state.tokenIndex { begin = 0, end = 0, index = 0 }) :: state.committed
     in
     { state | stack = [], committed = committed }
 
 
-reduceTokens : Int -> List Token -> List Expr
+reduceTokens : Int -> List Token -> List Expression
 reduceTokens lineNumber tokens =
     case tokens of
-        -- The reversed token list is of the form [LB name EXPRS RB], so return [Expr name (evalList EXPRS)]
+        -- The reversed token list is of the form [LB name EXPRS RB], so return [Expression name (evalList EXPRS)]
         (S t m1) :: (BS m2) :: rest ->
             Text t (boostMeta lineNumber m1) :: reduceTokens lineNumber (BS m2 :: rest)
 
@@ -365,7 +374,7 @@ reduceTokens lineNumber tokens =
             [ errorMessage1Part "{??}" ]
 
 
-reduceRestOfTokens : Maybe String -> Int -> List Token -> List Expr
+reduceRestOfTokens : Maybe String -> Int -> List Token -> List Expression
 reduceRestOfTokens macroName lineNumber tokens =
     case tokens of
         (BS _) :: _ ->
@@ -375,7 +384,7 @@ reduceRestOfTokens macroName lineNumber tokens =
             Text str (boostMeta lineNumber m1) :: reduceRestOfTokens Nothing lineNumber rest
 
         (LB _) :: _ ->
-            case MicroLaTeX.Parser.Match.match (Symbol.convertTokens2 tokens) of
+            case MicroLaTeX.Match.match (Symbol.convertTokens2 tokens) of
                 -- there was no match for the left brace;
                 -- this is an error
                 Nothing ->
@@ -385,7 +394,7 @@ reduceRestOfTokens macroName lineNumber tokens =
                     -- there are k matching tokens
                     let
                         ( a, b ) =
-                            MicroLaTeX.Parser.Match.splitAt (k + 1) tokens
+                            MicroLaTeX.Match.splitAt (k + 1) tokens
 
                         aa =
                             -- drop the leading and trailing LB, RG
@@ -394,10 +403,10 @@ reduceRestOfTokens macroName lineNumber tokens =
                     reduceTokens lineNumber aa ++ reduceRestOfTokens Nothing lineNumber b
 
         (MathToken _) :: (S str m2) :: (MathToken _) :: more ->
-            Verbatim "math" str (boostMeta lineNumber m2) :: reduceRestOfTokens Nothing lineNumber more
+            VFun "math" str (boostMeta lineNumber m2) :: reduceRestOfTokens Nothing lineNumber more
 
         (LMathBracket _) :: (S str m2) :: (RMathBracket _) :: more ->
-            Verbatim "math" str (boostMeta lineNumber m2) :: reduceRestOfTokens Nothing lineNumber more
+            VFun "math" str (boostMeta lineNumber m2) :: reduceRestOfTokens Nothing lineNumber more
 
         token :: more ->
             case exprOfToken lineNumber token of
@@ -413,12 +422,12 @@ reduceRestOfTokens macroName lineNumber tokens =
 
 split : List Token -> ( List Token, List Token )
 split tokens =
-    case MicroLaTeX.Parser.Match.match (Symbol.convertTokens2 tokens) of
+    case MicroLaTeX.Match.match (Symbol.convertTokens2 tokens) of
         Nothing ->
             ( tokens, [] )
 
         Just k ->
-            MicroLaTeX.Parser.Match.splitAt (k + 1) tokens
+            MicroLaTeX.Match.splitAt (k + 1) tokens
 
 
 isReducible : List Token -> Bool
@@ -433,7 +442,7 @@ isReducible tokens =
         False
 
     else
-        symbols |> MicroLaTeX.Parser.Match.reducible
+        symbols |> MicroLaTeX.Match.reducible
 
 
 recoverFromError : State -> Step State State
@@ -598,7 +607,7 @@ errorSuffix rest =
             ""
 
 
-boostMeta : Int -> Parser.Meta.Meta -> Parser.Meta.Meta
+boostMeta : Int -> Generic.Language.ExprMeta -> Generic.Language.ExprMeta
 boostMeta lineNumber meta =
     { meta | id = String.fromInt lineNumber ++ "." ++ meta.id }
 
@@ -626,7 +635,7 @@ recoverFromError2 state =
             Symbol.convertTokens2 (List.reverse newStack)
 
         reducible =
-            MicroLaTeX.Parser.Match.reducible newSymbols
+            MicroLaTeX.Match.reducible newSymbols
     in
     if reducible then
         Done <|
@@ -652,7 +661,7 @@ recoverFromError2 state =
             }
 
 
-bracketError : Int -> Expr
+bracketError : Int -> Expression
 bracketError k =
     if k < 0 then
         let
@@ -683,27 +692,27 @@ braceErrorAsString k =
 -- ERROR MESSAGES
 
 
-errorMessage1Part : String -> Expr
+errorMessage1Part : String -> Expression
 errorMessage1Part a =
     Fun "errorHighlight" [ Text a dummyLocWithId ] dummyLocWithId
 
 
-errorMessage3Part : String -> String -> String -> List Expr
+errorMessage3Part : String -> String -> String -> List Expression
 errorMessage3Part a b c =
     [ Fun "blue" [ Text a dummyLocWithId ] dummyLocWithId, Fun "errorHighlight" [ Text b dummyLocWithId ] dummyLocWithId, Fun "errorHighlight" [ Text c dummyLocWithId ] dummyLocWithId ]
 
 
-errorMessage : String -> Expr
+errorMessage : String -> Expression
 errorMessage message =
     Fun "errorHighlight" [ Text message dummyLocWithId ] dummyLocWithId
 
 
-errorMessageBold : String -> Expr
+errorMessageBold : String -> Expression
 errorMessageBold message =
     Fun "bold" [ Fun "red" [ Text message dummyLocWithId ] dummyLocWithId ] dummyLocWithId
 
 
-errorMessage2 : String -> Expr
+errorMessage2 : String -> Expression
 errorMessage2 message =
     Fun "blue" [ Text message dummyLocWithId ] dummyLocWithId
 
