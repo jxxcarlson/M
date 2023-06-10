@@ -61,8 +61,9 @@ type alias ParserOutput =
     { blocks : List PrimitiveBlock, stack : List PrimitiveBlock, holdingStack : List PrimitiveBlock }
 
 
-parse : List String -> List PrimitiveBlock
-parse lines =
+parse : String -> List String -> List PrimitiveBlock
+parse idPrefix lines =
+    -- TODO: idPrefix must be used
     lines |> parseLoop |> .blocks
 
 

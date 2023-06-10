@@ -63,7 +63,7 @@ initWithTokens lineNumber tokens =
 
 -}
 p str =
-    parse 0 str |> Tuple.first |> List.map Generic.Language.simplifyExpr
+    parse 0 str |> List.map Generic.Language.simplifyExpr
 
 
 
@@ -82,8 +82,13 @@ parseTokens tokens =
     exprs
 
 
-parse : Int -> String -> ( List Expression, List String )
+parse : Int -> String -> List Expression
 parse lineNumber str =
+    str |> Token.run |> initWithTokens lineNumber |> run |> .committed
+
+
+parseWithMessages : Int -> String -> ( List Expression, List String )
+parseWithMessages lineNumber str =
     let
         state =
             str |> Token.run |> initWithTokens lineNumber |> run

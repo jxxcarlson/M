@@ -1,5 +1,7 @@
 module Compiler exposing
-    ( compileM
+    ( compileL
+    , compileM
+    , parseL
     , parseM
     , pm
     )
@@ -13,6 +15,8 @@ import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import M.ExpressionParser
 import M.PrimitiveBlock
+import MicroLaTeX.Expression
+import MicroLaTeX.PrimitiveBlock
 import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
@@ -46,12 +50,44 @@ parseM idPrefix lines =
 
 
 
---
+-- M compiler
 
 
 compileM : Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
 compileM renderData lines =
     case parseM renderData.idPrefix lines of
+        Err err ->
+            [ Element.text "Oops something went wrong" ]
+
+        Ok forest_ ->
+            let
+                ( accumulator, forest ) =
+                    Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
+
+                _ =
+                    accumulator
+            in
+            Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
+                |> List.map Render.Tree.unravel
+
+
+
+-- LaTeX compiler
+
+
+{-|
+
+    > pl str = parseL "!!" (String.lines str) |> Result.map (F.map simplifyExpressionBlock)
+
+-}
+parseL : String -> List String -> Result Error (Forest ExpressionBlock)
+parseL idPrefix lines =
+    Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix lines
+
+
+compileL : Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
+compileL renderData lines =
+    case parseL renderData.idPrefix lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 

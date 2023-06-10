@@ -1,12 +1,4 @@
-| section numbering:off
-Introduction
-
-| subsection
-Itinerary
-
-|| code elm
-explode : List String -> List (List String)
-explode txt =
-    List.map (String.split ":") txt
-
+\begin{equation}
+a^2 + b^2 = c^2
+\end{equation}
 
