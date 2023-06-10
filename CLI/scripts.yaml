@@ -2,3 +2,5 @@ scripts:
   mpb: elm-cli run --debug src/MPB.elm
   # Example: vr mpb test/a1.txt
   # Test the M block parser
+
+  mlb: elm-cli run --debug src/MLB.elm
