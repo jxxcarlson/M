@@ -1,20 +1,18 @@
 module Compiler exposing
-    ( DisplaySettings
-    , cm
-    , compileMF
-    , compileML
-    , defaultRenderData
-    , render
+    ( compileM
+    , parseM
+    , pm
     )
 
 import Element exposing (Element)
 import Generic.Acc
+import Generic.Compiler
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import M.ExpressionParser
-import M.PrimitiveBlockParser
+import M.PrimitiveBlock
 import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
@@ -38,45 +36,22 @@ import Render.Tree
     Ok 1
 
 -}
-cm str =
-    compileMF "!!" (String.lines str) |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
+pm str =
+    parseM "!!" (String.lines str) |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
 
 
-compileML : String -> List String -> List ExpressionBlock
-compileML idPrefix lines =
-    lines
-        |> M.PrimitiveBlockParser.parse idPrefix
-        |> List.map (Generic.Pipeline.toExpressionBlock 0 M.ExpressionParser.parse)
+parseM : String -> List String -> Result Error (Forest ExpressionBlock)
+parseM idPrefix lines =
+    Generic.Compiler.parse_ M.PrimitiveBlock.parse M.ExpressionParser.parse idPrefix lines
 
 
-compileMF : String -> List String -> Result Error (Forest ExpressionBlock)
-compileMF idPrefix lines =
-    lines
-        |> M.PrimitiveBlockParser.parse idPrefix
-        |> Generic.Pipeline.toPrimitiveBlockForest
-        |> Result.map (Generic.Forest.map (Generic.Pipeline.toExpressionBlock 0 M.ExpressionParser.parse))
+
+--
 
 
-type alias RenderData =
-    { count : Int
-    , idPrefix : String
-    , settings : Render.Settings.Settings
-    , initialAccumulatorData : Generic.Acc.InitialAccumulatorData
-    }
-
-
-defaultRenderData : RenderData
-defaultRenderData =
-    { count = 0
-    , idPrefix = "!!"
-    , settings = Render.Settings.defaultSettings
-    , initialAccumulatorData = Generic.Acc.initialData
-    }
-
-
-render : RenderData -> List String -> List (Element MarkupMsg)
-render renderData lines =
-    case compileMF renderData.idPrefix lines of
+compileM : Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
+compileM renderData lines =
+    case parseM renderData.idPrefix lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
@@ -92,11 +67,5 @@ render renderData lines =
                 |> List.map Render.Tree.unravel
 
 
-type alias DisplaySettings =
-    { windowWidth : Int
-    , longEquationLimit : Float
-    , counter : Int
-    , selectedId : String
-    , selectedSlug : Maybe String
-    , scale : Float
-    }
+
+--
