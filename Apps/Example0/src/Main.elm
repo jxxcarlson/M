@@ -7,6 +7,7 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
 import Element.Input as Input
+import Generic.Compiler
 import Html exposing (Html)
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings
@@ -42,7 +43,7 @@ type alias Flags =
     {}
 
 
-displaySettings : Int -> Compiler.DisplaySettings
+displaySettings : Int -> Generic.Compiler.DisplaySettings
 displaySettings counter =
     { windowWidth = 500
     , counter = counter
@@ -137,7 +138,7 @@ view model =
 
 appWidth : Int
 appWidth =
-    800
+    1200
 
 
 panelWidth : Int
@@ -163,10 +164,6 @@ title str =
     row [ centerX, Font.bold, fontGray 0.9 ] [ text str ]
 
 
-
--- displayRenderedText : Model -> Element Msg
-
-
 displayRenderedText model =
     column [ spacing 8, Font.size 14 ]
         [ el [ fontGray 0.9 ] (text "Rendered Text")
@@ -178,9 +175,7 @@ displayRenderedText model =
             , paddingXY 16 32
             , scrollbarY
             ]
-            (Compiler.render Compiler.defaultRenderData (String.lines model.sourceText))
-
-        --|> List.map (Element.map Render))
+            (Compiler.compileM Generic.Compiler.defaultRenderData (String.lines model.sourceText))
         ]
 
 
