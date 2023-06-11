@@ -4,3 +4,6 @@ scripts:
   # Test the M block parser
 
   mlb: elm-cli run --debug src/MLB.elm
+
+  mxb: elm-cli run --debug src/MXB.elm
+
