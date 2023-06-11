@@ -308,9 +308,10 @@ handleSpecial_ classifier line state =
                     }
 
                 CSpecialBlock (LXOrdinaryBlock name) ->
+                    -- TODO: more work here and on related issues (see also module ClassifyBlock)
                     { newBlock_
                         | heading = Ordinary name
-                        , args = [ "WTF!" ]
+                        , args = []
                         , body =
                             case ClassifyBlock.getArg name newBlock_.firstLine of
                                 Err _ ->

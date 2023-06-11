@@ -41,6 +41,7 @@ itemParser =
 
 sectionParser : Parser Classification
 sectionParser =
+    -- TODO: more work on related variants
     specialBlockParser "section" (LXOrdinaryBlock "section")
 
 
