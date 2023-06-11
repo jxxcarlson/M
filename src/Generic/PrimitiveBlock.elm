@@ -1,6 +1,6 @@
 module Generic.PrimitiveBlock exposing
     ( empty, parse
-    , bogusBlockFromLine, eq, length, listLength
+    , ParserFunctions, bogusBlockFromLine, eq, length, listLength
     )
 
 {-| The main function is
@@ -11,14 +11,11 @@ module Generic.PrimitiveBlock exposing
 
 -}
 
--- import MicroLaTeX.Expression.TransformLaTeX
-
 import Dict exposing (Dict)
 import Generic.BlockUtilities
 import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock, emptyBlockMeta)
+import Generic.Line as Line exposing (HeadingData, HeadingError, Line)
 import List.Extra
-import M.Line as Line exposing (HeadingError, Line)
-import M.Regex
 import Tools.Loop exposing (Step(..), loop)
 
 
@@ -30,13 +27,21 @@ NOTE (TODO) for the moment we assume that the input ends with
 a blank line.
 
 -}
-parse : (String -> Bool) -> String -> Int -> List String -> List PrimitiveBlock
-parse isVerbatimLine_ initialId outerCount lines =
-    loop (init isVerbatimLine_ initialId outerCount lines) nextStep
+parse : ParserFunctions -> String -> Int -> List String -> List PrimitiveBlock
+parse functionData initialId outerCount lines =
+    loop (init functionData initialId outerCount lines) nextStep
+
+
+type alias ParserFunctions =
+    { isVerbatimBlock : String -> Bool
+    , getHeadingData : String -> Result HeadingError HeadingData
+    , findTitlePrefix : String -> Maybe String
+    }
 
 
 type alias State =
-    { blocks : List PrimitiveBlock
+    { parserFunctions : ParserFunctions
+    , blocks : List PrimitiveBlock
     , currentBlock : Maybe PrimitiveBlock
     , lines : List String -- the input
     , idPrefix : String -- the prefix used for block ids
@@ -45,7 +50,6 @@ type alias State =
     , lineNumber : Int
     , position : Int -- the string position in the input text of the first character in the block (an "offset")
     , inVerbatim : Bool
-    , isVerbatimLine : String -> Bool
     , count : Int
     , outerCount : Int
     , blocksCommitted : Int
@@ -122,8 +126,8 @@ finalize block =
     and lineNumber is the index of the current line in the source
 
 -}
-init : (String -> Bool) -> String -> Int -> List String -> State
-init isVerbatimLine_ initialId outerCount lines =
+init : ParserFunctions -> String -> Int -> List String -> State
+init parserFunctions initialId outerCount lines =
     { blocks = []
     , currentBlock = Nothing
     , lines = lines
@@ -133,7 +137,7 @@ init isVerbatimLine_ initialId outerCount lines =
     , inBlock = False
     , position = 0
     , inVerbatim = False
-    , isVerbatimLine = isVerbatimLine_
+    , parserFunctions = parserFunctions
     , count = 0
     , outerCount = outerCount
     , blocksCommitted = 0
@@ -142,9 +146,9 @@ init isVerbatimLine_ initialId outerCount lines =
     }
 
 
-blockFromLine : Line -> Result Line.HeadingError PrimitiveBlock
-blockFromLine ({ indent, lineNumber, position, prefix, content } as line) =
-    case Line.getHeadingData content of
+blockFromLine : ParserFunctions -> Line -> Result Line.HeadingError PrimitiveBlock
+blockFromLine parserFunctions ({ indent, lineNumber, position, prefix, content } as line) =
+    case parserFunctions.getHeadingData content of
         Err _ ->
             Ok (bogusBlockFromLine "<= something missing" line)
 
@@ -228,7 +232,6 @@ nextStep state =
 
                 currentLine : Line
                 currentLine =
-                    -- TODO: the below is wrong
                     Line.classify state.position (state.lineNumber + 1) rawLine
             in
             case ( state.inBlock, Line.isEmpty currentLine, Line.isNonEmptyBlank currentLine ) of
@@ -318,10 +321,15 @@ commitBlock state currentLine =
                         Ordinary _ ->
                             case Dict.get "section-style" block_.properties of
                                 Just "markdown" ->
-                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast } |> finalize |> transformBlock |> fixMarkdownTitleBlock
+                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast }
+                                        |> finalize
+                                        |> transformBlock state.parserFunctions.findTitlePrefix
+                                        |> fixMarkdownTitleBlock state.parserFunctions.findTitlePrefix
 
                                 _ ->
-                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast } |> finalize |> transformBlock
+                                    { block_ | body = block_.body |> Generic.BlockUtilities.dropLast }
+                                        |> finalize
+                                        |> transformBlock state.parserFunctions.findTitlePrefix
 
                         Verbatim _ ->
                             if List.head block_.body == Just "```" then
@@ -338,14 +346,14 @@ commitBlock state currentLine =
                 , blocksCommitted = state.blocksCommitted + 1
                 , blocks = block :: state.blocks
                 , inBlock = False
-                , inVerbatim = state.isVerbatimLine currentLine.content
+                , inVerbatim = state.parserFunctions.isVerbatimBlock currentLine.content
                 , currentBlock = Nothing
             }
 
 
-fixMarkdownTitleBlock : PrimitiveBlock -> PrimitiveBlock
-fixMarkdownTitleBlock block =
-    case M.Regex.findTitlePrefix block.firstLine of
+fixMarkdownTitleBlock : (String -> Maybe String) -> PrimitiveBlock -> PrimitiveBlock
+fixMarkdownTitleBlock findTitlePrefix block =
+    case findTitlePrefix block.firstLine of
         Nothing ->
             block
 
@@ -361,13 +369,13 @@ fixMarkdownTitleBlock block =
         - write "| subsection" instead of "| section\n2"
 
 -}
-transformBlock : PrimitiveBlock -> PrimitiveBlock
-transformBlock block =
+transformBlock : (String -> Maybe String) -> PrimitiveBlock -> PrimitiveBlock
+transformBlock findTitlePrefix block =
     case Generic.BlockUtilities.getName block of
         Just "section" ->
             let
                 fixedBlock =
-                    fixMarkdownTitleBlock block
+                    fixMarkdownTitleBlock findTitlePrefix block
             in
             case List.head block.args of
                 Nothing ->
@@ -413,7 +421,7 @@ createBlock state currentLine =
                         block :: state.blocks
 
         rNewBlock =
-            blockFromLine currentLine
+            blockFromLine state.parserFunctions currentLine
     in
     case rNewBlock of
         Err err ->
