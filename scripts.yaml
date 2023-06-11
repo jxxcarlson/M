@@ -3,6 +3,8 @@ scripts:
 
   cloc: cloc --by-file src
 
+  cloc-l: cloc --by-file src/MicroLaTeX
+
   cloc-m: cloc --by-file src/M
 
   cloc-g: cloc --by-file src/Generic

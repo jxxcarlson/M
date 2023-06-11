@@ -3,10 +3,16 @@ module MicroLaTeX.ClassifyBlock exposing
     , LXSpecial(..)
     , classificationString
     , classify
+    , getArg
     , match
+    , p
     )
 
 import Parser exposing ((|.), (|=), Parser)
+
+
+p str =
+    Parser.run classifierParser str
 
 
 type Classification
@@ -17,6 +23,51 @@ type Classification
     | CVerbatimBlockDelim
     | CPlainText
     | CEmpty
+
+
+type LXSpecial
+    = LXItem
+    | LXNumbered
+    | LXPseudoBlock
+    | LXOrdinaryBlock String
+    | LXVerbatimBlock String
+
+
+itemParser : Parser Classification
+itemParser =
+    Parser.succeed (CSpecialBlock LXItem)
+        |. Parser.symbol "\\item"
+
+
+sectionParser : Parser Classification
+sectionParser =
+    specialBlockParser "section" (LXOrdinaryBlock "section")
+
+
+specialBlockParser : String -> LXSpecial -> Parser Classification
+specialBlockParser name lxSpecial =
+    (Parser.succeed String.slice
+        |. Parser.symbol ("\\" ++ name ++ "{")
+        |= Parser.getOffset
+        |. Parser.chompUntil "}"
+        |= Parser.getOffset
+        |= Parser.getSource
+    )
+        |> Parser.map (\_ -> CSpecialBlock lxSpecial)
+
+
+getArg name str =
+    Parser.run (argParser name) str
+
+
+argParser : String -> Parser String
+argParser name =
+    Parser.succeed String.slice
+        |. Parser.symbol ("\\" ++ name ++ "{")
+        |= Parser.getOffset
+        |. Parser.chompUntil "}"
+        |= Parser.getOffset
+        |= Parser.getSource
 
 
 match : Classification -> Classification -> Bool
@@ -51,14 +102,6 @@ classificationString classification =
             "??"
 
 
-type LXSpecial
-    = LXItem
-    | LXNumbered
-    | LXPseudoBlock
-    | LXOrdinaryBlock String
-    | LXVerbatimBlock String
-
-
 classifierParser : Parser Classification
 classifierParser =
     Parser.oneOf
@@ -69,7 +112,9 @@ classifierParser =
         , ordinaryBlockParser
         , verbatimBlockParser
         , itemParser
-        , pseudoBlockParser
+        , sectionParser
+
+        --, pseudoBlockParser
         , numberedParser
         ]
 
@@ -80,16 +125,20 @@ classify str =
         str_ =
             String.trimLeft str
     in
-    case Parser.run classifierParser str_ of
-        Ok classificationOfLine ->
-            classificationOfLine
+    if str_ == "" then
+        CEmpty
 
-        Err _ ->
-            if str == "" then
-                CEmpty
+    else
+        case Parser.run classifierParser str_ of
+            Ok classificationOfLine ->
+                classificationOfLine
 
-            else
-                CPlainText
+            Err _ ->
+                if str == "" then
+                    CEmpty
+
+                else
+                    CPlainText
 
 
 mathBlockDelimParser : Parser Classification
@@ -120,24 +169,18 @@ beginBlockParser =
         |> Parser.map CBeginBlock
 
 
-itemParser : Parser Classification
-itemParser =
-    Parser.succeed (CSpecialBlock LXItem)
-        |. Parser.symbol "\\item"
-
-
 pseudoBlockParser : Parser Classification
 pseudoBlockParser =
-    Parser.succeed (CSpecialBlock LXItem)
-        |. Parser.oneOf
-            [ Parser.symbol "\\section"
-            , Parser.symbol "\\subsection"
-            , Parser.symbol "\\subsubsection"
-            , Parser.symbol "\\image"
-            , Parser.symbol "\\title"
-            , Parser.symbol "\\contents"
-            , Parser.symbol "\\setcounter"
-            ]
+    Parser.oneOf
+        [ Parser.symbol "\\section" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "section")))
+        , Parser.symbol "\\subsection" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "subsection")))
+        , Parser.symbol "\\subsubsection" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "subsubsubsection")))
+        , Parser.symbol "\\item" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "item mmmm")))
+        , Parser.symbol "\\image" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "image")))
+        , Parser.symbol "\\title" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "title")))
+        , Parser.symbol "\\contents" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "contents")))
+        , Parser.symbol "\\setcounter" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "setcounter")))
+        ]
 
 
 numberedParser : Parser Classification

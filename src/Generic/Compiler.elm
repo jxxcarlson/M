@@ -40,7 +40,7 @@ type alias RenderData =
 defaultRenderData : RenderData
 defaultRenderData =
     { count = 0
-    , idPrefix = "!!"
+    , idPrefix = "!@!"
     , settings = Render.Settings.defaultSettings
     , initialAccumulatorData = Generic.Acc.initialData
     }

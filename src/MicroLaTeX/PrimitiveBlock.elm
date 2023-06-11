@@ -132,7 +132,7 @@ nextStep : State -> Step State State
 nextStep state_ =
     let
         state =
-            { state_ | lineNumber = state_.lineNumber + 1, count = state_.count + 1 }
+            { state_ | lineNumber = state_.lineNumber + 1, count = state_.count + 1 } |> Debug.log "STATE"
     in
     case List.Extra.getAt state.lineNumber state.lines of
         Nothing ->
@@ -198,7 +198,7 @@ nextStep state_ =
                     plainText state currentLine
 
                 CEmpty ->
-                    emptyLine currentLine state
+                    emptyLine currentLine state |> Debug.log "@@@ CEmpty"
 
 
 
@@ -286,10 +286,13 @@ handleSpecial_ classifier line state =
             state.level + 1
 
         newBlock_ =
-            blockFromLine level line |> elaborate line
+            blockFromLine level line
+                -- TODO: should we add line.content to the body?
+                |> (\b -> { b | body = b.firstLine :: b.body })
+                |> elaborate line
 
         newBlock =
-            case classifier of
+            (case classifier of
                 CSpecialBlock LXItem ->
                     { newBlock_
                         | heading = Ordinary "item"
@@ -307,6 +310,15 @@ handleSpecial_ classifier line state =
                 CSpecialBlock (LXOrdinaryBlock name) ->
                     { newBlock_
                         | heading = Ordinary name
+                        , args = [ "WTF!" ]
+                        , body =
+                            case ClassifyBlock.getArg name newBlock_.firstLine of
+                                Err _ ->
+                                    [ "ERROR" ]
+
+                                Ok arg ->
+                                    [ arg ]
+                        , properties = statusFinished
                     }
 
                 CSpecialBlock (LXVerbatimBlock name) ->
@@ -316,6 +328,8 @@ handleSpecial_ classifier line state =
 
                 _ ->
                     newBlock_
+            )
+                |> Debug.log "NEW BLOCK"
 
         labelStack =
             case List.Extra.uncons state.labelStack of
@@ -462,6 +476,7 @@ endBlockOnMismatch label_ classifier line state =
                     }
                         |> finishBlock line.content
                         |> resolveIfStackEmpty
+                        |> Debug.log "@@@ END BLOCK ON MISMATCH"
 
 
 resolveIfStackEmpty : State -> State
@@ -540,6 +555,7 @@ endBlockOnMatch labelHead classifier line state =
                     , level = state.level - 1
                 }
                     |> resolveIfStackEmpty
+                    |> Debug.log "@@@ END BLOCK ON MATCH"
 
 
 addSource : String -> PrimitiveBlock -> PrimitiveBlock
@@ -920,7 +936,7 @@ emptyLine currentLine state =
                     endBlock (CSpecialBlock LXNumbered) currentLine state
 
                 CSpecialBlock (LXOrdinaryBlock name) ->
-                    endBlock (CSpecialBlock (LXOrdinaryBlock name)) currentLine state
+                    endBlock (CSpecialBlock (LXOrdinaryBlock name)) currentLine state |> Debug.log "@@@ END BLOCK"
 
                 CSpecialBlock (LXVerbatimBlock name) ->
                     endBlock (CSpecialBlock (LXVerbatimBlock name)) currentLine state

@@ -1,11 +1,12 @@
-module MicroLaTeX.Parser.Transform exposing (handleImage, macroArg, pseudoBlockNamesWithContent, transform)
+module MicroLaTeX.Transform exposing (handleImage, macroArg, pseudoBlockNamesWithContent, transform)
 
-import Compiler.Util
 import Dict exposing (Dict)
-import MicroLaTeX.Parser.Line
+import Either exposing (Either(..))
+import Generic.BlockUtilities
+import Generic.Language exposing (ExpressionBlock, Heading(..), PrimitiveBlock)
+import MicroLaTeX.Line as Line
+import MicroLaTeX.Util
 import Parser as P
-import Parser.Line exposing (PrimitiveBlockType(..))
-import Parser.PrimitiveBlock exposing (PrimitiveBlock)
 
 
 pseudoBlockNamesWithContent =
@@ -61,15 +62,15 @@ transform : PrimitiveBlock -> PrimitiveBlock
 transform block =
     let
         normalizedContent =
-            block.content
+            block.body
                 |> List.map String.trimLeft
                 |> normalize
     in
-    case ( block.blockType, normalizedContent ) of
-        ( PBVerbatim, _ ) ->
+    case ( block.heading, block.body, normalizedContent ) of
+        ( Verbatim _, _, _ ) ->
             block
 
-        ( _, firstLine :: _ ) ->
+        ( _, _, firstLine :: _ ) ->
             let
                 name =
                     if String.left 1 firstLine == "\\" then
@@ -80,7 +81,7 @@ transform block =
 
                 arg : Maybe String
                 arg =
-                    case P.run (Compiler.Util.macroValParserX name) firstLine of
+                    case P.run (MicroLaTeX.Util.macroValParserX name) firstLine of
                         Ok result ->
                             Just (result |> String.dropRight 1)
 
@@ -107,10 +108,8 @@ handlePseudoBlockWithContent name maybeArg block =
     case maybeArg of
         Nothing ->
             { block
-                | content = [] -- ("| section " ++ val) :: [ str ]
+                | body = [] -- ("| section " ++ val) :: [ str ]
                 , args = []
-                , name = Just name
-                , blockType = PBOrdinary
             }
 
         Just arg ->
@@ -136,17 +135,18 @@ handlePseudoBlockWithContent name maybeArg block =
                         }
 
 
+handleImage : PrimitiveBlock -> PrimitiveBlock
 handleImage block =
     let
         words =
-            List.head block.content
+            List.head block.body
                 |> Maybe.withDefault "???"
                 |> String.replace "\\image{" ""
                 |> String.replace "}" ""
                 |> String.words
 
         ( _, properties_ ) =
-            Parser.PrimitiveBlock.argsAndProperties (List.drop 1 words)
+            Generic.BlockUtilities.argsAndProperties (List.drop 1 words)
 
         properties =
             properties_
@@ -160,11 +160,10 @@ handleImage block =
         --        Dict.insert "caption" " " properties_
     in
     { block
-        | blockType = PBVerbatim
-        , args = []
-        , name = Just "image"
-        , properties = properties
-        , content = List.take 1 words
+        | properties = properties
+
+        -- TODO: I doubt very much that this is correct
+        , body = Left (List.take 1 words |> String.join "\n")
     }
 
 

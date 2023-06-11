@@ -14,7 +14,7 @@ print block =
     , "Indent: " ++ String.fromInt block.indent
     , "Args: " ++ showArgs block.args
     , "Properties: " ++ showProperties block.properties
-    , "Content: "
+    , "Content:\n---------"
         ++ (block.body
                 |> List.indexedMap (\k s -> String.padLeft 3 ' ' (String.fromInt (k + 1 + block.meta.lineNumber)) ++ ": " ++ s)
                 |> String.join "\n"
@@ -27,7 +27,7 @@ print block =
     , "    Number of lines: " ++ String.fromInt block.meta.numberOfLines
     , "    messages: " ++ String.join ", " block.meta.messages
     , "    Error: " ++ showError block.meta.error
-    , "    Source text:\n--------\n" ++ block.meta.sourceText
+    , "    Source text:\n--------" ++ block.meta.sourceText
     , "--------"
     ]
         |> String.join "\n"

@@ -1,6 +1,1 @@
-\begin{foo}
-  abc
-  def
-\end{foo}
-
-
+\section{Introduction}

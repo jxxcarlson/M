@@ -344,7 +344,7 @@ section count acc settings block =
     in
     Element.link
         (sectionBlockAttributes block settings [ topPadding 20, Font.size fontSize ])
-        { url = Render.Utility.internalLink (settings.titlePrefix ++ "title"), label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??" count acc settings exprs) }
+        { url = Render.Utility.internalLink (settings.titlePrefix ++ "title"), label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??!!" count acc settings exprs) }
 
 
 sectionBlockAttributes : ExpressionBlock -> Settings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
@@ -601,7 +601,7 @@ blockHeading block =
 
 {-|
 
-    Used in function env (ender generic LaTeX environments)
+    Used in function env (render generic LaTeX environments)
 
 -}
 blockLabel : Dict String String -> String

@@ -1,6 +1,12 @@
 module Data exposing (initialText)
 
 
+initialText1 =
+    """\\section{Introduction}
+    
+"""
+
+
 initialText =
     """
 \\title{Wave Packets and the Dispersion Relation}
