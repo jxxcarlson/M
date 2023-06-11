@@ -132,7 +132,7 @@ nextStep : State -> Step State State
 nextStep state_ =
     let
         state =
-            { state_ | lineNumber = state_.lineNumber + 1, count = state_.count + 1 } |> Debug.log "STATE"
+            { state_ | lineNumber = state_.lineNumber + 1, count = state_.count + 1 }
     in
     case List.Extra.getAt state.lineNumber state.lines of
         Nothing ->
@@ -198,7 +198,7 @@ nextStep state_ =
                     plainText state currentLine
 
                 CEmpty ->
-                    emptyLine currentLine state |> Debug.log "@@@ CEmpty"
+                    emptyLine currentLine state
 
 
 
@@ -292,7 +292,7 @@ handleSpecial_ classifier line state =
                 |> elaborate line
 
         newBlock =
-            (case classifier of
+            case classifier of
                 CSpecialBlock LXItem ->
                     { newBlock_
                         | heading = Ordinary "item"
@@ -328,8 +328,6 @@ handleSpecial_ classifier line state =
 
                 _ ->
                     newBlock_
-            )
-                |> Debug.log "NEW BLOCK"
 
         labelStack =
             case List.Extra.uncons state.labelStack of
@@ -476,7 +474,6 @@ endBlockOnMismatch label_ classifier line state =
                     }
                         |> finishBlock line.content
                         |> resolveIfStackEmpty
-                        |> Debug.log "@@@ END BLOCK ON MISMATCH"
 
 
 resolveIfStackEmpty : State -> State
@@ -524,23 +521,28 @@ endBlockOnMatch labelHead classifier line state =
             else
                 let
                     newBlock =
-                        if classifier == CSpecialBlock (LXVerbatimBlock "texComment") then
-                            newBlockWithError classifier (getContent classifier line state ++ [ block.firstLine ]) block |> addSource line.content
+                        case classifier of
+                            CSpecialBlock (LXVerbatimBlock "texComment") ->
+                                newBlockWithError classifier (getContent classifier line state ++ [ block.firstLine ]) block |> addSource line.content
 
-                        else if List.member classifier (List.map CEndBlock verbatimBlockNames) then
-                            let
-                                sourceText =
-                                    getSource line state
-                            in
-                            newBlockWithError classifier
-                                (getContent classifier line state)
-                                (block
-                                    |> Generic.BlockUtilities.updateMeta
-                                        (\m -> { m | numberOfLines = List.length block.body, sourceText = sourceText })
-                                )
+                            CSpecialBlock (LXOrdinaryBlock _) ->
+                                block
 
-                        else
-                            newBlockWithOutError (getContent classifier line state) block |> addSource line.content
+                            _ ->
+                                if List.member classifier (List.map CEndBlock verbatimBlockNames) then
+                                    let
+                                        sourceText =
+                                            getSource line state
+                                    in
+                                    newBlockWithError classifier
+                                        (getContent classifier line state)
+                                        (block
+                                            |> Generic.BlockUtilities.updateMeta
+                                                (\m -> { m | numberOfLines = List.length block.body, sourceText = sourceText })
+                                        )
+
+                                else
+                                    newBlockWithOutError (getContent classifier line state) block |> addSource line.content
                 in
                 { state
                     | holdingStack = newBlock :: state.holdingStack
@@ -555,7 +557,6 @@ endBlockOnMatch labelHead classifier line state =
                     , level = state.level - 1
                 }
                     |> resolveIfStackEmpty
-                    |> Debug.log "@@@ END BLOCK ON MATCH"
 
 
 addSource : String -> PrimitiveBlock -> PrimitiveBlock
@@ -936,7 +937,7 @@ emptyLine currentLine state =
                     endBlock (CSpecialBlock LXNumbered) currentLine state
 
                 CSpecialBlock (LXOrdinaryBlock name) ->
-                    endBlock (CSpecialBlock (LXOrdinaryBlock name)) currentLine state |> Debug.log "@@@ END BLOCK"
+                    endBlock (CSpecialBlock (LXOrdinaryBlock name)) currentLine state
 
                 CSpecialBlock (LXVerbatimBlock name) ->
                     endBlock (CSpecialBlock (LXVerbatimBlock name)) currentLine state
