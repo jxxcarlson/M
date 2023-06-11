@@ -10,10 +10,10 @@ import Generic.Language exposing (Expression, ExpressionBlock, PrimitiveBlock)
 import M.PrimitiveBlock
 
 
-toExpressionBlockForestFromStringlist : (Int -> String -> List Expression) -> List String -> Result Error (Forest ExpressionBlock)
-toExpressionBlockForestFromStringlist parser lines =
+toExpressionBlockForestFromStringlist : String -> Int -> (Int -> String -> List Expression) -> List String -> Result Error (Forest ExpressionBlock)
+toExpressionBlockForestFromStringlist idPrefix outerCount parser lines =
     lines
-        |> M.PrimitiveBlock.parse "!!"
+        |> M.PrimitiveBlock.parse idPrefix outerCount
         |> toPrimitiveBlockForest
         |> Result.map (Generic.Forest.map (toExpressionBlock 0 parser))
 

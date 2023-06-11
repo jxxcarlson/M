@@ -175,7 +175,7 @@ displayRenderedText model =
             , paddingXY 16 32
             , scrollbarY
             ]
-            (Compiler.compileL Generic.Compiler.defaultRenderData (String.lines model.sourceText))
+            (Compiler.compileL "ID" 0 Generic.Compiler.defaultRenderData (String.lines model.sourceText))
         ]
 
 

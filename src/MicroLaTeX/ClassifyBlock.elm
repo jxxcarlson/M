@@ -115,6 +115,11 @@ subheadingParser =
     specialBlockParser "subheading" (LXOrdinaryBlock "subheading")
 
 
+bannerParser : Parser Classification
+bannerParser =
+    specialBlockParser "banner" (LXOrdinaryBlock "banner")
+
+
 setcounterParser : Parser Classification
 setcounterParser =
     specialBlockParser "setcounter" (LXOrdinaryBlock "setcounter")

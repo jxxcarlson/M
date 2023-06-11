@@ -30,9 +30,9 @@ NOTE (TODO) for the moment we assume that the input ends with
 a blank line.
 
 -}
-parse : String -> List String -> List PrimitiveBlock
-parse initialId lines =
-    loop (init initialId lines) nextStep
+parse : String -> Int -> List String -> List PrimitiveBlock
+parse initialId outerCount lines =
+    loop (init initialId outerCount lines) nextStep
 
 
 type alias State =
@@ -47,6 +47,7 @@ type alias State =
     , inVerbatim : Bool
     , isVerbatimLine : String -> Bool
     , count : Int
+    , outerCount : Int
     , blocksCommitted : Int
     , label : String
     , error : Maybe HeadingError
@@ -128,8 +129,8 @@ finalize block =
     and lineNumber is the index of the current line in the source
 
 -}
-init : String -> List String -> State
-init initialId lines =
+init : String -> Int -> List String -> State
+init initialId outerCount lines =
     { blocks = []
     , currentBlock = Nothing
     , lines = lines
@@ -141,6 +142,7 @@ init initialId lines =
     , inVerbatim = False
     , isVerbatimLine = isVerbatimLine
     , count = 0
+    , outerCount = outerCount
     , blocksCommitted = 0
     , label = "0, START"
     , error = Nothing

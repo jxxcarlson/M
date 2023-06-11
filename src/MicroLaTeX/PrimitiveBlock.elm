@@ -39,6 +39,8 @@ type alias State =
     , position : Int
     , blockClassification : Maybe Classification
     , count : Int
+    , outerCount : Int
+    , idPrefix : String
     , label : String
     }
 
@@ -61,15 +63,15 @@ type alias ParserOutput =
     { blocks : List PrimitiveBlock, stack : List PrimitiveBlock, holdingStack : List PrimitiveBlock }
 
 
-parse : String -> List String -> List PrimitiveBlock
-parse idPrefix lines =
+parse : String -> Int -> List String -> List PrimitiveBlock
+parse idPrefix outerCount lines =
     -- TODO: idPrefix must be used
-    lines |> parseLoop |> .blocks
+    lines |> parseLoop idPrefix outerCount |> .blocks
 
 
-parseLoop : List String -> ParserOutput
-parseLoop lines =
-    loop (init lines) nextStep |> finalize
+parseLoop : String -> Int -> List String -> ParserOutput
+parseLoop idPrefix outerCount lines =
+    loop (init idPrefix outerCount lines) nextStep |> finalize
 
 
 finalize : State -> ParserOutput
@@ -84,8 +86,8 @@ finalize state =
     and lineNumber is the index of the current line in the source
 
 -}
-init : List String -> State
-init lines =
+init : String -> Int -> List String -> State
+init idPrefix outerCount lines =
     { committedBlocks = []
     , stack = []
     , holdingStack = []
@@ -99,6 +101,8 @@ init lines =
     , position = 0
     , blockClassification = Nothing
     , count = -1
+    , outerCount = 0
+    , idPrefix = idPrefix
     , label = "0, START"
     }
 
@@ -159,7 +163,7 @@ nextStep state_ =
                         Loop state
 
                     else
-                        Loop (state |> dispatchBeginBlock (CBeginBlock label) currentLine)
+                        Loop (state |> dispatchBeginBlock state.idPrefix state.outerCount (CBeginBlock label) currentLine)
 
                 CEndBlock label ->
                     -- TODO: changed, review
@@ -182,7 +186,7 @@ nextStep state_ =
                     -- Loop (state |> handleMathBlock currentLine)
                     case List.head state.labelStack of
                         Nothing ->
-                            Loop (state |> dispatchBeginBlock CMathBlockDelim currentLine)
+                            Loop (state |> dispatchBeginBlock state.idPrefix state.outerCount CMathBlockDelim currentLine)
 
                         Just label ->
                             if List.member label.classification [ CBeginBlock "code" ] then
@@ -192,7 +196,7 @@ nextStep state_ =
                                 state |> endBlockOnMatch (Just label) CMathBlockDelim currentLine |> Loop
 
                             else
-                                Loop (state |> dispatchBeginBlock CMathBlockDelim currentLine)
+                                Loop (state |> dispatchBeginBlock state.idPrefix state.outerCount CMathBlockDelim currentLine)
 
                 CVerbatimBlockDelim ->
                     Loop (state |> handleVerbatimBlock currentLine)
@@ -208,16 +212,16 @@ nextStep state_ =
 -- HANDLERS
 
 
-dispatchBeginBlock : Classification -> Line -> State -> State
-dispatchBeginBlock classifier line state =
+dispatchBeginBlock : String -> Int -> Classification -> Line -> State -> State
+dispatchBeginBlock idPrefix count classifier line state =
     case List.Extra.uncons state.stack of
         -- stack is empty; begin block
         Nothing ->
-            beginBlock classifier line state
+            beginBlock idPrefix count classifier line state
 
         -- stack is not empty; change status of stack top if need be, then begin block
         Just ( block, rest ) ->
-            beginBlock classifier line { state | stack = changeStatusOfStackTop block rest state }
+            beginBlock idPrefix count classifier line { state | stack = changeStatusOfStackTop block rest state }
 
 
 {-|
@@ -232,8 +236,8 @@ dispatchBeginBlock classifier line state =
     4. Update the state with the results of these computations.
 
 -}
-beginBlock : Classification -> Line -> State -> State
-beginBlock classifier line state =
+beginBlock : String -> Int -> Classification -> Line -> State -> State
+beginBlock idPrefix count classifier line state =
     let
         newBlockClassifier =
             case classifier of
@@ -251,7 +255,7 @@ beginBlock classifier line state =
             state.level + 1
 
         newBlock =
-            blockFromLine level line |> elaborate line
+            blockFromLine idPrefix count level line |> elaborate line
 
         labelStack =
             case List.Extra.uncons state.labelStack of
@@ -289,7 +293,7 @@ handleSpecial_ classifier line state =
             state.level + 1
 
         newBlock_ =
-            blockFromLine level line
+            blockFromLine state.idPrefix state.outerCount level line
                 -- TODO: should we add line.content to the body?
                 |> (\b -> { b | body = b.firstLine :: b.body })
                 |> elaborate line
@@ -339,7 +343,7 @@ handleSpecial_ classifier line state =
                         , body =
                             case ClassifyBlock.getArg name_ newBlock_.firstLine of
                                 Err _ ->
-                                    [ "ERROR" ]
+                                    []
 
                                 Ok arg ->
                                     [ arg ]
@@ -691,7 +695,7 @@ plainText state currentLine =
             Loop (handleComment currentLine state)
 
         else
-            Loop (dispatchBeginBlock CPlainText currentLine state)
+            Loop (dispatchBeginBlock state.idPrefix state.outerCount CPlainText currentLine state)
 
     else
         Loop state
@@ -701,7 +705,7 @@ handleComment : Line -> State -> State
 handleComment line state =
     let
         newBlock =
-            blockFromLine 0 line
+            blockFromLine state.idPrefix state.outerCount 0 line
                 |> (\b -> { b | heading = Verbatim "texComment" })
                 |> Generic.BlockUtilities.updateMeta
                     (\m -> { m | numberOfLines = 1 })
@@ -996,7 +1000,7 @@ handleMathBlock line state =
                 , indent = line.indent
                 , level = state.level + 1
                 , labelStack = { classification = CMathBlockDelim, level = state.level + 1, status = Started, lineNumber = line.lineNumber } :: state.labelStack
-                , stack = blockFromLine (state.level + 1) line :: state.stack
+                , stack = blockFromLine state.idPrefix state.outerCount (state.level + 1) line :: state.stack
             }
 
         Just label ->
@@ -1031,7 +1035,7 @@ handleVerbatimBlock line state =
                 , indent = line.indent
                 , level = state.level + 1
                 , labelStack = { classification = CVerbatimBlockDelim, level = state.level + 1, status = Started, lineNumber = line.lineNumber } :: state.labelStack
-                , stack = (blockFromLine (state.level + 1) line |> elaborate line) :: state.stack
+                , stack = (blockFromLine state.idPrefix state.outerCount (state.level + 1) line |> elaborate line) :: state.stack
             }
 
         Just label ->
@@ -1216,8 +1220,8 @@ showStatus status =
         \begin{equation}
 
 -}
-blockFromLine : Int -> Line -> PrimitiveBlock
-blockFromLine level ({ indent, lineNumber, position, prefix, content } as line) =
+blockFromLine : String -> Int -> Int -> Line -> PrimitiveBlock
+blockFromLine idPrefix count level ({ indent, lineNumber, position, prefix, content } as line) =
     { heading = getHeading line.content
     , indent = indent
     , args = []
@@ -1228,7 +1232,7 @@ blockFromLine level ({ indent, lineNumber, position, prefix, content } as line) 
         { position = 0
         , lineNumber = 1
         , numberOfLines = 0
-        , id = ""
+        , id = idPrefix ++ String.fromInt count
         , messages = []
         , sourceText = ""
         , error = Nothing

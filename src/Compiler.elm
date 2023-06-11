@@ -41,21 +41,21 @@ import Render.Tree
 
 -}
 pm str =
-    parseM "!!" (String.lines str) |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
+    parseM "!!" 0 (String.lines str) |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
 
 
-parseM : String -> List String -> Result Error (Forest ExpressionBlock)
-parseM idPrefix lines =
-    Generic.Compiler.parse_ M.PrimitiveBlock.parse M.ExpressionParser.parse idPrefix lines
+parseM : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
+parseM idPrefix outerCount lines =
+    Generic.Compiler.parse_ M.PrimitiveBlock.parse M.ExpressionParser.parse idPrefix outerCount lines
 
 
 
 -- M compiler
 
 
-compileM : Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
-compileM renderData lines =
-    case parseM renderData.idPrefix lines of
+compileM : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
+compileM idPrefix outerCount renderData lines =
+    case parseM idPrefix outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
@@ -80,14 +80,15 @@ compileM renderData lines =
     > pl str = parseL "!!" (String.lines str) |> Result.map (F.map simplifyExpressionBlock)
 
 -}
-parseL : String -> List String -> Result Error (Forest ExpressionBlock)
-parseL idPrefix lines =
-    Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix lines
+parseL : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
+parseL idPrefix outerCount lines =
+    Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix outerCount lines
 
 
-compileL : Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
-compileL renderData lines =
-    case parseL renderData.idPrefix lines of
+compileL : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
+compileL idPrefix outerCount renderData lines =
+    -- TODO: case parseL renderData.idPrefix lines of
+    case parseL idPrefix outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 

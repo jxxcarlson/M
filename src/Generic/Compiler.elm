@@ -17,14 +17,15 @@ import Render.Settings
 
 -}
 parse_ :
-    (String -> List String -> List Generic.Language.PrimitiveBlock)
+    (String -> Int -> List String -> List Generic.Language.PrimitiveBlock)
     -> (Int -> String -> List Generic.Language.Expression)
     -> String
+    -> Int
     -> List String
     -> Result Error (Forest ExpressionBlock)
-parse_ primitiveBlockParser exprParser idPrefix lines =
+parse_ primitiveBlockParser exprParser idPrefix outerCount lines =
     lines
-        |> primitiveBlockParser idPrefix
+        |> primitiveBlockParser idPrefix outerCount
         |> Generic.Pipeline.toPrimitiveBlockForest
         |> Result.map (Generic.Forest.map (Generic.Pipeline.toExpressionBlock 0 exprParser))
 
