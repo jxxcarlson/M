@@ -1,8 +1,10 @@
 module Compiler exposing
     ( compileL
     , compileM
+    , compileX
     , parseL
     , parseM
+    , parseX
     , pm
     )
 
@@ -21,6 +23,8 @@ import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
 import Render.Tree
+import XMarkdown.Expression
+import XMarkdown.PrimitiveBlock
 
 
 {-|
@@ -49,6 +53,11 @@ parseM idPrefix outerCount lines =
     Generic.Compiler.parse_ M.PrimitiveBlock.parse M.ExpressionParser.parse idPrefix outerCount lines
 
 
+parseX : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
+parseX idPrefix outerCount lines =
+    Generic.Compiler.parse_ XMarkdown.PrimitiveBlock.parse XMarkdown.Expression.parse idPrefix outerCount lines
+
+
 
 -- M compiler
 
@@ -56,6 +65,24 @@ parseM idPrefix outerCount lines =
 compileM : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
 compileM idPrefix outerCount renderData lines =
     case parseM idPrefix outerCount lines of
+        Err err ->
+            [ Element.text "Oops something went wrong" ]
+
+        Ok forest_ ->
+            let
+                ( accumulator, forest ) =
+                    Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
+
+                _ =
+                    accumulator
+            in
+            Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
+                |> List.map Render.Tree.unravel
+
+
+compileX : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
+compileX idPrefix outerCount renderData lines =
+    case parseX idPrefix outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 

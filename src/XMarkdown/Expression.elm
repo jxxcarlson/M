@@ -12,6 +12,7 @@ module XMarkdown.Expression exposing
 
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
+import M.ExpressionParser exposing (parseWithMessages)
 import Tools.Loop exposing (Step(..), loop)
 import XMarkdown.ForkLog as Tools
 import XMarkdown.Match as M
@@ -335,7 +336,7 @@ handleAt state =
 
         expr : List Expression
         expr =
-            L0.Parser.Expression.parseWithMessages 0 content |> Tuple.first
+            parseWithMessages 0 content |> Tuple.first
     in
     { state | committed = expr ++ state.committed, stack = [] }
 
@@ -421,7 +422,7 @@ handleMathSymbol symbols state =
                 takeMiddle state.stack |> Token.toString2
 
             expr =
-                Verbatim "math" content { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
+                VFun "math" content { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
         in
         { state | stack = [], committed = expr :: state.committed }
 
@@ -437,7 +438,7 @@ handleCodeSymbol symbols state =
                 takeMiddle state.stack |> Token.toString2
 
             expr =
-                Verbatim "code" content { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
+                VFun "code" content { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
         in
         { state | stack = [], committed = expr :: state.committed }
 
@@ -728,7 +729,7 @@ recoverFromError state =
                     , stack = []
                     , tokenIndex = meta.index + 1
                     , numberOfTokens = 0
-                    , messages = Helpers.prependMessage state.lineNumber "opening dollar sign needs to be matched with a closing one" state.messages
+                    , messages = prependMessage state.lineNumber "opening dollar sign needs to be matched with a closing one" state.messages
                 }
 
         -- backtick with no closing backtick
@@ -750,7 +751,7 @@ recoverFromError state =
                     , stack = []
                     , tokenIndex = meta.index + 1
                     , numberOfTokens = 0
-                    , messages = Helpers.prependMessage state.lineNumber "opening backtick needs to be matched with a closing one" state.messages
+                    , messages = prependMessage state.lineNumber "opening backtick needs to be matched with a closing one" state.messages
                 }
 
         _ ->
@@ -783,5 +784,6 @@ dummyLocWithId =
     { begin = 0, end = 0, index = dummyTokenIndex, id = "dummy (3)" }
 
 
-
--- LOOP
+prependMessage : Int -> String -> List String -> List String
+prependMessage lineNumber message messages =
+    (message ++ " (line " ++ String.fromInt lineNumber ++ ")") :: List.take 2 messages
