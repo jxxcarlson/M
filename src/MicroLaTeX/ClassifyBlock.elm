@@ -3,17 +3,20 @@ module MicroLaTeX.ClassifyBlock exposing
     , LXSpecial(..)
     , classificationString
     , classify
+    , contentsParser
     , getArg
     , match
     , p
     , pseudoBlockParser
     )
 
+{-| This module provides a parser for classifying lines of LaTeX source code.
+
+    classify : String -> Classification
+
+-}
+
 import Parser exposing ((|.), (|=), Parser)
-
-
-p str =
-    Parser.run classifierParser str
 
 
 type Classification
@@ -32,6 +35,57 @@ type LXSpecial
     | LXPseudoBlock
     | LXOrdinaryBlock String
     | LXVerbatimBlock String
+
+
+classifierParser : Parser Classification
+classifierParser =
+    Parser.oneOf
+        [ beginBlockParser
+        , endBlockParser
+        , mathBlockDelimParser
+        , verbatimBlockDelimParser
+        , ordinaryBlockParser
+        , verbatimBlockParser
+        , itemParser
+        , sectionParser
+        , subsectionParser
+        , subsubsectionParser
+        , subheadingParser
+        , setcounterParser
+        , contentsParser
+        , numberedParser
+        ]
+
+
+{-|
+
+    For testing purposes.
+
+-}
+p str =
+    Parser.run classifierParser str
+
+
+classify : String -> Classification
+classify str =
+    let
+        str_ =
+            String.trimLeft str
+    in
+    if str_ == "" then
+        CEmpty
+
+    else
+        case Parser.run classifierParser str_ of
+            Ok classificationOfLine ->
+                classificationOfLine
+
+            Err _ ->
+                if str == "" then
+                    CEmpty
+
+                else
+                    CPlainText
 
 
 itemParser : Parser Classification
@@ -139,48 +193,6 @@ classificationString classification =
 
         _ ->
             "??"
-
-
-classifierParser : Parser Classification
-classifierParser =
-    Parser.oneOf
-        [ beginBlockParser
-        , endBlockParser
-        , mathBlockDelimParser
-        , verbatimBlockDelimParser
-        , ordinaryBlockParser
-        , verbatimBlockParser
-        , itemParser
-        , sectionParser
-        , subsectionParser
-        , subsubsectionParser
-        , subheadingParser
-        , setcounterParser
-        , contentsParser
-        , numberedParser
-        ]
-
-
-classify : String -> Classification
-classify str =
-    let
-        str_ =
-            String.trimLeft str
-    in
-    if str_ == "" then
-        CEmpty
-
-    else
-        case Parser.run classifierParser str_ of
-            Ok classificationOfLine ->
-                classificationOfLine
-
-            Err _ ->
-                if str == "" then
-                    CEmpty
-
-                else
-                    CPlainText
 
 
 mathBlockDelimParser : Parser Classification

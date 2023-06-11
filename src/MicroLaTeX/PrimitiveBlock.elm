@@ -149,8 +149,11 @@ nextStep state_ =
             let
                 currentLine =
                     Line.classify (getPosition rawLine state) state.lineNumber rawLine
+
+                _ =
+                    ClassifyBlock.classify (currentLine.content ++ "\n")
             in
-            case ClassifyBlock.classify currentLine.content of
+            case ClassifyBlock.classify (currentLine.content ++ "\n") of
                 CBeginBlock label ->
                     if List.member (List.head state.labelStack |> Maybe.map .classification) [ Just <| CBeginBlock "code" ] then
                         Loop state
