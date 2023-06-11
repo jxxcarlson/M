@@ -307,13 +307,34 @@ handleSpecial_ classifier line state =
                         , properties = Dict.fromList [ ( "firstLine", String.replace "\\numbered" "" line.content ) ]
                     }
 
-                CSpecialBlock (LXOrdinaryBlock name) ->
+                CSpecialBlock (LXOrdinaryBlock name_) ->
                     -- TODO: more work here and on related issues (see also module ClassifyBlock)
+                    let
+                        ( name, args ) =
+                            case name_ of
+                                "section" ->
+                                    ( "section", [ "2" ] )
+
+                                "subsection" ->
+                                    ( "section", [ "3" ] )
+
+                                "subsubsection" ->
+                                    ( "section", [ "4" ] )
+
+                                "subheading" ->
+                                    ( "section", [ "5" ] )
+
+                                "setcounter" ->
+                                    ( "setcounter", [ ClassifyBlock.getArg name_ newBlock_.firstLine |> Result.withDefault "1" ] )
+
+                                _ ->
+                                    ( name_, [] )
+                    in
                     { newBlock_
                         | heading = Ordinary name
-                        , args = []
+                        , args = args
                         , body =
-                            case ClassifyBlock.getArg name newBlock_.firstLine of
+                            case ClassifyBlock.getArg name_ newBlock_.firstLine of
                                 Err _ ->
                                     [ "ERROR" ]
 

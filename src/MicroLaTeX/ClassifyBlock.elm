@@ -6,6 +6,7 @@ module MicroLaTeX.ClassifyBlock exposing
     , getArg
     , match
     , p
+    , pseudoBlockParser
     )
 
 import Parser exposing ((|.), (|=), Parser)
@@ -45,12 +46,49 @@ sectionParser =
     specialBlockParser "section" (LXOrdinaryBlock "section")
 
 
+subsectionParser : Parser Classification
+subsectionParser =
+    specialBlockParser "subsection" (LXOrdinaryBlock "subsection")
+
+
+subsubsectionParser : Parser Classification
+subsubsectionParser =
+    specialBlockParser "subsubsection" (LXOrdinaryBlock "subsubsection")
+
+
+subheadingParser : Parser Classification
+subheadingParser =
+    specialBlockParser "subheading" (LXOrdinaryBlock "subheading")
+
+
+setcounterParser : Parser Classification
+setcounterParser =
+    specialBlockParser "setcounter" (LXOrdinaryBlock "setcounter")
+
+
+contentsParser : Parser Classification
+contentsParser =
+    pseudoBlockParser "contents" (LXOrdinaryBlock "contents")
+
+
 specialBlockParser : String -> LXSpecial -> Parser Classification
 specialBlockParser name lxSpecial =
     (Parser.succeed String.slice
         |. Parser.symbol ("\\" ++ name ++ "{")
         |= Parser.getOffset
         |. Parser.chompUntil "}"
+        |= Parser.getOffset
+        |= Parser.getSource
+    )
+        |> Parser.map (\_ -> CSpecialBlock lxSpecial)
+
+
+pseudoBlockParser : String -> LXSpecial -> Parser Classification
+pseudoBlockParser name lxSpecial =
+    (Parser.succeed String.slice
+        |. Parser.symbol ("\\" ++ name)
+        |= Parser.getOffset
+        |. Parser.chompUntil "\n"
         |= Parser.getOffset
         |= Parser.getSource
     )
@@ -114,8 +152,11 @@ classifierParser =
         , verbatimBlockParser
         , itemParser
         , sectionParser
-
-        --, pseudoBlockParser
+        , subsectionParser
+        , subsubsectionParser
+        , subheadingParser
+        , setcounterParser
+        , contentsParser
         , numberedParser
         ]
 
@@ -168,20 +209,6 @@ beginBlockParser =
         |= Parser.getSource
     )
         |> Parser.map CBeginBlock
-
-
-pseudoBlockParser : Parser Classification
-pseudoBlockParser =
-    Parser.oneOf
-        [ Parser.symbol "\\section" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "section")))
-        , Parser.symbol "\\subsection" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "subsection")))
-        , Parser.symbol "\\subsubsection" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "subsubsubsection")))
-        , Parser.symbol "\\item" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "item mmmm")))
-        , Parser.symbol "\\image" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "image")))
-        , Parser.symbol "\\title" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "title")))
-        , Parser.symbol "\\contents" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "contents")))
-        , Parser.symbol "\\setcounter" |> (\_ -> Parser.succeed (CSpecialBlock (LXOrdinaryBlock "setcounter")))
-        ]
 
 
 numberedParser : Parser Classification
