@@ -1,7 +1,11 @@
 module XMarkdown.PrimitiveBlock exposing (..)
 
-import Generic.Language exposing (PrimitiveBlock)
-import Generic.PrimitiveBlock
+import Dict exposing (Dict)
+import Generic.Language exposing (Heading(..), PrimitiveBlock)
+import Generic.Line exposing (HeadingData, HeadingError(..), Line)
+import Generic.PrimitiveBlock exposing (ParserFunctions)
+import Regex
+import Tools.KV as KV
 
 
 {-| Parse a list of strings into a list of primitive blocks given
@@ -14,78 +18,106 @@ a blank line.
 -}
 parse : String -> Int -> List String -> List PrimitiveBlock
 parse initialId outerCount lines =
-    Generic.PrimitiveBlock.parse isVerbatimLine initialId outerCount lines
+    Generic.PrimitiveBlock.parse functionData initialId outerCount lines
 
 
-getBlockType : Language -> String -> PrimitiveBlockType
-getBlockType lang line_ =
-    let
-        line =
-            String.trim line_
-    in
-    case lang of
-        L0Lang ->
-            if String.left 2 line == "||" then
-                PBVerbatim
-
-            else if String.left 2 line == "$$" then
-                PBVerbatim
-
-            else if
-                String.left 1 line
-                    == "|"
-            then
-                PBOrdinary
-
-            else
-                PBParagraph
-
-        MicroLaTeXLang ->
-            -- Note the source text has already been partially transformed to conform to L0
-            if String.left 2 line == "||" then
-                PBVerbatim
-
-            else if String.left 2 line == "$$" then
-                PBVerbatim
-
-            else if
-                String.left 1 line
-                    == "|"
-            then
-                PBOrdinary
-
-            else
-                PBParagraph
-
-        PlainTextLang ->
-            PBParagraph
-
-        XMarkdownLang ->
-            if String.left 3 line == "```" then
-                PBVerbatim
-
-            else if String.left 3 line == "|| " then
-                PBVerbatim
-
-            else if String.left 2 line == "$$" then
-                PBVerbatim
-
-            else if String.left 2 line == "| " then
-                PBOrdinary
-
-            else
-                PBParagraph
+functionData =
+    { isVerbatimBlock = isVerbatimLine
+    , getHeadingData = getHeadingData
+    , findTitlePrefix = findTitlePrefix
+    }
 
 
 isVerbatimLine : String -> Bool
 isVerbatimLine str =
     (String.left 2 str == "||")
         || (String.left 3 str == "```")
-        || (String.left 16 str == "\\begin{equation}")
-        || (String.left 15 str == "\\begin{aligned}")
-        || (String.left 15 str == "\\begin{comment}")
-        || (String.left 12 str == "\\begin{code}")
-        || (String.left 12 str == "\\begin{verbatim}")
-        || (String.left 18 str == "\\begin{mathmacros}")
-        || (String.left 14 str == "\\begin{iframe}")
         || (String.left 2 str == "$$")
+
+
+getHeadingData : String -> Result HeadingError HeadingData
+getHeadingData line_ =
+    let
+        line =
+            String.trim line_
+
+        ( args1, properties ) =
+            KV.argsAndProperties (String.words line)
+    in
+    case findTitlePrefix line of
+        Just prefix ->
+            { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.singleton "section-type" "markdown" }
+                |> Ok
+
+        Nothing ->
+            case args1 of
+                [] ->
+                    Err <| HEMissingPrefix
+
+                prefix :: args ->
+                    case prefix of
+                        "||" ->
+                            case args of
+                                [] ->
+                                    Err <| HEMissingName
+
+                                name :: args2 ->
+                                    Ok <| { heading = Verbatim name, args = args2, properties = properties }
+
+                        "|" ->
+                            case args of
+                                [] ->
+                                    Err <| HEMissingName
+
+                                name :: args2 ->
+                                    Ok <| { heading = Ordinary name, args = args2, properties = properties }
+
+                        "-" ->
+                            let
+                                reducedLine =
+                                    String.replace "- " "" line
+                            in
+                            if String.isEmpty reducedLine then
+                                Err HENoContent
+
+                            else
+                                Ok <|
+                                    { heading = Ordinary "item"
+                                    , args = []
+                                    , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
+                                    }
+
+                        "." ->
+                            let
+                                reducedLine =
+                                    String.replace ". " "" line
+                            in
+                            if String.isEmpty reducedLine then
+                                Err HENoContent
+
+                            else
+                                Ok <|
+                                    { heading = Ordinary "numbered"
+                                    , args = []
+                                    , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
+                                    }
+
+                        "$$" ->
+                            Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
+
+                        _ ->
+                            Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
+
+
+titlePrefixRegex : Regex.Regex
+titlePrefixRegex =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "^#+\\s*"
+
+
+findTitlePrefix : String -> Maybe String
+findTitlePrefix string =
+    Regex.find titlePrefixRegex string
+        |> List.map .match
+        |> List.head
+        |> Maybe.map String.trim

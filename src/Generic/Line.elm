@@ -2,7 +2,6 @@ module Generic.Line exposing
     ( HeadingData
     , HeadingError(..)
     , Line
-    , PrimitiveBlockType(..)
     , classify
     , errorToString
     , isEmpty
@@ -48,12 +47,6 @@ errorToString error =
 
         HENoContent ->
             "No content"
-
-
-type PrimitiveBlockType
-    = PBVerbatim
-    | PBOrdinary
-    | PBParagraph
 
 
 isEmpty : Line -> Bool

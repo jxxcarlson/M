@@ -7,6 +7,8 @@ scripts:
 
   cloc-m: cloc --by-file src/M
 
+  cloc-x: cloc --by-file src/XMarkdown
+
   cloc-g: cloc --by-file src/Generic
 
   cloc-r: cloc --by-file src/Render
