@@ -12,7 +12,7 @@ import Render.Settings exposing (Settings)
 import Render.Sync
 import Render.Utility
 import SvgParser
-import Utility
+import Tools.Utility as Utility
 
 
 red : Element.Color

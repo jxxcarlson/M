@@ -1,4 +1,4 @@
-module Utility exposing
+module Tools.Utility exposing
     ( compressWhitespace
     , keyValueDict
     , removeNonAlphaNum

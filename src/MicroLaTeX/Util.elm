@@ -19,8 +19,8 @@ module MicroLaTeX.Util exposing
 
 import Parser exposing ((|.), (|=), Parser, Step(..), loop, map, oneOf, spaces, succeed)
 import Regex
+import Tools.Utility as Utility
 import Tree exposing (Tree)
-import Utility
 
 
 normalizedWord : List String -> String

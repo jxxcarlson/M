@@ -31,7 +31,7 @@ import Render.Sync
 import Render.Tabular
 import Render.Utility
 import String.Extra
-import Utility
+import Tools.Utility as Utility
 
 
 

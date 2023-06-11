@@ -19,7 +19,7 @@ import Generic.ASTTools
 import Generic.Language exposing (Expr(..))
 import Html.Attributes
 import List.Extra
-import Utility
+import Tools.Utility as Utility
 
 
 argString : List String -> String

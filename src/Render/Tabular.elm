@@ -11,7 +11,7 @@ import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (Settings)
 import Render.Sync
 import Render.Utility
-import Utility
+import Tools.Utility as Utility
 
 
 render : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg

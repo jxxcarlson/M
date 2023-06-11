@@ -19,8 +19,8 @@ import Generic.TextMacro exposing (Macro)
 import Generic.Vector as Vector exposing (Vector)
 import List.Extra
 import Maybe.Extra
+import Tools.Utility as Utility
 import Tree exposing (Tree)
-import Utility
 
 
 indentationQuantum =

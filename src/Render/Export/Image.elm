@@ -9,7 +9,7 @@ import Parser.Expr exposing (Expr)
 import Render.Export.Util
 import Render.Settings exposing (Settings)
 import Render.Utility
-import Utility
+import Tools.Utility as Utility
 
 
 exportBlock : Settings -> ExpressionBlock -> String
