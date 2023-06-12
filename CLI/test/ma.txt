@@ -1,12 +1,4 @@
-| title
-On Thinking
-
-| contents
-
-| section
-Philosophy
-
-| section
-Chemistry
+|| equation
+a^2 + b^2 = c^2
 
 

@@ -76,6 +76,9 @@ compileM width outerCount selectedId lines =
 
         Ok forest_ ->
             let
+                _ =
+                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock |> Debug.log "AST"
+
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
@@ -112,7 +115,7 @@ compileX width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
 
                 _ =
-                    accumulator
+                    accumulator |> Debug.log "ACC"
             in
             Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
                 |> List.map Render.Tree.unravel

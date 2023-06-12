@@ -2,17 +2,14 @@ module Data exposing (initialText)
 
 
 initialText1 =
-    """| title
-On Thinking
+    """
+|| equation
+x^2 + y^2 = z^2
 
-| contents
+abc
 
-| section
-Philosophy
-
-| section
-Chemistry
-
+|| equation
+2 + 2 = 4
 
 """
 

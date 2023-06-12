@@ -82,12 +82,27 @@ equation count acc settings block =
             String.join "\n" filteredLines
 
         -- TODO: changed 45 -> 0
+        labelText =
+            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "??") ++ ")"
+
+        label =
+            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
     in
-    Element.column []
+    Element.column [ Element.width (Element.px (settings.width - 110 |> Debug.log "@@WIDTH")) ]
         [ Element.row
-            (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines :: [ Element.width (Element.px settings.width), Render.Utility.elementAttribute "id" block.meta.id ])
-            [ Element.el (Render.Sync.highlightIfIdSelected block.meta.id settings (Render.Sync.highlighter block.args [ Element.centerX ])) (mathText count w block.meta.id DisplayMathMode content)
-            , putLabel settings.display content block.properties settings.longEquationLimit
+            ([ Element.centerX, Element.spacing 12, Element.inFront label ]
+                ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                        :: [ Render.Utility.elementAttribute "id" block.meta.id ]
+                   )
+            )
+            [ Element.el
+                (Render.Sync.highlightIfIdSelected block.meta.id
+                    settings
+                    (Render.Sync.highlighter block.args
+                        []
+                    )
+                )
+                (mathText count w block.meta.id DisplayMathMode content)
             ]
         ]
 
@@ -102,13 +117,12 @@ putLabel display content properties longEquationLimit_ =
                 Render.Settings.PhoneDisplay ->
                     0.9 * longEquationLimit_
     in
-    if Render.Utility.textWidth content > longEquationLimit then
-        Element.none
-
-    else
-        -- TODO: is this fixed?
-        -- Element.el [ Font.size 12 ] (Element.text <| "(" ++ (getLabel "equation" properties |> Debug.log "EQ NO (2)") ++ ")")
-        Element.el [ Font.size 12 ] (Element.text <| "(" ++ getLabel "equation" properties ++ ")")
+    --if Render.Utility.textWidth content > longEquationLimit then
+    --    Element.none
+    --
+    --else
+    -- TODO: is this fixed?
+    Element.el [ Font.size 1 ] (Element.text <| "(" ++ getLabel "equation-number" properties ++ ")")
 
 
 getCounter : String -> Dict String Int -> String
@@ -118,7 +132,7 @@ getCounter counterName dict =
 
 getLabel : String -> Dict String String -> String
 getLabel label dict =
-    Dict.get label dict |> Maybe.withDefault ""
+    Dict.get label dict |> Maybe.withDefault "" |> Debug.log "LABEL" |> String.trim
 
 
 aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg

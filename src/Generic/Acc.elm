@@ -62,6 +62,7 @@ transformAccumulate : InitialAccumulatorData -> Forest ExpressionBlock -> ( Accu
 transformAccumulate data forest =
     List.foldl (\tree ( acc_, ast_ ) -> transformAccumulateTree tree acc_ |> mapper ast_) ( init data, [] ) forest
         |> (\( acc_, ast_ ) -> ( acc_, List.reverse ast_ ))
+        |> Debug.log "TRANSFORM ACCUMULATE"
 
 
 initialAccumulator : Accumulator
@@ -182,7 +183,7 @@ transformBlock acc block =
         ( Ordinary "document", _ ) ->
             { block | properties = Dict.insert "label" (Vector.toString acc.documentIndex) block.properties }
 
-        ( Verbatim "equation", _ ) ->
+        ( Verbatim "equation", args ) ->
             let
                 prefix =
                     Vector.toString acc.headingIndex
@@ -194,7 +195,7 @@ transformBlock acc block =
                     else
                         Vector.toString acc.headingIndex ++ "." ++ getCounterAsString "equation" acc.counter
             in
-            { block | properties = Dict.insert "equation" equationProp block.properties }
+            { block | properties = Dict.insert "equation-number" equationProp block.properties |> Debug.log "EQUATION" }
 
         ( Verbatim "aligned", _ ) ->
             let
@@ -324,7 +325,11 @@ type alias ReferenceDatum =
 
 makeReferenceDatum : String -> String -> String -> ReferenceDatum
 makeReferenceDatum id tag numRef =
-    { id = id, tag = tag, numRef = numRef }
+    -- TODO: test by setting tag = id
+    { id = id
+    , tag = id
+    , numRef = numRef
+    }
 
 
 {-| Update the references dictionary: add a key-value pair where the
@@ -520,18 +525,17 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
                 Just str ->
                     updateWithTextMacros str accumulator
 
-        Verbatim _ ->
-            case getNameContentIdTag block of
-                Nothing ->
+        Verbatim name_ ->
+            let
+                _ =
+                    Debug.log ("@@Verbatim " ++ name_) ( block.meta.id, block.properties )
+            in
+            case block.body of
+                Left str ->
+                    updateWithVerbatimBlock (Just name_) args str block.meta.id accumulator
+
+                Right _ ->
                     accumulator
-
-                Just { name, content, id, tag } ->
-                    case content of
-                        Left str ->
-                            updateWithVerbatimBlock Nothing args str id accumulator
-
-                        Right _ ->
-                            accumulator
 
         Paragraph ->
             case getNameContentIdTag block of

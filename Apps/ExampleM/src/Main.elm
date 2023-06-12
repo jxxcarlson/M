@@ -154,7 +154,7 @@ htmlId str =
 
 viewToc compiledTOC =
     column [ spacing 8, Font.size 14 ]
-        [ el [ fontGray 0.9 ] (text "Rendered Text")
+        [ el [ fontGray 0.9 ] (text "Table of contents")
         , column
             [ spacing 18
             , Background.color (Element.rgb 1.0 1.0 1.0)
