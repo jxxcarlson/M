@@ -13,7 +13,7 @@ import Test exposing (Test, describe, test)
 lastBlockLevel source =
     source
         |> String.lines
-        |> MicroLaTeX.PrimitiveBlock.parse
+        |> MicroLaTeX.PrimitiveBlock.parse "!!" 0
         |> List.map MicroLaTeX.PrimitiveBlock.getLevel
         |> List.head
         |> Maybe.Extra.join

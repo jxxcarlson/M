@@ -24,12 +24,12 @@ f str =
 toExpressionBlockForestFromStringlist : List String -> Result Error (Forest ExpressionBlock)
 toExpressionBlockForestFromStringlist lines =
     lines
-        |> Generic.Pipeline.toExpressionBlockForestFromStringlist M.Expression.parse
+        |> Generic.Pipeline.toExpressionBlockForestFromStringlist "@" 0 M.Expression.parse
 
 
 toExpressionBlocksFromString : Int -> String -> List ExpressionBlock
 toExpressionBlocksFromString lineNumber str =
     str
         |> String.lines
-        |> M.PrimitiveBlock.parse "!!"
-        |> List.map (Generic.Pipeline.toExpressionBlock lineNumber M.Expression.parse)
+        |> M.PrimitiveBlock.parse "!!" lineNumber
+        |> List.map (Generic.Pipeline.toExpressionBlock M.Expression.parse)

@@ -19,8 +19,8 @@ testF label f input output =
 suite : Test
 suite =
     describe "PrimitiveBlock parser"
-        [ testF "test1" (M.PrimitiveBlock.parse "abc" << String.lines) input1 output1
-        , testF "test2" (M.PrimitiveBlock.parse "!!" << String.lines) input2 output2
+        [ testF "test1" (M.PrimitiveBlock.parse "abc" 0 << String.lines) input1 output1
+        , testF "test2" (M.PrimitiveBlock.parse "!!" 0 << String.lines) input2 output2
         ]
 
 
