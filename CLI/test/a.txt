@@ -1,17 +1,8 @@
-# On This and That
+\title{My Book}
 
-## This
+\contents
 
-- Bread
+\section{A}
 
-- Wine
-
-- Cheese
-
-## That
-
-. Nuts
-
-. Bolts
-
+\section{B}
 

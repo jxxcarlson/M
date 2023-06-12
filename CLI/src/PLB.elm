@@ -1,10 +1,10 @@
-module MXB exposing (..)
+module PLB exposing (..)
 
 import Generic.Print
+import MicroLaTeX.PrimitiveBlock exposing (parse)
 import Posix.IO as IO exposing (IO, Process)
 import Posix.IO.File as File
 import Posix.IO.Process as Proc
-import XMarkdown.PrimitiveBlock exposing (parse)
 
 
 program : Process -> IO ()
