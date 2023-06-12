@@ -2,6 +2,25 @@ module Data exposing (initialText)
 
 
 initialText =
+    """| title
+My Book
+
+| contents
+
+| section 1
+ABC
+
+This is a test. [i Yes it is!]
+
+xxxx
+
+| section 1
+XYZ
+
+"""
+
+
+initialText1 =
     """
 | title
 Introduction

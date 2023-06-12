@@ -27,7 +27,7 @@ parse_ primitiveBlockParser exprParser idPrefix outerCount lines =
     lines
         |> primitiveBlockParser idPrefix outerCount
         |> Generic.Pipeline.toPrimitiveBlockForest
-        |> Result.map (Generic.Forest.map (Generic.Pipeline.toExpressionBlock 0 exprParser))
+        |> Result.map (Generic.Forest.map (Generic.Pipeline.toExpressionBlock exprParser))
 
 
 type alias RenderData =

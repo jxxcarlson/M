@@ -62,6 +62,7 @@ parseToState : Int -> String -> State
 parseToState lineNumber str =
     str
         |> Token.run
+        |> Debug.log "TOKENS"
         |> parseTokenListToState lineNumber
 
 
@@ -272,6 +273,10 @@ reduceTokens lineNumber tokens =
 
 reduceRestOfTokens : Int -> List Token -> List Expression
 reduceRestOfTokens lineNumber tokens =
+    let
+        _ =
+            Debug.log "reduceRestOfTokens, lineNumber" lineNumber
+    in
     case tokens of
         (LB _) :: _ ->
             case splitTokens tokens of
@@ -589,8 +594,8 @@ segLength tokens =
 
 
 makeId : Int -> Int -> String
-makeId a b =
-    String.fromInt a ++ "." ++ String.fromInt b
+makeId lineNumber tokenIndex =
+    "e-" ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
 
 
 dummyTokenIndex =

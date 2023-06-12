@@ -15,12 +15,12 @@ toExpressionBlockForestFromStringlist idPrefix outerCount parser lines =
     lines
         |> M.PrimitiveBlock.parse idPrefix outerCount
         |> toPrimitiveBlockForest
-        |> Result.map (Generic.Forest.map (toExpressionBlock 0 parser))
+        |> Result.map (Generic.Forest.map (toExpressionBlock parser))
 
 
-toExpressionBlock : Int -> (Int -> String -> List Expression) -> PrimitiveBlock -> ExpressionBlock
-toExpressionBlock lineNumber parser block =
-    Generic.Language.toExpressionBlock (parser lineNumber) block
+toExpressionBlock : (Int -> String -> List Expression) -> PrimitiveBlock -> ExpressionBlock
+toExpressionBlock parser block =
+    Generic.Language.toExpressionBlock (parser block.meta.lineNumber) block
 
 
 toPrimitiveBlockForest : List PrimitiveBlock -> Result Error (Forest PrimitiveBlock)
