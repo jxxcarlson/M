@@ -6,7 +6,8 @@ My Book
 | section 1
 ABC
 
-This is a test. [i Yes it is!]
+This is a test.
+[i Yes it is!]
 
 xxxx
 

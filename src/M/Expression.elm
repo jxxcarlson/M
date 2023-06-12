@@ -62,7 +62,6 @@ parseToState : Int -> String -> State
 parseToState lineNumber str =
     str
         |> Token.run
-        |> Debug.log "TOKENS"
         |> parseTokenListToState lineNumber
 
 
@@ -197,7 +196,7 @@ push token state =
 
 commit : Token -> State -> State
 commit token state =
-    case stringTokenToExpr token of
+    case stringTokenToExpr state.lineNumber token of
         Nothing ->
             state
 
@@ -205,17 +204,17 @@ commit token state =
             { state | committed = expr :: state.committed }
 
 
-stringTokenToExpr : Token -> Maybe Expression
-stringTokenToExpr token =
+stringTokenToExpr : Int -> Token -> Maybe Expression
+stringTokenToExpr lineNumber token =
     case token of
         S str loc ->
-            Just (Text str (boostMeta 0 (Token.indexOf token) loc))
+            Just (Text str (boostMeta lineNumber (Token.indexOf token) loc))
 
         W str loc ->
-            Just (Text str (boostMeta 0 (Token.indexOf token) loc))
+            Just (Text str (boostMeta lineNumber (Token.indexOf token) loc))
 
         BracketedMath str loc ->
-            Just (VFun "math" str (boostMeta 0 (Token.indexOf token) loc))
+            Just (VFun "math" str (boostMeta lineNumber (Token.indexOf token) loc))
 
         _ ->
             Nothing
@@ -273,10 +272,6 @@ reduceTokens lineNumber tokens =
 
 reduceRestOfTokens : Int -> List Token -> List Expression
 reduceRestOfTokens lineNumber tokens =
-    let
-        _ =
-            Debug.log "reduceRestOfTokens, lineNumber" lineNumber
-    in
     case tokens of
         (LB _) :: _ ->
             case splitTokens tokens of
@@ -304,7 +299,7 @@ reduceRestOfTokens lineNumber tokens =
             Text str (boostMeta 0 (Token.indexOf (S str meta)) meta) :: reduceRestOfTokens lineNumber (List.drop 1 tokens)
 
         token :: _ ->
-            case stringTokenToExpr token of
+            case stringTokenToExpr lineNumber token of
                 Just expr ->
                     expr :: reduceRestOfTokens lineNumber (List.drop 1 tokens)
 
@@ -568,6 +563,11 @@ isExpr tokens =
         == [ TRB ]
 
 
+{-|
+
+    This is where the id of an expression is created fromm the lie number and token index.
+
+-}
 boostMeta : Int -> Int -> { begin : Int, end : Int, index : Int } -> { begin : Int, end : Int, index : Int, id : String }
 boostMeta lineNumber tokenIndex { begin, end, index } =
     { begin = begin, end = end, index = index, id = makeId lineNumber tokenIndex }
