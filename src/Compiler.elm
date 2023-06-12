@@ -22,6 +22,7 @@ import MicroLaTeX.PrimitiveBlock
 import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
+import Render.TOC
 import Render.Tree
 import XMarkdown.Expression
 import XMarkdown.PrimitiveBlock
@@ -50,6 +51,11 @@ pm str =
 
 parseM : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
 parseM idPrefix outerCount lines =
+    let
+        _ =
+            Generic.Compiler.parse_ M.PrimitiveBlock.parse M.Expression.parse idPrefix outerCount lines
+                |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
+    in
     Generic.Compiler.parse_ M.PrimitiveBlock.parse M.Expression.parse idPrefix outerCount lines
 
 
@@ -62,11 +68,11 @@ parseX idPrefix outerCount lines =
 -- M compiler
 
 
-compileM : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileM : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
 compileM width outerCount selectedId lines =
     case parseM "@" outerCount lines of
         Err err ->
-            [ Element.text "Oops something went wrong" ]
+            { body = [ Element.text "Oops something went wrong" ], toc = [] }
 
         Ok forest_ ->
             let
@@ -79,8 +85,12 @@ compileM width outerCount selectedId lines =
                 _ =
                     accumulator
             in
-            Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
-                |> List.map Render.Tree.unravel
+            { body =
+                Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
+                    |> List.map Render.Tree.unravel
+            , toc =
+                Render.TOC.view renderData.count accumulator forest
+            }
 
 
 

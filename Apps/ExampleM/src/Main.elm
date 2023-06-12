@@ -9,6 +9,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Generic.Compiler
 import Html exposing (Html)
+import Html.Attributes
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings
 
@@ -105,17 +106,22 @@ appWidth =
 
 panelWidth : Int
 panelWidth =
-    (appWidth // 2) - 30
+    ((appWidth - 300) // 2) - 30
 
 
 mainColumn : Model -> Element Msg
 mainColumn model =
+    let
+        compiled =
+            Compiler.compileM panelWidth model.count "@@" (String.lines model.sourceText)
+    in
     column mainColumnStyle
         [ column [ spacing 18, width (px appWidth), height (px 650) ]
             [ -- title "Compiler Demo"
               row [ spacing 18 ]
                 [ inputText model
-                , displayRenderedText model |> Element.map Render
+                , displayRenderedText compiled.body |> Element.map Render
+                , viewToc compiled.toc |> Element.map Render
                 ]
             ]
         ]
@@ -126,7 +132,7 @@ title str =
     row [ centerX, Font.bold, fontGray 0.9 ] [ text str ]
 
 
-displayRenderedText model =
+displayRenderedText compiledBody =
     column [ spacing 8, Font.size 14 ]
         [ el [ fontGray 0.9 ] (text "Rendered Text")
         , column
@@ -135,9 +141,29 @@ displayRenderedText model =
             , width (px panelWidth)
             , height (px 600)
             , paddingXY 16 32
+            , htmlId "rendered-text"
             , scrollbarY
             ]
-            (Compiler.compileM panelWidth model.count "@@" (String.lines model.sourceText))
+            compiledBody
+        ]
+
+
+htmlId str =
+    Element.htmlAttribute (Html.Attributes.id str)
+
+
+viewToc compiledTOC =
+    column [ spacing 8, Font.size 14 ]
+        [ el [ fontGray 0.9 ] (text "Rendered Text")
+        , column
+            [ spacing 18
+            , Background.color (Element.rgb 1.0 1.0 1.0)
+            , width (px 300)
+            , height (px 600)
+            , paddingXY 16 32
+            , scrollbarY
+            ]
+            compiledTOC
         ]
 
 

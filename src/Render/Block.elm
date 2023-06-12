@@ -29,7 +29,7 @@ import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Tabular
-import Render.Utility
+import Render.Utility exposing (elementAttribute)
 import String.Extra
 import Tools.Utility as Utility
 
@@ -188,7 +188,7 @@ blockDict =
         , ( "subheading", subheading ) -- xx
         , ( "runninghead_", \_ _ _ _ -> Element.none ) -- DEPRECATED
         , ( "banner", \_ _ _ _ -> Element.none )
-        , ( "title", \_ _ _ _ -> Element.none )
+        , ( "title", \c a s b -> title c a s b )
         , ( "subtitle", \_ _ _ _ -> Element.none )
         , ( "author", \_ _ _ _ -> Element.none )
         , ( "date", \_ _ _ _ -> Element.none )
@@ -330,7 +330,7 @@ section count acc settings block =
         }
 
 
-title : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> List (Element MarkupMsg)
+title : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 title count acc settings block =
     let
         fontSize =
@@ -339,7 +339,7 @@ title count acc settings block =
         exprs =
             Generic.Language.getExpressionContent block
     in
-    renderWithDefaultWithSize fontSize "??!!" count acc settings exprs
+    Element.column [ Font.size fontSize, elementAttribute "id" "title" ] (renderWithDefaultWithSize fontSize "??!!" count acc settings exprs)
 
 
 sectionBlockAttributes : ExpressionBlock -> RenderSettings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)

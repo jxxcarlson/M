@@ -2,11 +2,17 @@ module Data exposing (initialText)
 
 
 initialText1 =
-    """$$
-R = \\{ x\\ |\\ x \\not\\in x \\}
+    """| title
+On Thinking
 
-|| equation
-R = \\{ x\\ |\\ x \\not\\in x \\}
+| contents
+
+| section
+Philosophy
+
+| section
+Chemistry
+
 
 """
 

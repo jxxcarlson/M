@@ -56,6 +56,14 @@ type alias Accumulator =
     }
 
 
+{-| Note that function transformAccumulate operates on initialized accumulator.
+-}
+transformAccumulate : InitialAccumulatorData -> Forest ExpressionBlock -> ( Accumulator, Forest ExpressionBlock )
+transformAccumulate data forest =
+    List.foldl (\tree ( acc_, ast_ ) -> transformAccumulateTree tree acc_ |> mapper ast_) ( init data, [] ) forest
+        |> (\( acc_, ast_ ) -> ( acc_, List.reverse ast_ ))
+
+
 initialAccumulator : Accumulator
 initialAccumulator =
     { headingIndex = Vector.init 4
@@ -96,14 +104,6 @@ incrementCounter name dict =
 transformST : InitialAccumulatorData -> Forest ExpressionBlock -> Forest ExpressionBlock
 transformST data ast =
     ast |> transformAccumulate data |> Tuple.second
-
-
-{-| Note that function transformAccumulate operates on initialized accumulator.
--}
-transformAccumulate : InitialAccumulatorData -> Forest ExpressionBlock -> ( Accumulator, Forest ExpressionBlock )
-transformAccumulate data forest =
-    List.foldl (\tree ( acc_, ast_ ) -> transformAccumulateTree tree acc_ |> mapper ast_) ( init data, [] ) forest
-        |> (\( acc_, ast_ ) -> ( acc_, List.reverse ast_ ))
 
 
 type alias InitialAccumulatorData =

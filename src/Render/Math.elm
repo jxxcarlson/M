@@ -42,7 +42,7 @@ displayedMath count acc settings block =
 
         filteredLines =
             -- lines of math text to be rendered: filter stuff out
-            String.lines (getContent block |> Debug.log "Math_Content")
+            String.lines (getContent block)
                 |> List.filter (\line -> not (String.left 2 (String.trim line) == "$$"))
                 |> List.filter (\line -> not (String.left 6 line == "[label"))
                 |> List.filter (\line -> line /= "")
