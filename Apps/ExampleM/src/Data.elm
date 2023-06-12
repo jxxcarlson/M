@@ -16,6 +16,7 @@ abc
 
 initialText =
     """
+
 | title
 Introduction
 
@@ -30,6 +31,13 @@ Type theory brings together programming, logic, and mathematics.
 We outline some of its history, introducing notions that will be studied in detail in what follows.
 
 
+|| aligned
+a &= x + y\\\\
+b &= x - y\\\\
+c &= a b \\\\
+  &= (x + y)(x - y) \\\\
+  & = x^2 - y^2
+
 
 | section
 Russell's paradox
@@ -40,7 +48,7 @@ introduced them in the early 1900s to deal with a paradox that he spotted in Fre
 attampt to formalize the foundations of mathematics: consider the
 set $R$ of all sets which are not members of themselves:
 
-$$
+|| equation
 R = \\{ x\\ |\\ x \\not\\in x \\}
 
 One asks: [i is $R$ a member of itself?]. One sees that if it is,
@@ -239,8 +247,6 @@ Supplementary Readings
 
 | bibitem Loader
 [i Termination of Lambda Calculus Computations.] This paper provides a detailed discussion of various methods for ensuring termination of lambda calculus computations, including the use of measure functions.
-
-
 
 
 """

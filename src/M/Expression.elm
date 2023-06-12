@@ -6,6 +6,7 @@ module M.Expression exposing
     , parseWithMessages
     )
 
+import Config
 import Generic.Language exposing (Expr(..), ExprMeta, Expression)
 import List.Extra
 import M.Match as M
@@ -595,7 +596,7 @@ segLength tokens =
 
 makeId : Int -> Int -> String
 makeId lineNumber tokenIndex =
-    "e-" ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
+    Config.idPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
 
 
 dummyTokenIndex =

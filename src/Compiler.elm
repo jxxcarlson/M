@@ -8,6 +8,7 @@ module Compiler exposing
     , pm
     )
 
+import Config
 import Element exposing (Element)
 import Generic.Acc
 import Generic.Compiler
@@ -70,7 +71,7 @@ parseX idPrefix outerCount lines =
 
 compileM : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
 compileM width outerCount selectedId lines =
-    case parseM "@" outerCount lines of
+    case parseM Config.idPrefix outerCount lines of
         Err err ->
             { body = [ Element.text "Oops something went wrong" ], toc = [] }
 
@@ -102,7 +103,7 @@ compileM width outerCount selectedId lines =
 
 compileX : Int -> Int -> String -> List String -> List (Element MarkupMsg)
 compileX width outerCount selectedId lines =
-    case parseX "@" outerCount lines of
+    case parseX Config.idPrefix outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
@@ -138,7 +139,7 @@ parseL idPrefix outerCount lines =
 compileL : Int -> Int -> String -> List String -> List (Element MarkupMsg)
 compileL width outerCount selectedId lines =
     -- TODO: case parseL renderData.idPrefix lines of
-    case parseL "@" outerCount lines of
+    case parseL Config.idPrefix outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 

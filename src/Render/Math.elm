@@ -67,8 +67,6 @@ getContent { body } =
 equation : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 equation count acc settings block =
     let
-        --_ =
-        --    Debug.log "equation (id, selectedId)" ( id, settings.selectedId )
         w =
             String.fromInt settings.width ++ "px"
 
@@ -107,24 +105,6 @@ equation count acc settings block =
         ]
 
 
-putLabel display content properties longEquationLimit_ =
-    let
-        longEquationLimit =
-            case display of
-                Render.Settings.DefaultDisplay ->
-                    longEquationLimit_
-
-                Render.Settings.PhoneDisplay ->
-                    0.9 * longEquationLimit_
-    in
-    --if Render.Utility.textWidth content > longEquationLimit then
-    --    Element.none
-    --
-    --else
-    -- TODO: is this fixed?
-    Element.el [ Font.size 1 ] (Element.text <| "(" ++ getLabel "equation-number" properties ++ ")")
-
-
 getCounter : String -> Dict String Int -> String
 getCounter counterName dict =
     Dict.get counterName dict |> Maybe.withDefault 0 |> String.fromInt
@@ -137,19 +117,22 @@ getLabel label dict =
 
 aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 aligned count acc settings block =
-    Element.column []
-        [ Element.row [ Element.width (Element.px settings.width), Render.Utility.elementAttribute "id" block.meta.id ]
-            [ Element.el [ Element.centerX ] (aligned_ count acc settings block.args block.meta.lineNumber block.meta.numberOfLines block.meta.id (getContent block))
-            , putLabel settings.display (getContent block) block.properties settings.longEquationLimit
-            ]
-        ]
-
-
-aligned_ : Int -> Accumulator -> RenderSettings -> List String -> Int -> Int -> String -> String -> Element MarkupMsg
-aligned_ count acc settings args lineNumber numberOfLines id str =
     let
         w =
-            String.fromInt settings.width ++ "px"
+            case block.body of
+                Left str_ ->
+                    str_
+
+                Right _ ->
+                    ""
+
+        str =
+            case block.body of
+                Left str_ ->
+                    str_
+
+                Right _ ->
+                    ""
 
         filteredLines =
             -- lines of math text to be rendered: filter stuff out
@@ -173,9 +156,31 @@ aligned_ count acc settings args lineNumber numberOfLines id str =
 
         content =
             String.join "\n" adjustedLines
+
+        -- TODO: changed 45 -> 0
+        labelText =
+            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "??") ++ ")"
+
+        label =
+            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
     in
-    Element.column (Render.Sync.rightLeftSyncHelper lineNumber numberOfLines :: [])
-        [ Element.el (Render.Sync.highlightIfIdSelected id settings (Render.Sync.highlighter args [ Element.centerX ])) (mathText count w id DisplayMathMode content) ]
+    Element.column [ Element.width (Element.px ((settings.width |> Debug.log "@@WIDTH") - 110 |> Debug.log "@@WIDTH")) ]
+        [ Element.row
+            ([ Element.centerX, Element.spacing 12, Element.inFront label ]
+                ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                        :: [ Render.Utility.elementAttribute "id" block.meta.id ]
+                   )
+            )
+            [ Element.el
+                (Render.Sync.highlightIfIdSelected block.meta.id
+                    settings
+                    (Render.Sync.highlighter block.args
+                        []
+                    )
+                )
+                (mathText count w block.meta.id DisplayMathMode content)
+            ]
+        ]
 
 
 mathText : Int -> String -> String -> DisplayMode -> String -> Element msg

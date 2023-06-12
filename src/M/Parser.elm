@@ -1,5 +1,6 @@
 module M.Parser exposing (f, toExpressionBlockForestFromStringlist, toExpressionBlocksFromString)
 
+import Config
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
@@ -24,7 +25,7 @@ f str =
 toExpressionBlockForestFromStringlist : List String -> Result Error (Forest ExpressionBlock)
 toExpressionBlockForestFromStringlist lines =
     lines
-        |> Generic.Pipeline.toExpressionBlockForestFromStringlist "@" 0 M.Expression.parse
+        |> Generic.Pipeline.toExpressionBlockForestFromStringlist Config.idPrefix 0 M.Expression.parse
 
 
 toExpressionBlocksFromString : Int -> String -> List ExpressionBlock

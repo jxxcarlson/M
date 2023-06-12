@@ -1,5 +1,6 @@
 module Render.TOC exposing (view)
 
+import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Element exposing (Element)
@@ -41,7 +42,7 @@ viewTocItem count acc settings ({ args, body, properties } as block) =
         Right exprs ->
             let
                 id =
-                    "e-" ++ String.fromInt block.meta.lineNumber ++ ".0"
+                    Config.idPrefix ++ String.fromInt block.meta.lineNumber ++ ".0"
 
                 sectionNumber =
                     case List.Extra.getAt 1 args of

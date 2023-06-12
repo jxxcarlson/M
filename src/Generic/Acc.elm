@@ -1,12 +1,43 @@
 module Generic.Acc exposing
     ( Accumulator
     , InitialAccumulatorData
-    , init
-    , initialAccumulator
     , initialData
     , transformAccumulate
-    , transformST
     )
+
+{-|
+
+    The function the Generic.Acc module is to collect information from the AST that will
+    be used when it is rendered. This information is built up in an Accumulator, a
+    data structure used for
+
+            - numbering sections, theorems, figures, etc.
+            - creating
+               - a dictionary of references
+               - a dictionary of terms
+               - a dictionary of footnotes
+               - a dictionary of math macros
+               - a dictionary of text macros
+               - a dictionary of key-value pairs
+               - a dictionary of questions and answers
+
+
+     The main function is transformAccumulate, which has the signature
+
+           InitialAccumulatorData -> Forest ExpressionBlock -> ( Accumulator, Forest ExpressionBlock )
+
+     Two helper functions are of special interest,
+
+          updateAccumulator : ExpressionBlock -> Accumulator -> Accumulator
+
+     and
+
+          transformBlock : Accumulator -> ExpressionBlock -> ExpressionBlock
+
+      The first function is used to update the accumulator with information from the AST. The second
+      updates expression blocks with information already gathered in the accumulator.
+
+-}
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -209,7 +240,7 @@ transformBlock acc block =
                     else
                         Vector.toString acc.headingIndex ++ "." ++ getCounterAsString "equation" acc.counter
             in
-            { block | properties = Dict.insert "equation" equationProp block.properties }
+            { block | properties = Dict.insert "equation-number" equationProp block.properties }
 
         ( heading, _ ) ->
             -- TODO: not at all sure that the below is correct
@@ -526,10 +557,6 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
                     updateWithTextMacros str accumulator
 
         Verbatim name_ ->
-            let
-                _ =
-                    Debug.log ("@@Verbatim " ++ name_) ( block.meta.id, block.properties )
-            in
             case block.body of
                 Left str ->
                     updateWithVerbatimBlock (Just name_) args str block.meta.id accumulator
