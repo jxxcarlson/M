@@ -15,7 +15,7 @@ import Render.Data
 import Render.Export.Image
 import Render.Export.Preamble
 import Render.Export.Util
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Utility as Utility
 import Time
 import Tree exposing (Tree)
@@ -29,7 +29,7 @@ counterValue ast =
         |> Maybe.andThen String.toInt
 
 
-export : Time.Posix -> Settings -> Forest ExpressionBlock -> String
+export : Time.Posix -> RenderSettings -> Forest ExpressionBlock -> String
 export currentTime settings_ ast =
     let
         rawBlockNames =
@@ -162,7 +162,7 @@ shiftSection delta ((ExpressionBlock data) as block) =
         block
 
 
-exportTree : Settings -> Tree ExpressionBlock -> String
+exportTree : RenderSettings -> Tree ExpressionBlock -> String
 exportTree settings tree =
     case Tree.children tree of
         [] ->
@@ -195,7 +195,7 @@ exportTree settings tree =
                     firstLines ++ renderedChildren ++ [ lastLine ] |> String.join "\n"
 
 
-rawExport : Settings -> List (Tree ExpressionBlock) -> String
+rawExport : RenderSettings -> List (Tree ExpressionBlock) -> String
 rawExport settings ast =
     ast
         |> ASTTools.filterForestOnLabelNames (\name -> not (name == Just "runninghead"))
@@ -390,7 +390,7 @@ nextState tree state =
             { state | output = tree :: state.output, input = List.drop 1 state.input }
 
 
-exportBlock : Settings -> ExpressionBlock -> String
+exportBlock : RenderSettings -> ExpressionBlock -> String
 exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as block) =
     case blockType of
         Paragraph ->
@@ -625,7 +625,7 @@ functionDict =
 -- MACRODICT
 
 
-macroDict : Dict String (Settings -> List Expr -> String)
+macroDict : Dict String (RenderSettings -> List Expr -> String)
 macroDict =
     Dict.fromList
         [ ( "link", \_ -> link )
@@ -643,7 +643,7 @@ macroDict =
         ]
 
 
-dontRender : Settings -> List Expr -> String
+dontRender : RenderSettings -> List Expr -> String
 dontRender _ _ =
     ""
 
@@ -652,7 +652,7 @@ dontRender _ _ =
 -- BLOCKDICT
 
 
-blockDict : Dict String (Settings -> List String -> String -> String)
+blockDict : Dict String (RenderSettings -> List String -> String -> String)
 blockDict =
     Dict.fromList
         [ ( "title", \_ _ _ -> "" )
@@ -796,7 +796,7 @@ setcounter args =
     [ "\\setcounter{section}{", Utility.getArg "0" 0 args, "}" ] |> String.join ""
 
 
-subheading : Settings -> List String -> String -> String
+subheading : RenderSettings -> List String -> String -> String
 subheading settings args body =
     "\\subheading{" ++ body ++ "}"
 
@@ -820,7 +820,7 @@ argString args =
     List.filter (\arg -> not <| String.contains "label:" arg) args |> String.join " "
 
 
-section : Settings -> List String -> String -> String
+section : RenderSettings -> List String -> String -> String
 section settings args body =
     if settings.isStandaloneDocument then
         section1 args body
@@ -924,12 +924,12 @@ macro1 name arg =
                 "\\" ++ fName ++ "{" ++ mapChars2 (String.trimLeft arg) ++ "}"
 
 
-exportExprList : Settings -> List Expr -> String
+exportExprList : RenderSettings -> List Expr -> String
 exportExprList settings exprs =
     List.map (exportExpr settings) exprs |> String.join "" |> mapChars1
 
 
-exportExpr : Settings -> Expr -> String
+exportExpr : RenderSettings -> Expr -> String
 exportExpr settings expr =
     case expr of
         Fun name exps_ _ ->

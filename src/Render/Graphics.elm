@@ -8,7 +8,7 @@ import Generic.ASTTools as ASTTools
 import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Utility
 import SvgParser
@@ -30,7 +30,7 @@ type alias ImageParameters msg =
     }
 
 
-image : Render.Settings.Settings -> List Expression -> Element msg
+image : Render.Settings.RenderSettings -> List Expression -> Element msg
 image settings body =
     let
         params =
@@ -59,7 +59,7 @@ image settings body =
 
 {-| For \\image and [image ...]
 -}
-image2 : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+image2 : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 image2 _ _ settings block =
     let
         caption =
@@ -161,7 +161,7 @@ getVerbatimContent { body } =
             ""
 
 
-svg : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+svg : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 svg count acc settings block =
     case SvgParser.parse (getVerbatimContent block) of
         Ok html_ ->
@@ -178,7 +178,7 @@ svg count acc settings block =
 
 {-| Create elements from HTML markup. On parsing error, output no elements.
 -}
-tikz : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+tikz : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 tikz count acc settings block =
     let
         maybePair_ =
@@ -205,7 +205,7 @@ tikz count acc settings block =
                 ]
 
 
-quiver : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+quiver : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 quiver _ _ settings block =
     let
         -- arguments: ["width:250","caption:Fig","1"]
@@ -257,7 +257,7 @@ argumentsFromAST body =
     ASTTools.exprListToStringList body |> List.map String.words |> List.concat
 
 
-imageParameters : Render.Settings.Settings -> List String -> ImageParameters msg
+imageParameters : Render.Settings.RenderSettings -> List String -> ImageParameters msg
 imageParameters settings arguments =
     let
         url =
@@ -342,7 +342,7 @@ imageParameters settings arguments =
     { caption = caption, description = description, placement = placement, width = width, url = url, yPadding = yPadding }
 
 
-parameters : Settings -> Dict String String -> { caption : String, description : String, placement : Element.Attribute msg, width : Element.Length }
+parameters : RenderSettings -> Dict String String -> { caption : String, description : String, placement : Element.Attribute msg, width : Element.Length }
 parameters settings properties =
     let
         captionPhrase =

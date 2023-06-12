@@ -1,4 +1,7 @@
-module Render.Settings exposing (Display(..), Settings, defaultSettings, makeSettings)
+module Render.Settings exposing
+    ( Display(..), defaultSettings, makeSettings
+    , RenderSettings, default
+    )
 
 {-| The Settings record holds information needed to render a
 parsed document. For example, the renderer needs to
@@ -12,11 +15,11 @@ is to be displayed. This is given by the `.width` field.
 import Element
 
 
-{-| A record of nformation needed to render a document.
+{-| A record of information needed to render a document.
 For instance, the`width`field defines the width of the
 page in which the document is e
 -}
-type alias Settings =
+type alias RenderSettings =
     { paragraphSpacing : Int
     , selectedId : String
     , display : Display
@@ -48,22 +51,30 @@ type Display
 
 
 {-| -}
-defaultSettings : Settings
+defaultSettings : RenderSettings
 defaultSettings =
     makeSettings "" Nothing 1 600
 
 
+default selectedId width =
+    makeSettings selectedId Nothing 1 width
+
+
 {-| -}
-makeSettings : String -> Maybe String -> Float -> Int -> Settings
-makeSettings id selectedSlug scale windowWidth =
+makeSettings : String -> Maybe String -> Float -> Int -> RenderSettings
+makeSettings selectedId selectedSlug scale windowWidth =
+    let
+        titleSize =
+            32
+    in
     { width = round (scale * toFloat windowWidth)
-    , titleSize = 30
+    , titleSize = titleSize
     , paragraphSpacing = 28
     , display = DefaultDisplay
     , longEquationLimit = 0.1 * (windowWidth |> toFloat)
     , showTOC = True
     , showErrorMessages = False
-    , selectedId = id
+    , selectedId = selectedId
     , selectedSlug = selectedSlug
     , backgroundColor = Element.rgb 1 1 1
     , titlePrefix = ""
@@ -74,7 +85,7 @@ makeSettings id selectedSlug scale windowWidth =
     , leftRightIndentation = 18
     , wideLeftIndentation = 54
     , windowWidthScale = 0.3
-    , maxHeadingFontSize = 32
+    , maxHeadingFontSize = (titleSize |> toFloat) * 0.67
     , redColor = Element.rgb 0.7 0 0
     , topMarginForChildren = 6
     }

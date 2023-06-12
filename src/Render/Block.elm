@@ -26,7 +26,7 @@ import Render.IFrame
 import Render.List
 import Render.Math
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Tabular
 import Render.Utility
@@ -42,7 +42,7 @@ topPaddingForIndentedElements =
     10
 
 
-render : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 render count acc settings block =
     case block.heading of
         Paragraph ->
@@ -55,7 +55,7 @@ render count acc settings block =
             renderVerbatimBlock count acc settings block |> showError block.meta.error
 
 
-renderParagraph : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderParagraph : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderParagraph count acc settings block =
     case block.body of
         Right exprs ->
@@ -98,7 +98,7 @@ clickableParagraph lineNumber numberOfLines color elements =
         elements
 
 
-renderOrdinaryBlock : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderOrdinaryBlock : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderOrdinaryBlock count acc settings block =
     case block.body of
         Left _ ->
@@ -120,7 +120,7 @@ renderOrdinaryBlock count acc settings block =
                     Element.none
 
 
-indentOrdinaryBlock : Int -> String -> Settings -> Element msg -> Element msg
+indentOrdinaryBlock : Int -> String -> RenderSettings -> Element msg -> Element msg
 indentOrdinaryBlock indent id settings x =
     if indent > 0 then
         Element.el [ selectedColor id settings, Element.paddingEach { top = topPaddingForIndentedElements, bottom = 0, left = 0, right = 0 } ] x
@@ -146,7 +146,7 @@ showError maybeError x =
                 ]
 
 
-renderVerbatimBlock : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderVerbatimBlock : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderVerbatimBlock count acc settings block =
     case block.body of
         Right _ ->
@@ -170,7 +170,7 @@ renderVerbatimBlock count acc settings block =
 -- DICT OF BLOCKS
 
 
-blockDict : Dict String (Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg)
+blockDict : Dict String (Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg)
 blockDict =
     Dict.fromList
         [ ( "indent", indented )
@@ -214,7 +214,7 @@ nonExportableOrdinaryBlocks =
 -- must be present in Parser.PrimitiveBlock.verbatimNames
 
 
-verbatimDict : Dict String (Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg)
+verbatimDict : Dict String (Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg)
 verbatimDict =
     Dict.fromList
         [ ( "math", Render.Math.displayedMath )
@@ -258,7 +258,7 @@ noSuchVerbatimBlock functionName content =
         ]
 
 
-noSuchOrdinaryBlock : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+noSuchOrdinaryBlock : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 noSuchOrdinaryBlock count acc settings block =
     Element.column [ Element.spacing 4 ]
         [ Element.paragraph [ Font.color (Element.rgb255 180 0 0) ] [ Element.text <| "No such block:" ++ (block.args |> String.join " ") ]
@@ -266,7 +266,7 @@ noSuchOrdinaryBlock count acc settings block =
         ]
 
 
-renderNothing : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderNothing : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderNothing _ _ _ _ =
     Element.none
 
@@ -275,7 +275,7 @@ renderNothing _ _ _ _ =
 -- DEFAULTS
 
 
-renderWithDefaultWithSize : Int -> String -> Int -> Accumulator -> Settings -> List Expression -> List (Element MarkupMsg)
+renderWithDefaultWithSize : Int -> String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
 renderWithDefaultWithSize size default count acc settings exprs =
     if List.isEmpty exprs then
         [ Element.el [ Font.color settings.redColor, Font.size size ] (Element.text default) ]
@@ -284,7 +284,7 @@ renderWithDefaultWithSize size default count acc settings exprs =
         List.map (Render.Expression.render count acc settings) exprs
 
 
-renderWithDefault2 : String -> Int -> Accumulator -> Settings -> List Expression -> List (Element MarkupMsg)
+renderWithDefault2 : String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
 renderWithDefault2 _ count acc settings exprs =
     List.map (Render.Expression.render count acc settings) exprs
 
@@ -293,7 +293,7 @@ renderWithDefault2 _ count acc settings exprs =
 -- HEADINGS
 
 
-subheading : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+subheading : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 subheading count acc settings block =
     Element.link
         (sectionBlockAttributes block settings [ topPadding 10 ])
@@ -302,7 +302,7 @@ subheading count acc settings block =
         }
 
 
-section : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+section : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 section count acc settings block =
     -- level 1 is reserved for titles
     let
@@ -330,7 +330,19 @@ section count acc settings block =
         }
 
 
-sectionBlockAttributes : ExpressionBlock -> Settings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
+title : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> List (Element MarkupMsg)
+title count acc settings block =
+    let
+        fontSize =
+            settings.titleSize
+
+        exprs =
+            Generic.Language.getExpressionContent block
+    in
+    renderWithDefaultWithSize fontSize "??!!" count acc settings exprs
+
+
+sectionBlockAttributes : ExpressionBlock -> RenderSettings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
 sectionBlockAttributes block settings attrs =
     [ Render.Utility.makeId (Generic.Language.getExpressionContent block)
     , Render.Utility.idAttribute block.meta.id
@@ -375,7 +387,7 @@ topPadding k =
     Wave Packets and Schrödinger's Equation
 
 -}
-collection : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+collection : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 collection _ _ _ _ =
     Element.none
 
@@ -388,7 +400,7 @@ collection _ _ _ _ =
         Wave Packets and Schrödinger's Equation
 
 -}
-document : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+document : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 document _ _ settings block =
     let
         docId =
@@ -407,7 +419,7 @@ document _ _ settings block =
         level =
             List.Extra.getAt 1 block.args |> Maybe.withDefault "1" |> String.toInt |> Maybe.withDefault 1
 
-        title =
+        title_ =
             List.map ASTTools.getText (Generic.Language.getExpressionContent block) |> Maybe.Extra.values |> String.join " " |> Utility.truncateString 35
 
         sectionNumber =
@@ -434,7 +446,7 @@ document _ _ settings block =
             , Element.width (Element.px 30)
             ]
             (Element.text sectionNumber)
-        , ilink title settings.selectedId settings.selectedSlug docId
+        , ilink title_ settings.selectedId settings.selectedSlug docId
         ]
 
 
@@ -463,10 +475,10 @@ ilink docTitle selectedId selecteSlug docId =
 -- QUESTIONS AND ANSWERS (FOR TEACHING)
 
 
-question : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+question : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 question count acc settings block =
     let
-        title =
+        title_ =
             String.join " " block.args
 
         label =
@@ -476,16 +488,16 @@ question count acc settings block =
             Dict.get block.meta.id acc.qAndADict |> Maybe.withDefault block.meta.id
     in
     Element.column [ Element.spacing 12 ]
-        [ Element.el [ Font.bold, Font.color Color.blue, Events.onClick (HighlightId qId) ] (Element.text (title ++ " " ++ label))
+        [ Element.el [ Font.bold, Font.color Color.blue, Events.onClick (HighlightId qId) ] (Element.text (title_ ++ " " ++ label))
         , Element.paragraph ([ Font.italic, Events.onClick (HighlightId qId), Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
             (Render.Helper.renderWithDefault "..." count acc settings (Generic.Language.getExpressionContent block))
         ]
 
 
-answer : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+answer : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 answer count acc settings block =
     let
-        title =
+        title_ =
             String.join " " (List.drop 1 block.args)
 
         clicker =
@@ -496,7 +508,7 @@ answer count acc settings block =
                 Events.onClick (ProposeSolution (Render.Msg.Solved block.meta.id))
     in
     Element.column [ Element.spacing 12, Element.paddingEach { top = 0, bottom = 24, left = 0, right = 0 } ]
-        [ Element.el [ Font.bold, Font.color Color.blue, clicker ] (Element.text title)
+        [ Element.el [ Font.bold, Font.color Color.blue, clicker ] (Element.text title_)
         , if settings.selectedId == block.meta.id then
             Element.el [ Events.onClick (ProposeSolution Render.Msg.Unsolved) ]
                 (Element.paragraph ([ Font.italic, Render.Utility.idAttributeFromInt block.meta.lineNumber, Element.paddingXY 8 8 ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
@@ -517,7 +529,7 @@ answer count acc settings block =
     Used to render generic LaTeX environments
 
 -}
-env_ : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+env_ : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 env_ count acc settings block =
     case List.head block.args of
         Nothing ->
@@ -537,7 +549,7 @@ env_ count acc settings block =
     Used to render generic LaTeX environments
 
 -}
-env : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+env : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 env count acc settings block =
     case block.body of
         Left _ ->
@@ -598,7 +610,7 @@ blockLabel properties =
 
 {-| indented block
 -}
-indented : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+indented : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 indented count acc settings block =
     Element.paragraph
         ([ Render.Utility.leftPadding settings.leftIndentation
@@ -610,7 +622,7 @@ indented count acc settings block =
         (Render.Helper.renderWithDefault "indent" count acc settings (Generic.Language.getExpressionContent block))
 
 
-centered : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+centered : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 centered count acc settings block =
     Element.paragraph
         ([ Element.width (Element.px (settings.width - 60))
@@ -623,7 +635,7 @@ centered count acc settings block =
         (Render.Helper.renderWithDefault "indent" count acc settings (Generic.Language.getExpressionContent block))
 
 
-box : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+box : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 box count acc settings block =
     Element.column [ Element.paddingXY 48 0 ]
         [ Element.column
@@ -668,7 +680,7 @@ comment count acc settings block =
 -- TODO: attrs!
 
 
-quotation : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+quotation : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 quotation count acc settings block =
     Element.column [ Element.spacing 12 ]
         [ Element.paragraph
@@ -685,7 +697,7 @@ blockAttributes settings block attrs =
         ++ attrs
 
 
-bibitem : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+bibitem : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 bibitem count acc settings block =
     let
         label =
@@ -709,7 +721,7 @@ bibitem count acc settings block =
 -- VERBATIM
 
 
-renderCode : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderCode : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderCode count acc settings block =
     Element.column
         [ Font.color settings.codeColor
@@ -732,14 +744,14 @@ renderCode count acc settings block =
         )
 
 
-renderVerse : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderVerse : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderVerse _ _ _ block =
     Element.column
         (verbatimBlockAttributes block.meta.lineNumber block.meta.numberOfLines [])
         (List.map (renderVerbatimLine "plain") (String.lines (String.trim (Render.Utility.getVerbatimContent block))))
 
 
-renderVerse1 : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderVerse1 : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderVerse1 _ _ _ block =
     Element.column
         (verbatimBlockAttributes block.meta.lineNumber block.meta.numberOfLines [ Element.htmlAttribute (Html.Attributes.attribute "whitespace" "pre") ])
@@ -820,7 +832,7 @@ elmDict =
         ]
 
 
-renderVerbatim : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+renderVerbatim : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderVerbatim _ _ _ block =
     let
         _ =
@@ -859,7 +871,7 @@ labeledArgs args =
 -- INDEX
 
 
-index : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+index : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 index _ acc _ block =
     let
         groupItemList : List GroupItem
@@ -901,7 +913,7 @@ indexItem_ ( name, loc ) =
 -- ENDNOTES
 
 
-endnotes : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+endnotes : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 endnotes _ acc _ block =
     let
         endnoteList =

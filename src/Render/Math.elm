@@ -20,7 +20,7 @@ import Html.Attributes as HA
 import Html.Keyed
 import Json.Encode
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Utility
 
@@ -34,7 +34,7 @@ leftPadding =
     Element.paddingEach { left = 0, right = 0, top = 0, bottom = 0 }
 
 
-displayedMath : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+displayedMath : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 displayedMath count acc settings block =
     let
         w =
@@ -42,14 +42,16 @@ displayedMath count acc settings block =
 
         filteredLines =
             -- lines of math text to be rendered: filter stuff out
-            String.lines (getContent block)
+            String.lines (getContent block |> Debug.log "Math_Content")
                 |> List.filter (\line -> not (String.left 2 (String.trim line) == "$$"))
                 |> List.filter (\line -> not (String.left 6 line == "[label"))
                 |> List.filter (\line -> line /= "")
                 |> List.map (Generic.MathMacro.evalStr acc.mathMacroDict)
     in
     Element.column (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines :: [])
-        [ Element.el (Render.Sync.highlighter block.args [ Element.centerX ]) (mathText count w block.meta.id DisplayMathMode (filteredLines |> String.join "\n")) ]
+        [ Element.el (Render.Sync.highlighter block.args [ Element.centerX ])
+            (mathText count w block.meta.id DisplayMathMode (filteredLines |> String.join "\n"))
+        ]
 
 
 getContent : ExpressionBlock -> String
@@ -62,7 +64,7 @@ getContent { body } =
             ""
 
 
-equation : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+equation : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 equation count acc settings block =
     let
         --_ =
@@ -119,7 +121,7 @@ getLabel label dict =
     Dict.get label dict |> Maybe.withDefault ""
 
 
-aligned : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 aligned count acc settings block =
     Element.column []
         [ Element.row [ Element.width (Element.px settings.width), Render.Utility.elementAttribute "id" block.meta.id ]
@@ -129,7 +131,7 @@ aligned count acc settings block =
         ]
 
 
-aligned_ : Int -> Accumulator -> Settings -> List String -> Int -> Int -> String -> String -> Element MarkupMsg
+aligned_ : Int -> Accumulator -> RenderSettings -> List String -> Int -> Int -> String -> String -> Element MarkupMsg
 aligned_ count acc settings args lineNumber numberOfLines id str =
     let
         w =

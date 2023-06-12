@@ -12,7 +12,7 @@ import Generic.Language exposing (ExpressionBlock)
 import List.Extra
 import Maybe.Extra
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Utility
 
 
@@ -41,7 +41,7 @@ fontWidth =
     10
 
 
-chart : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+chart : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 chart count acc settings block =
     let
         options : Options
@@ -542,7 +542,7 @@ prepareTable fontWidth_ ((ExpressionBlock { id, args, properties }) as block) =
     { title = title, columnWidths = columnWidths, totalWidth = totalWidth, selectedCells = selectedCells }
 
 
-table : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+table : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 table count acc settings ((ExpressionBlock { id, args, properties }) as block) =
     let
         data =

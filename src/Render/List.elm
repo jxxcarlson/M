@@ -8,7 +8,7 @@ import Generic.Language exposing (ExpressionBlock)
 import List.Extra
 import Render.Helper
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Utility
 
@@ -21,7 +21,7 @@ indentationScale =
     15
 
 
-item : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+item : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 item count acc settings block =
     let
         id =
@@ -55,7 +55,7 @@ item count acc settings block =
         ]
 
 
-numbered : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+numbered : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 numbered count acc settings block =
     let
         id =
@@ -106,7 +106,7 @@ numbered count acc settings block =
         ]
 
 
-desc : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+desc : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 desc count acc settings block =
     let
         label =

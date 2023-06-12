@@ -137,7 +137,7 @@ displayRenderedText model =
             , paddingXY 16 32
             , scrollbarY
             ]
-            (Compiler.compileM "ID" 0 Generic.Compiler.defaultRenderData (String.lines model.sourceText))
+            (Compiler.compileM panelWidth model.count "@@" (String.lines model.sourceText))
         ]
 
 

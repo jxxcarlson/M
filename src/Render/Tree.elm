@@ -11,13 +11,13 @@ import Generic.Settings
 import M.Expression
 import Render.Block
 import Render.Msg exposing (MarkupMsg)
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Tree exposing (Tree)
 
 
 {-| Transform a tree of expression blocks to Element MarkupMsg ("HTML")
 -}
-render : Int -> Accumulator -> Settings -> Tree ExpressionBlock -> Element MarkupMsg
+render : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
 render count accumulator settings tree =
     let
         blockName =

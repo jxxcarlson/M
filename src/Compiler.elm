@@ -62,14 +62,17 @@ parseX idPrefix outerCount lines =
 -- M compiler
 
 
-compileM : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
-compileM idPrefix outerCount renderData lines =
-    case parseM idPrefix outerCount lines of
+compileM : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileM width outerCount selectedId lines =
+    case parseM "@" outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
         Ok forest_ ->
             let
+                renderData =
+                    Generic.Compiler.defaultRenderData width outerCount selectedId
+
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
 
@@ -80,14 +83,21 @@ compileM idPrefix outerCount renderData lines =
                 |> List.map Render.Tree.unravel
 
 
-compileX : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
-compileX idPrefix outerCount renderData lines =
-    case parseX idPrefix outerCount lines of
+
+-- makeSettings id selectedSlug scale windowWidth
+
+
+compileX : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileX width outerCount selectedId lines =
+    case parseX "@" outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
         Ok forest_ ->
             let
+                renderData =
+                    Generic.Compiler.defaultRenderData width outerCount selectedId
+
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
 
@@ -112,15 +122,18 @@ parseL idPrefix outerCount lines =
     Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix outerCount lines
 
 
-compileL : String -> Int -> Generic.Compiler.RenderData -> List String -> List (Element MarkupMsg)
-compileL idPrefix outerCount renderData lines =
+compileL : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileL width outerCount selectedId lines =
     -- TODO: case parseL renderData.idPrefix lines of
-    case parseL idPrefix outerCount lines of
+    case parseL "@" outerCount lines of
         Err err ->
             [ Element.text "Oops something went wrong" ]
 
         Ok forest_ ->
             let
+                renderData =
+                    Generic.Compiler.defaultRenderData width outerCount selectedId
+
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
 

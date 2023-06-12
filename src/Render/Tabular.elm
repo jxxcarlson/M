@@ -8,13 +8,13 @@ import List.Extra
 import M.Expression
 import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Utility
 import Tools.Utility as Utility
 
 
-render : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 render count acc settings block =
     let
         formatString : List String

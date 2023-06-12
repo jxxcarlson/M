@@ -9,12 +9,12 @@ import Html
 import Html.Attributes
 import Render.Msg exposing (MarkupMsg(..))
 import Render.PUtility
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Sync
 import Render.Utility
 
 
-render : Int -> Accumulator -> Settings -> ExpressionBlock -> Element MarkupMsg
+render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 render count acc settings block =
     case parseIFrame (Render.Utility.getVerbatimContent block) of
         Nothing ->

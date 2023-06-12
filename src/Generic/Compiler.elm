@@ -33,16 +33,20 @@ parse_ primitiveBlockParser exprParser idPrefix outerCount lines =
 type alias RenderData =
     { count : Int
     , idPrefix : String
-    , settings : Render.Settings.Settings
+    , settings : Render.Settings.RenderSettings
     , initialAccumulatorData : Generic.Acc.InitialAccumulatorData
     }
 
 
-defaultRenderData : RenderData
-defaultRenderData =
-    { count = 0
-    , idPrefix = "!@!"
-    , settings = Render.Settings.defaultSettings
+
+-- default selectedId width
+
+
+defaultRenderData : Int -> Int -> String -> RenderData
+defaultRenderData width outerCount selectedId =
+    { count = outerCount
+    , idPrefix = "!!"
+    , settings = Render.Settings.default selectedId width
     , initialAccumulatorData = Generic.Acc.initialData
     }
 

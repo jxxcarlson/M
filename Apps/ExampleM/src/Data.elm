@@ -1,17 +1,17 @@
 module Data exposing (initialText)
 
 
-initialText =
-    """| section 1
-ABC
+initialText1 =
+    """$$
+R = \\{ x\\ |\\ x \\not\\in x \\}
 
-| subsection
-XYZ
+|| equation
+R = \\{ x\\ |\\ x \\not\\in x \\}
 
 """
 
 
-initialText1 =
+initialText =
     """
 | title
 Introduction

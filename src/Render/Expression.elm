@@ -19,11 +19,11 @@ import MicroScheme.Interpreter
 import Render.Graphics
 import Render.Math
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Utility as Utility
 
 
-render : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
+render : Int -> Accumulator -> RenderSettings -> Expression -> Element MarkupMsg
 render generation acc settings expr =
     case expr of
         Text string meta ->
@@ -62,7 +62,7 @@ errorBackgroundColor =
 -- DICTIONARIES
 
 
-markupDict : Dict String (Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg)
+markupDict : Dict String (Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg)
 markupDict =
     Dict.fromList
         [ ( "bibitem", \_ _ _ exprList -> bibitem exprList )
@@ -187,12 +187,12 @@ abstract g acc s exprList =
     Element.paragraph [] [ Element.el [ Font.size 18 ] (Element.text "Abstract."), simpleElement [] g acc s exprList ]
 
 
-large : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
+large : Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg
 large g acc s exprList =
     simpleElement [ Font.size 18 ] g acc s exprList
 
 
-link : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
+link : Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg
 link _ _ _ exprList =
     case List.head <| ASTTools.exprListToStringList exprList of
         Nothing ->
@@ -236,7 +236,7 @@ link _ _ _ exprList =
                     }
 
 
-href : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
+href : Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg
 href _ _ _ exprList =
     let
         url =
@@ -374,12 +374,12 @@ math g a m str =
     mathElement g a m str
 
 
-table : Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
+table : Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg
 table g acc s rows =
     Element.column [ Element.spacing 8 ] (List.map (tableRow g acc s) rows)
 
 
-tableRow : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
+tableRow : Int -> Accumulator -> RenderSettings -> Expression -> Element MarkupMsg
 tableRow g acc s expr =
     case expr of
         Fun "tableRow" items _ ->
@@ -389,7 +389,7 @@ tableRow g acc s expr =
             Element.none
 
 
-tableItem : Int -> Accumulator -> Settings -> Expression -> Element MarkupMsg
+tableItem : Int -> Accumulator -> RenderSettings -> Expression -> Element MarkupMsg
 tableItem g acc s expr =
     case expr of
         Fun "tableItem" exprList _ ->
@@ -718,7 +718,7 @@ errorHighlight g acc s exprList =
 -- HELPERS
 
 
-simpleElement : List (Element.Attribute MarkupMsg) -> Int -> Accumulator -> Settings -> List Expression -> Element MarkupMsg
+simpleElement : List (Element.Attribute MarkupMsg) -> Int -> Accumulator -> RenderSettings -> List Expression -> Element MarkupMsg
 simpleElement formatList g acc s exprList =
     Element.paragraph formatList (List.map (render g acc s) exprList)
 

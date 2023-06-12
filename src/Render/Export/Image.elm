@@ -7,12 +7,12 @@ import List.Extra
 import Parser.Block exposing (ExpressionBlock(..))
 import Parser.Expr exposing (Expr)
 import Render.Export.Util
-import Render.Settings exposing (Settings)
+import Render.Settings exposing (RenderSettings)
 import Render.Utility
 import Tools.Utility as Utility
 
 
-exportBlock : Settings -> ExpressionBlock -> String
+exportBlock : RenderSettings -> ExpressionBlock -> String
 exportBlock settings ((ExpressionBlock { content, args }) as block) =
     let
         params =
@@ -33,7 +33,7 @@ fixWidth w =
         w
 
 
-export : Settings -> List Expr -> String
+export : RenderSettings -> List Expr -> String
 export s exprs =
     let
         args =
@@ -80,7 +80,7 @@ type alias ImageParameters =
     }
 
 
-imageParameters : Render.Settings.Settings -> List Expr -> ImageParameters
+imageParameters : Render.Settings.RenderSettings -> List Expr -> ImageParameters
 imageParameters settings body =
     let
         arguments : List String
@@ -171,7 +171,7 @@ imageParameters settings body =
     { caption = caption, description = description, placement = placement, width = width, fractionalWidth = fractionalWidth, url = url }
 
 
-imageParametersForBlock : Render.Settings.Settings -> ExpressionBlock -> ImageParameters
+imageParametersForBlock : Render.Settings.RenderSettings -> ExpressionBlock -> ImageParameters
 imageParametersForBlock settings (ExpressionBlock { content, args, properties }) =
     let
         arguments : List String
