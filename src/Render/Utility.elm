@@ -5,6 +5,7 @@ module Render.Utility exposing
     , getVerbatimContent
     , hspace
     , idAttribute
+    , idAttributeFromInt
     , internalLink
     , leftPadding
     , makeId
@@ -140,9 +141,14 @@ getVerbatimContent { body } =
             ""
 
 
-idAttribute : Int -> Element.Attribute msg
-idAttribute k =
+idAttributeFromInt : Int -> Element.Attribute msg
+idAttributeFromInt k =
     elementAttribute "id" (String.fromInt k)
+
+
+idAttribute : String -> Element.Attribute msg
+idAttribute s =
+    elementAttribute "id" s
 
 
 getArg : String -> Int -> List String -> String
@@ -173,7 +179,7 @@ internalLink str =
 makeId : List Generic.Language.Expression -> Element.Attribute msg
 makeId exprs =
     elementAttribute "id"
-        (Generic.ASTTools.stringValueOfList exprs |> String.trim |> makeSlug)
+        (Generic.ASTTools.stringValueOfList exprs |> String.trim |> makeSlug |> Debug.log "SLUG")
 
 
 makeSlug : String -> String

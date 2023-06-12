@@ -15,7 +15,7 @@ import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
-import M.ExpressionParser
+import M.Expression
 import M.PrimitiveBlock
 import MicroLaTeX.Expression
 import MicroLaTeX.PrimitiveBlock
@@ -50,7 +50,7 @@ pm str =
 
 parseM : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
 parseM idPrefix outerCount lines =
-    Generic.Compiler.parse_ M.PrimitiveBlock.parse M.ExpressionParser.parse idPrefix outerCount lines
+    Generic.Compiler.parse_ M.PrimitiveBlock.parse M.Expression.parse idPrefix outerCount lines
 
 
 parseX : String -> Int -> List String -> Result Error (Forest ExpressionBlock)

@@ -12,7 +12,7 @@ module XMarkdown.Expression exposing
 
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
-import M.ExpressionParser exposing (parseWithMessages)
+import M.Expression exposing (parseWithMessages)
 import Tools.Loop exposing (Step(..), loop)
 import XMarkdown.ForkLog as Tools
 import XMarkdown.Match as M

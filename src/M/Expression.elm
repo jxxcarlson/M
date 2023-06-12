@@ -1,4 +1,4 @@
-module M.ExpressionParser exposing
+module M.Expression exposing
     ( State
     , extractMessages
     , parse

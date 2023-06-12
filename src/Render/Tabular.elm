@@ -5,7 +5,7 @@ import Element exposing (Element)
 import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
-import M.ExpressionParser
+import M.Expression
 import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (Settings)
@@ -76,7 +76,7 @@ render count acc settings block =
 
         parsedCells : List (List (List Expression))
         parsedCells =
-            List.map (List.map (M.ExpressionParser.parse 0)) cellsAsStrings
+            List.map (List.map (M.Expression.parse 0)) cellsAsStrings
 
         renderer : Expression -> Element MarkupMsg
         renderer =
@@ -107,7 +107,7 @@ render count acc settings block =
     Element.column
         [ Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
         , Render.Sync.rightLeftSyncHelper block.meta.lineNumber (block.meta.lineNumber + block.meta.numberOfLines)
-        , Render.Utility.idAttribute block.meta.lineNumber
+        , Render.Utility.idAttributeFromInt block.meta.lineNumber
         ]
         (renderTable extendedFormatList parsedCells)
 

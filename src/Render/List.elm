@@ -41,7 +41,7 @@ item count acc settings block =
                 _ ->
                     "◊"
     in
-    Element.row [ Element.moveRight (indentationScale * level_ |> toFloat), Element.alignTop, Render.Utility.idAttribute block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ]
+    Element.row [ Element.moveRight (indentationScale * level_ |> toFloat), Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ]
         [ Element.el
             [ Font.size 14
             , Element.alignTop
@@ -93,7 +93,7 @@ numbered count acc settings block =
                 _ ->
                     String.fromInt index_
     in
-    Element.row [ Element.moveRight (indentationScale * level |> toFloat), Element.alignTop, Render.Utility.idAttribute block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ]
+    Element.row [ Element.moveRight (indentationScale * level |> toFloat), Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ]
         [ Element.el
             [ Font.size 14
             , Element.alignTop
@@ -112,7 +112,7 @@ desc count acc settings block =
         label =
             Render.Utility.argString block.args
     in
-    Element.row ([ Element.alignTop, Render.Utility.idAttribute block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+    Element.row ([ Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
         [ Element.el [ Font.bold, Element.alignTop, Element.width (Element.px 100) ] (Element.text label)
         , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
             (Render.Helper.renderWithDefault "| desc" count acc settings (Generic.Language.getExpressionContent block))

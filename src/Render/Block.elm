@@ -281,7 +281,7 @@ renderWithDefaultWithSize size default count acc settings exprs =
         [ Element.el [ Font.color settings.redColor, Font.size size ] (Element.text default) ]
 
     else
-        List.map (Render.Expression.render count acc settings) exprs
+        List.map (Render.Expression.render count acc settings) (exprs |> Debug.log "exprs")
 
 
 renderWithDefault2 : String -> Int -> Accumulator -> Settings -> List Expression -> List (Element MarkupMsg)
@@ -344,13 +344,19 @@ section count acc settings block =
     in
     Element.link
         (sectionBlockAttributes block settings [ topPadding 20, Font.size fontSize ])
-        { url = Render.Utility.internalLink (settings.titlePrefix ++ "title"), label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??!!" count acc settings exprs) }
+        { url = Render.Utility.internalLink (settings.titlePrefix ++ "title")
+        , label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??!!" count acc settings exprs)
+        }
 
 
 sectionBlockAttributes : ExpressionBlock -> Settings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
 sectionBlockAttributes block settings attrs =
+    let
+        _ =
+            Debug.log "SEL_ID" block.meta.id
+    in
     [ Render.Utility.makeId (Generic.Language.getExpressionContent block)
-    , Render.Utility.idAttribute block.meta.lineNumber
+    , Render.Utility.idAttribute block.meta.id
     ]
         ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
         ++ attrs
@@ -494,7 +500,7 @@ question count acc settings block =
     in
     Element.column [ Element.spacing 12 ]
         [ Element.el [ Font.bold, Font.color Color.blue, Events.onClick (HighlightId qId) ] (Element.text (title ++ " " ++ label))
-        , Element.paragraph ([ Font.italic, Events.onClick (HighlightId qId), Render.Utility.idAttribute block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+        , Element.paragraph ([ Font.italic, Events.onClick (HighlightId qId), Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
             (Render.Helper.renderWithDefault "..." count acc settings (Generic.Language.getExpressionContent block))
         ]
 
@@ -516,7 +522,7 @@ answer count acc settings block =
         [ Element.el [ Font.bold, Font.color Color.blue, clicker ] (Element.text title)
         , if settings.selectedId == block.meta.id then
             Element.el [ Events.onClick (ProposeSolution Render.Msg.Unsolved) ]
-                (Element.paragraph ([ Font.italic, Render.Utility.idAttribute block.meta.lineNumber, Element.paddingXY 8 8 ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+                (Element.paragraph ([ Font.italic, Render.Utility.idAttributeFromInt block.meta.lineNumber, Element.paddingXY 8 8 ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
                     (Render.Helper.renderWithDefault "..." count acc settings (Generic.Language.getExpressionContent block))
                 )
 
@@ -539,7 +545,7 @@ env_ count acc settings block =
     case List.head block.args of
         Nothing ->
             Element.paragraph
-                [ Render.Utility.idAttribute block.meta.lineNumber
+                [ Render.Utility.idAttributeFromInt block.meta.lineNumber
                 , Font.color settings.redColor
                 , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
                 ]
@@ -561,7 +567,7 @@ env count acc settings block =
             Element.none
 
         Right exprs ->
-            Element.column ([ Element.spacing 8, Render.Utility.idAttribute block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+            Element.column ([ Element.spacing 8, Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
                 [ Element.el
                     [ Font.bold
                     , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
@@ -620,7 +626,7 @@ indented count acc settings block =
     Element.paragraph
         ([ Render.Utility.leftPadding settings.leftIndentation
          , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-         , Render.Utility.idAttribute block.meta.lineNumber
+         , Render.Utility.idAttributeFromInt block.meta.lineNumber
          ]
             ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
         )
@@ -633,7 +639,7 @@ centered count acc settings block =
         ([ Element.width (Element.px (settings.width - 60))
          , Element.centerX
          , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-         , Render.Utility.idAttribute block.meta.lineNumber
+         , Render.Utility.idAttributeFromInt block.meta.lineNumber
          ]
             ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
         )
@@ -647,7 +653,7 @@ box count acc settings block =
             ([ Background.color Color.lightBlue
              , Element.padding 20
              , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-             , Render.Utility.idAttribute block.meta.lineNumber
+             , Render.Utility.idAttributeFromInt block.meta.lineNumber
              , Element.spacing 18
              ]
                 ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
@@ -675,7 +681,7 @@ comment count acc settings block =
     in
     Element.column [ Element.spacing 6 ]
         [ Element.el [ Font.bold, Font.color Color.blue ] (Element.text author)
-        , Element.paragraph ([ Font.italic, Font.color Color.blue, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines, Render.Utility.idAttribute block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+        , Element.paragraph ([ Font.italic, Font.color Color.blue, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines, Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
             (Render.Helper.renderWithDefault "| comment" count acc settings (Generic.Language.getExpressionContent block))
         ]
 
@@ -696,7 +702,7 @@ quotation count acc settings block =
 
 blockAttributes settings block attrs =
     [ Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-    , Render.Utility.idAttribute block.meta.lineNumber
+    , Render.Utility.idAttributeFromInt block.meta.lineNumber
     ]
         ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
         ++ attrs
@@ -708,7 +714,7 @@ bibitem count acc settings block =
         label =
             List.Extra.getAt 0 block.args |> Maybe.withDefault "(12)" |> (\s -> "[" ++ s ++ "]")
     in
-    Element.row ([ Element.alignTop, Render.Utility.idAttribute block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+    Element.row ([ Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
         [ Element.el
             [ Font.size 14
             , Element.alignTop
@@ -738,7 +744,7 @@ renderCode count acc settings block =
         --, Element.spacing 8
         , Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
         , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-        , Render.Utility.idAttribute block.meta.lineNumber
+        , Render.Utility.idAttributeFromInt block.meta.lineNumber
         ]
         (case List.head block.args of
             Just arg ->
@@ -777,7 +783,7 @@ padFirst leftPadding elements =
 
 verbatimBlockAttributes lineNumber numberOfLines attrs =
     [ Render.Sync.rightLeftSyncHelper lineNumber numberOfLines
-    , Render.Utility.idAttribute lineNumber
+    , Render.Utility.idAttributeFromInt lineNumber
     ]
         ++ attrs
 
@@ -851,7 +857,7 @@ renderVerbatim _ _ _ block =
         , Element.spacing 8
         , Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
         , Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-        , Render.Utility.idAttribute block.meta.lineNumber
+        , Render.Utility.idAttributeFromInt block.meta.lineNumber
         ]
         (case List.head block.args of
             Just lang ->

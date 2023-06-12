@@ -4,7 +4,7 @@ import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
-import M.ExpressionParser
+import M.Expression
 import M.PrimitiveBlock
 
 
@@ -24,7 +24,7 @@ f str =
 toExpressionBlockForestFromStringlist : List String -> Result Error (Forest ExpressionBlock)
 toExpressionBlockForestFromStringlist lines =
     lines
-        |> Generic.Pipeline.toExpressionBlockForestFromStringlist M.ExpressionParser.parse
+        |> Generic.Pipeline.toExpressionBlockForestFromStringlist M.Expression.parse
 
 
 toExpressionBlocksFromString : Int -> String -> List ExpressionBlock
@@ -32,4 +32,4 @@ toExpressionBlocksFromString lineNumber str =
     str
         |> String.lines
         |> M.PrimitiveBlock.parse "!!"
-        |> List.map (Generic.Pipeline.toExpressionBlock lineNumber M.ExpressionParser.parse)
+        |> List.map (Generic.Pipeline.toExpressionBlock lineNumber M.Expression.parse)

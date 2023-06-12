@@ -6,7 +6,7 @@ import Generic.Language
         ( Expr(..)
         , simplifyExpr
         )
-import M.ExpressionParser exposing (parse)
+import M.Expression exposing (parse)
 import Test exposing (Test, describe, test)
 
 

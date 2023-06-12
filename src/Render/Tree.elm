@@ -8,7 +8,7 @@ import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import Generic.Settings
-import M.ExpressionParser
+import M.Expression
 import Render.Block
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings exposing (Settings)
