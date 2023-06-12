@@ -1,17 +1,6 @@
-| title
-My Book
-
-| contents
-
 | section 1
-ABC
+A
 
-This is a test.
-[i Yes it is!]
-
-xxxx
-
-| section 1
-XYZ
-
+| section
+B
 

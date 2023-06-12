@@ -179,7 +179,7 @@ internalLink str =
 makeId : List Generic.Language.Expression -> Element.Attribute msg
 makeId exprs =
     elementAttribute "id"
-        (Generic.ASTTools.stringValueOfList exprs |> String.trim |> makeSlug |> Debug.log "SLUG")
+        (Generic.ASTTools.stringValueOfList exprs |> String.trim |> makeSlug)
 
 
 makeSlug : String -> String

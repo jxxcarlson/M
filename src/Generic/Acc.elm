@@ -164,7 +164,7 @@ transformAccumulateTree tree acc =
 transformBlock : Accumulator -> ExpressionBlock -> ExpressionBlock
 transformBlock acc block =
     case ( block.heading, block.args ) of
-        ( Ordinary "section", level :: [] ) ->
+        ( Ordinary "section", _ ) ->
             { block | properties = Dict.insert "label" (Vector.toString acc.headingIndex) block.properties }
 
         ( Ordinary "quiver", _ ) ->
@@ -178,9 +178,6 @@ transformBlock acc block =
 
         ( Ordinary "iframe", _ ) ->
             { block | properties = Dict.insert "figure" (getCounterAsString "figure" acc.counter) block.properties }
-
-        ( Ordinary "section", level :: "-" :: [] ) ->
-            { block | args = level :: "-" :: [] }
 
         ( Ordinary "document", _ ) ->
             { block | properties = Dict.insert "label" (Vector.toString acc.documentIndex) block.properties }
@@ -431,7 +428,7 @@ getReferenceDatum block =
 
 
 updateAccumulator : ExpressionBlock -> Accumulator -> Accumulator
-updateAccumulator ({ heading, indent, args, body, meta } as block) accumulator =
+updateAccumulator ({ heading, indent, args, body, meta, properties } as block) accumulator =
     -- Update the accumulator for expression blocks with selected name
     case heading of
         -- provide numbering for sections
@@ -466,7 +463,7 @@ updateAccumulator ({ heading, indent, args, body, meta } as block) accumulator =
         Ordinary "section" ->
             let
                 level =
-                    List.head args |> Maybe.withDefault "1"
+                    Dict.get "level" properties |> Maybe.withDefault "1"
             in
             case getNameContentId block of
                 Just { name, content, id } ->
@@ -569,7 +566,7 @@ updateWithOrdinarySectionBlock accumulator name content level id =
             titleWords |> List.map (String.toLower >> Utility.compressWhitespace >> Utility.removeNonAlphaNum >> String.replace " " "-") |> String.join ""
 
         headingIndex =
-            Vector.increment (String.toInt level |> Maybe.withDefault 2) accumulator.headingIndex
+            Vector.increment (String.toInt level |> Maybe.withDefault 1 |> (\x -> x - 1)) accumulator.headingIndex
 
         blockCounter =
             0
@@ -582,7 +579,7 @@ updateWithOrdinarySectionBlock accumulator name content level id =
         | inList = inList
         , headingIndex = headingIndex
         , blockCounter = blockCounter
-        , counter = Dict.insert "equation" 0 accumulator.counter
+        , counter = Dict.insert "equation" 0 accumulator.counter --TODO: this is strange!!
     }
         |> updateReference referenceDatum
 

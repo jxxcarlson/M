@@ -281,7 +281,7 @@ renderWithDefaultWithSize size default count acc settings exprs =
         [ Element.el [ Font.color settings.redColor, Font.size size ] (Element.text default) ]
 
     else
-        List.map (Render.Expression.render count acc settings) (exprs |> Debug.log "exprs")
+        List.map (Render.Expression.render count acc settings) exprs
 
 
 renderWithDefault2 : String -> Int -> Accumulator -> Settings -> List Expression -> List (Element MarkupMsg)
@@ -307,37 +307,18 @@ section count acc settings block =
     -- level 1 is reserved for titles
     let
         headingLevel =
-            case block.args of
-                n :: [] ->
-                    if n == "-" then
-                        2
+            case Dict.get "level" block.properties of
+                Nothing ->
+                    2
 
-                    else
-                        String.toFloat n |> Maybe.withDefault 2 |> (\x -> x + 1)
-
-                n :: "-" :: [] ->
-                    String.toFloat n |> Maybe.withDefault 2 |> (\x -> x + 1)
-
-                _ ->
-                    3
+                Just n ->
+                    String.toFloat n |> Maybe.withDefault 3
 
         fontSize =
             settings.maxHeadingFontSize / sqrt headingLevel |> round
 
         sectionNumber =
-            case block.args of
-                n :: [] ->
-                    if n == "-" then
-                        Element.none
-
-                    else
-                        Element.el [ Font.size fontSize ] (Element.text (blockLabel block.properties ++ ". "))
-
-                _ :: "-" :: [] ->
-                    Element.none
-
-                _ ->
-                    Element.none
+            Element.el [ Font.size fontSize ] (Element.text (blockLabel block.properties ++ ". "))
 
         exprs =
             Generic.Language.getExpressionContent block
@@ -351,10 +332,6 @@ section count acc settings block =
 
 sectionBlockAttributes : ExpressionBlock -> Settings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
 sectionBlockAttributes block settings attrs =
-    let
-        _ =
-            Debug.log "SEL_ID" block.meta.id
-    in
     [ Render.Utility.makeId (Generic.Language.getExpressionContent block)
     , Render.Utility.idAttribute block.meta.id
     ]
@@ -612,7 +589,7 @@ blockHeading block =
 -}
 blockLabel : Dict String String -> String
 blockLabel properties =
-    Dict.get "label" properties |> Maybe.withDefault "??"
+    Dict.get "label" properties |> Maybe.withDefault ""
 
 
 
