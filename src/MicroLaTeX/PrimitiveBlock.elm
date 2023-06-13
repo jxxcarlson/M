@@ -370,7 +370,7 @@ handleSpecial_ classifier line state =
                     { label | status = Filled } :: rest_
     in
     { state
-        | lineNumber = line.lineNumber
+        | lineNumber = line.lineNumber |> Debug.log "@STATE_LINE_NUMBER"
         , firstBlockLine = line.lineNumber
         , indent = line.indent
         , level = level
@@ -1233,7 +1233,7 @@ blockFromLine idPrefix count level ({ indent, lineNumber, position, prefix, cont
     , body = []
     , meta =
         { position = 0
-        , lineNumber = 1
+        , lineNumber = lineNumber
         , numberOfLines = 0
         , id = idPrefix ++ String.fromInt count
         , messages = []
