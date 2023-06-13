@@ -10,6 +10,7 @@ module XMarkdown.Expression exposing
 
 -- import L0.Parser.Expression
 
+import Config
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
 import M.Expression exposing (parseWithMessages)
@@ -144,7 +145,8 @@ pushToken token state =
                         state |> push token |> push (Bold meta_) |> advanceTokenIndex
 
                     _ ->
-                        pushOrCommit token state
+                        -- TODO: this is the place!
+                        pushOrCommit (token |> Debug.log "@PUSH_OR_COMMIT") state
 
         W _ _ ->
             pushOrCommit token state
@@ -174,7 +176,9 @@ commit token state =
             state
 
         Just expr ->
-            { state | committed = expr :: state.committed }
+            -- TODO: the "0" below is problematics, but I am using this rather than token.index
+            -- TODO: in order to match what the TOC needs
+            { state | committed = Generic.Language.updateMeta (\m -> { m | id = makeId state.lineNumber 0 }) expr :: state.committed }
 
 
 exprOfToken : Token -> Maybe Expression
@@ -539,7 +543,7 @@ isReducible : List Token -> Bool
 isReducible tokens =
     let
         preliminary =
-            tokens |> List.reverse |> Symbol.convertTokens |> List.filter (\sym -> sym /= O) |> Tools.forklogYellow "SYMBOLS" forkLogWidth identity
+            tokens |> Debug.log "@IS_REDUCIBLE" |> List.reverse |> Symbol.convertTokens |> List.filter (\sym -> sym /= O) |> Tools.forklogYellow "SYMBOLS" forkLogWidth identity
     in
     if preliminary == [] then
         False
@@ -785,8 +789,8 @@ recoverFromError state =
 
 
 makeId : Int -> Int -> String
-makeId a b =
-    String.fromInt a ++ "." ++ String.fromInt b
+makeId lineNumber tokenIndex =
+    Config.expressionIdPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
 
 
 

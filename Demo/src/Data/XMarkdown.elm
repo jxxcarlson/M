@@ -1,7 +1,7 @@
 module Data.XMarkdown exposing (text)
 
 
-text =
+text1 =
     """# XMarkdown Test Document!
 
 ## Type Theory
@@ -10,7 +10,7 @@ text =
 """
 
 
-text1 =
+text =
     """
 
  # XMarkdown Test Document

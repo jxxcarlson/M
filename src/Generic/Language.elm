@@ -20,6 +20,7 @@ module Generic.Language exposing
     , simplifyExpressionBlock
     , simplifyPrimitiveBlock
     , toExpressionBlock
+    , updateMeta
     )
 
 import Dict exposing (Dict)
@@ -88,6 +89,37 @@ type alias BlockMeta =
 
 type alias Expression =
     Expr ExprMeta
+
+
+getMeta : Expression -> ExprMeta
+getMeta expr =
+    case expr of
+        Fun _ _ meta ->
+            meta
+
+        VFun _ _ meta ->
+            meta
+
+        Text _ meta ->
+            meta
+
+
+setMeta : ExprMeta -> Expression -> Expression
+setMeta meta expr =
+    case expr of
+        Fun name args _ ->
+            Fun name args meta
+
+        VFun name arg _ ->
+            VFun name arg meta
+
+        Text text _ ->
+            Text text meta
+
+
+updateMeta : (ExprMeta -> ExprMeta) -> Expression -> Expression
+updateMeta update expr =
+    setMeta (update (getMeta expr)) expr
 
 
 {-| A block whose content is a list of expressions.
