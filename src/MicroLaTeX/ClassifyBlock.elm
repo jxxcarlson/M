@@ -47,14 +47,20 @@ classifierParser =
         , ordinaryBlockParser
         , verbatimBlockParser
         , itemParser
-        , sectionParser
-        , subsectionParser
-        , subsubsectionParser
-        , subheadingParser
-        , setcounterParser
+        , specialOrdinaryBlockParser "section"
+        , specialOrdinaryBlockParser "subsection"
+        , specialOrdinaryBlockParser "subsubsection"
+        , specialOrdinaryBlockParser "subheading"
+        , specialOrdinaryBlockParser "setcounter"
+        , specialOrdinaryBlockParser "shiftandsetcounter"
+        , specialOrdinaryBlockParser "banner"
         , contentsParser
         , numberedParser
         ]
+
+
+specialOrdinaryBlockParser name =
+    specialBlockParser name (LXOrdinaryBlock name)
 
 
 {-|
@@ -92,37 +98,6 @@ itemParser : Parser Classification
 itemParser =
     Parser.succeed (CSpecialBlock LXItem)
         |. Parser.symbol "\\item"
-
-
-sectionParser : Parser Classification
-sectionParser =
-    -- TODO: more work on related variants
-    specialBlockParser "section" (LXOrdinaryBlock "section")
-
-
-subsectionParser : Parser Classification
-subsectionParser =
-    specialBlockParser "subsection" (LXOrdinaryBlock "subsection")
-
-
-subsubsectionParser : Parser Classification
-subsubsectionParser =
-    specialBlockParser "subsubsection" (LXOrdinaryBlock "subsubsection")
-
-
-subheadingParser : Parser Classification
-subheadingParser =
-    specialBlockParser "subheading" (LXOrdinaryBlock "subheading")
-
-
-bannerParser : Parser Classification
-bannerParser =
-    specialBlockParser "banner" (LXOrdinaryBlock "banner")
-
-
-setcounterParser : Parser Classification
-setcounterParser =
-    specialBlockParser "setcounter" (LXOrdinaryBlock "setcounter")
 
 
 contentsParser : Parser Classification
