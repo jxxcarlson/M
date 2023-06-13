@@ -73,9 +73,11 @@ parse lineNumber str =
         |> Token.run
         |> Tools.forklogCyan "TOKENS" forkLogWidth Token.toString2
         |> initWithTokens lineNumber
+        |> Debug.log "@INIT_TOKENS"
         |> run
         |> .committed
         |> Tools.forklogCyan "LENGTH" forkLogWidth List.length
+        |> Debug.log "@TOKENS_OUT"
 
 
 parseToState : Int -> String -> State
@@ -361,6 +363,26 @@ handleParens state =
     { state | committed = expr :: state.committed, stack = [] }
 
 
+handleS : State -> State
+handleS state =
+    let
+        str =
+            case state.stack of
+                [ S str_ _ ] ->
+                    str_
+
+                _ ->
+                    state.stack |> List.reverse |> Token.toString
+
+        meta =
+            { begin = 0, end = 0, index = 0, id = makeId state.lineNumber state.tokenIndex }
+
+        expr =
+            Text str meta
+    in
+    { state | committed = expr :: state.committed, stack = [] }
+
+
 handleItalicSymbol : List Symbol -> State -> State
 handleItalicSymbol symbols state =
     if symbols == [ SItalic, SItalic ] then
@@ -475,12 +497,16 @@ evalList macroName lineNumber tokens =
                                     -- drop the leading and trailing LB, RG
                                     a |> List.take (List.length a - 1) |> List.drop 1
                             in
-                            eval lineNumber aa ++ evalList Nothing lineNumber b
+                            eval lineNumber aa
+                                ++ evalList Nothing lineNumber b
+                                |> Debug.log "@EVAL_LIST"
 
                 _ ->
                     case exprOfToken token of
                         Just expr ->
-                            expr :: evalList Nothing lineNumber (List.drop 1 tokens)
+                            expr
+                                :: evalList Nothing lineNumber (List.drop 1 tokens)
+                                |> Debug.log "@EXPR_OF_TOKEN"
 
                         Nothing ->
                             [ errorMessage "•••?(7)" ]
