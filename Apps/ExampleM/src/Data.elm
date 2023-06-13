@@ -30,6 +30,7 @@ Introduction
 Type theory brings together programming, logic, and mathematics.
 We outline some of its history, introducing notions that will be studied in detail in what follows.
 
+[hrule]
 
 || aligned
 a &= x + y\\\\
@@ -38,6 +39,7 @@ c &= a b \\\\
   &= (x + y)(x - y) \\\\
   & = x^2 - y^2
 
+[hrule]
 
 | section
 Russell's paradox

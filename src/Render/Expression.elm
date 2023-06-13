@@ -99,7 +99,7 @@ markupDict =
                     ]
                     [ Element.el
                         [ Element.Border.width 1
-                        , Element.width (Element.px (s.width - 20))
+                        , Element.width (Element.px s.width)
                         , Element.centerX
                         , Element.Border.color (Element.rgb 0.75 0.75 0.75)
                         ]

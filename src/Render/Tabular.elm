@@ -45,7 +45,7 @@ render count acc settings block =
 
         columnWidths : List Int
         columnWidths =
-            List.map (List.map Render.Utility.textWidth) cellsAsStrings
+            List.map (List.map (Render.Utility.textWidth settings.display)) cellsAsStrings
                 |> List.Extra.transpose
                 |> List.map (\column -> List.maximum column |> Maybe.withDefault 1)
                 |> List.map ((\w -> effectiveFontWidth_ * w) >> round)

@@ -20,6 +20,7 @@ import Generic.ASTTools
 import Generic.Language exposing (Expr(..))
 import Html.Attributes
 import List.Extra
+import Render.Settings
 import Tools.Utility as Utility
 
 
@@ -32,8 +33,22 @@ leftPadding p =
     Element.paddingEach { left = p, right = 0, top = 0, bottom = 0 }
 
 
-textWidth : String -> Float
-textWidth str_ =
+textWidth : Render.Settings.Display -> String -> Float
+textWidth display str =
+    let
+        pixelsPerCharacter =
+            case display of
+                Render.Settings.DefaultDisplay ->
+                    8.0
+
+                Render.Settings.PhoneDisplay ->
+                    7.0
+    in
+    textWidth_ str * pixelsPerCharacter
+
+
+textWidth_ : String -> Float
+textWidth_ str_ =
     if String.contains "\\\\" str_ then
         str_
             |> String.split "\\\\"

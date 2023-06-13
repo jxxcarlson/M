@@ -21,12 +21,12 @@ page in which the document is e
 -}
 type alias RenderSettings =
     { paragraphSpacing : Int
-    , selectedId : String
+    , selectedId : String -- the element with this id will be highlighted
     , display : Display
     , longEquationLimit : Float
-    , selectedSlug : Maybe String
+    , selectedSlug : Maybe String -- is this necessary?
     , showErrorMessages : Bool
-    , showTOC : Bool
+    , showTOC : Bool -- is this necessary?
     , titleSize : Int
     , width : Int
     , backgroundColor : Element.Color
@@ -71,7 +71,7 @@ makeSettings selectedId selectedSlug scale windowWidth =
     , titleSize = titleSize
     , paragraphSpacing = 28
     , display = DefaultDisplay
-    , longEquationLimit = 0.1 * (windowWidth |> toFloat)
+    , longEquationLimit = 1 * (windowWidth |> toFloat)
     , showTOC = True
     , showErrorMessages = False
     , selectedId = selectedId

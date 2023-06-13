@@ -140,11 +140,15 @@ paddingZero =
     { left = 0, right = 0, top = 0, bottom = 0 }
 
 
+xPadding =
+    16
+
+
 mainColumn : Model -> Element Msg
 mainColumn model =
     let
         compiled =
-            Compiler.compileM (panelWidth model) model.count "(selectedId)" (String.lines model.sourceText)
+            Compiler.compileM (panelWidth model - 2 * xPadding) model.count "(selectedId)" (String.lines model.sourceText)
     in
     column mainColumnStyle
         [ column [ width (px <| appWidth model), height (px <| appHeight model) ]

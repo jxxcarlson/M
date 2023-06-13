@@ -79,14 +79,16 @@ equation count acc settings block =
         content =
             String.join "\n" filteredLines
 
-        -- TODO: changed 45 -> 0
         labelText =
-            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "??") ++ ")"
+            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "-") ++ ")"
+
+        label_ =
+            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
 
         label =
-            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
+            showIf settings content label_
     in
-    Element.column [ Element.width (Element.px (settings.width - 110 |> Debug.log "@@WIDTH")) ]
+    Element.column [ Element.width (Element.px settings.width) ]
         [ Element.row
             ([ Element.centerX, Element.spacing 12, Element.inFront label ]
                 ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
@@ -105,6 +107,15 @@ equation count acc settings block =
         ]
 
 
+showIf : Render.Settings.RenderSettings -> String -> Element msg -> Element msg
+showIf settings content element =
+    if Render.Utility.textWidth settings.display content > (toFloat settings.width - 40) then
+        Element.none
+
+    else
+        element
+
+
 getCounter : String -> Dict String Int -> String
 getCounter counterName dict =
     Dict.get counterName dict |> Maybe.withDefault 0 |> String.fromInt
@@ -118,14 +129,6 @@ getLabel label dict =
 aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 aligned count acc settings block =
     let
-        w =
-            case block.body of
-                Left str_ ->
-                    str_
-
-                Right _ ->
-                    ""
-
         str =
             case block.body of
                 Left str_ ->
@@ -135,7 +138,7 @@ aligned count acc settings block =
                     ""
 
         filteredLines =
-            -- lines of math text to be rendered: filter stuff out
+            -- filter stuff out of lines of math text to be rendered:
             String.lines str
                 |> List.filter (\line -> not (String.left 6 line == "[label") && not (line == ""))
 
@@ -157,14 +160,16 @@ aligned count acc settings block =
         content =
             String.join "\n" adjustedLines
 
-        -- TODO: changed 45 -> 0
         labelText =
-            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "??") ++ ")"
+            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "-") ++ ")"
+
+        label_ =
+            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
 
         label =
-            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
+            showIf settings content label_
     in
-    Element.column [ Element.width (Element.px ((settings.width |> Debug.log "@@WIDTH") - 110 |> Debug.log "@@WIDTH")) ]
+    Element.column [ Element.width (Element.px settings.width) ]
         [ Element.row
             ([ Element.centerX, Element.spacing 12, Element.inFront label ]
                 ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
@@ -178,7 +183,7 @@ aligned count acc settings block =
                         []
                     )
                 )
-                (mathText count w block.meta.id DisplayMathMode content)
+                (mathText count str block.meta.id DisplayMathMode content)
             ]
         ]
 
