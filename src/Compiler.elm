@@ -152,16 +152,14 @@ compileL width outerCount selectedId lines =
         Ok forest_ ->
             let
                 _ =
-                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock |> Debug.log "AST"
+                    -- forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock |> Debug.log "AST"
+                    forest_ |> Debug.log "AST"
 
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
-
-                _ =
-                    accumulator
             in
             { body =
                 Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
