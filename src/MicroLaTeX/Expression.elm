@@ -9,6 +9,7 @@ module MicroLaTeX.Expression exposing
     , reduceTokens
     )
 
+import Config
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
 import MicroLaTeX.Helpers as Helpers exposing (Step(..), loop)
@@ -614,7 +615,7 @@ errorSuffix rest =
 
 boostMeta : Int -> Generic.Language.ExprMeta -> Generic.Language.ExprMeta
 boostMeta lineNumber meta =
-    { meta | id = String.fromInt lineNumber ++ "." ++ meta.id }
+    { meta | id = makeId lineNumber 0 }
 
 
 boostMeta_ : Int -> Int -> { begin : Int, end : Int, index : Int } -> { begin : Int, end : Int, index : Int, id : String }
@@ -622,9 +623,16 @@ boostMeta_ lineNumber tokenIndex { begin, end, index } =
     { begin = begin, end = end, index = index, id = makeId lineNumber tokenIndex }
 
 
+
+--
+--makeId : Int -> Int -> String
+--makeId a b =
+--    String.fromInt a ++ "." ++ String.fromInt b
+
+
 makeId : Int -> Int -> String
-makeId a b =
-    String.fromInt a ++ "." ++ String.fromInt b
+makeId lineNumber tokenIndex =
+    Config.expressionIdPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex |> Debug.log "@makeId"
 
 
 recoverFromError2 : State -> Step State State
