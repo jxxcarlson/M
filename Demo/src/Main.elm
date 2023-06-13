@@ -39,6 +39,7 @@ type alias Model =
     , windowWidth : Int
     , windowHeight : Int
     , currentLanguage : Language
+    , selectId : String
     }
 
 
@@ -84,6 +85,7 @@ init flags =
       , windowWidth = flags.window.windowWidth
       , windowHeight = flags.window.windowHeight
       , currentLanguage = MLang
+      , selectId = "@InitID"
       }
     , Cmd.none
     )
@@ -112,11 +114,16 @@ update msg model =
         Render msg_ ->
             case msg_ of
                 Render.Msg.SelectId id ->
+                    let
+                        _ =
+                            Debug.log "@@MAIN, NEW select id" id
+                    in
+                    -- TODO: work on this
                     if id == "title" then
-                        ( model, jumpToTopOf "rendered-text" )
+                        ( { model | selectId = id }, jumpToTopOf "rendered-text" )
 
                     else
-                        ( model, Cmd.none )
+                        ( { model | selectId = id }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -183,19 +190,19 @@ mainColumn model =
                 MLang ->
                     Compiler.compileM (panelWidth model - 2 * xPadding)
                         model.count
-                        "(selectedId)"
+                        model.selectId
                         (String.lines model.sourceText)
 
                 MicroLaTeXLang ->
                     Compiler.compileL (panelWidth model - 2 * xPadding)
                         model.count
-                        "(selectedId)"
+                        model.selectId
                         (String.lines model.sourceText)
 
                 XMarkdownLang ->
                     Compiler.compileX (panelWidth model - 2 * xPadding)
                         model.count
-                        "(selectedId)"
+                        model.selectId
                         (String.lines model.sourceText)
     in
     column mainColumnStyle

@@ -54,6 +54,7 @@ attampt to formalize the foundations of mathematics: consider the
 set $R$ of all sets which are not members of themselves:
 
 || equation
+\\label{russell}
 R = \\{ x\\ |\\ x \\not\\in x \\}
 
 One asks: [i is $R$ a member of itself?]. One sees that if it is,
@@ -241,6 +242,8 @@ a brief introduction to the ideas of [term Homotopy Type Theory].
 
 | section
 Reading
+
+Let's talk about the work of Russel (see [eqref russell]).
 
 | bibitem Andrej
 [link Logic in CS https://www.andrej.com/zapiski/ISRM-LOGRAC-2022/01-first-steps-with-agda.lagda.html]

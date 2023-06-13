@@ -656,8 +656,6 @@ reflink acc exprList =
     in
     Element.link
         [ Font.color (Element.rgb 0 0 0.7)
-
-        -- , Events.onClick (SendId id)
         , Events.onClick (SelectId id)
         ]
         { url = Utility.internalLink id
@@ -686,8 +684,9 @@ eqref acc exprList =
     in
     Element.link
         [ Font.color (Element.rgb 0 0 0.7)
-        , Events.onClick (SelectId id)
-        , Events.onClick (HighlightId id)
+        , Events.onClick (SelectId (id |> Debug.log "@@click, SelectId@@"))
+
+        --, Events.onClick (HighlightId id)
         ]
         { url = Utility.internalLink id
         , label = Element.paragraph [] [ Element.text ("(" ++ val ++ ")") ]
