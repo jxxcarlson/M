@@ -20,6 +20,7 @@ type MarkupMsg
     | ProposeSolution SolutionState
     | RequestCopyOfDocument
     | RequestToggleIndexSize
+    | JumpToTop
     | MMNoOp
 
 

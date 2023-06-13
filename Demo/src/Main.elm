@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom
 import Browser.Events
 import Compiler
 import Data.M
@@ -15,6 +16,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings
+import Task
 
 
 main =
@@ -107,8 +109,17 @@ update msg model =
         SetLanguage lang ->
             ( { model | currentLanguage = lang, sourceText = setSourceText lang }, Cmd.none )
 
-        Render _ ->
-            ( model, Cmd.none )
+        Render msg_ ->
+            case msg_ of
+                Render.Msg.SelectId id ->
+                    if id == "title" then
+                        ( model, jumpToTopOf "rendered-text" )
+
+                    else
+                        ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 
@@ -323,3 +334,15 @@ mainColumnStyle =
     , bgGray 0.4
     , paddingXY 20 20
     ]
+
+
+scrollToTop : Cmd Msg
+scrollToTop =
+    Browser.Dom.setViewport 0 0 |> Task.perform (\() -> NoOp)
+
+
+jumpToTopOf : String -> Cmd Msg
+jumpToTopOf id =
+    Browser.Dom.getViewportOf id
+        |> Task.andThen (\info -> Browser.Dom.setViewportOf id 0 0)
+        |> Task.attempt (\_ -> NoOp)
