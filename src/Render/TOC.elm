@@ -42,7 +42,7 @@ viewTocItem count acc settings ({ args, body, properties } as block) =
         Right exprs ->
             let
                 id =
-                    Config.idPrefix ++ String.fromInt block.meta.lineNumber ++ ".0"
+                    Config.expressionIdPrefix ++ String.fromInt block.meta.lineNumber ++ ".0"
 
                 sectionNumber =
                     case List.Extra.getAt 1 args of

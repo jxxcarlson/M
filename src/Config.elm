@@ -1,4 +1,8 @@
-module Config exposing (expressionIdPrefix, idPrefix)
+module Config exposing
+    ( expressionIdPrefix
+    , idPrefix
+    , indentationQuantum
+    )
 
 
 idPrefix =
@@ -7,3 +11,7 @@ idPrefix =
 
 expressionIdPrefix =
     "e-"
+
+
+indentationQuantum =
+    2

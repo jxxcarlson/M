@@ -596,7 +596,7 @@ segLength tokens =
 
 makeId : Int -> Int -> String
 makeId lineNumber tokenIndex =
-    Config.idPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
+    Config.expressionIdPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
 
 
 dummyTokenIndex =

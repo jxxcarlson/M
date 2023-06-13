@@ -39,6 +39,7 @@ module Generic.Acc exposing
 
 -}
 
+import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Generic.ASTTools
@@ -52,10 +53,6 @@ import List.Extra
 import Maybe.Extra
 import Tools.Utility as Utility
 import Tree exposing (Tree)
-
-
-indentationQuantum =
-    2
 
 
 initialData : InitialAccumulatorData
@@ -681,7 +678,7 @@ updateWithOrdinaryBlock name content tag id indent accumulator =
         Just "numbered" ->
             let
                 level =
-                    indent // indentationQuantum
+                    indent // Config.indentationQuantum
 
                 itemVector =
                     case initialNumberedVector of
@@ -706,7 +703,7 @@ updateWithOrdinaryBlock name content tag id indent accumulator =
         Just "item" ->
             let
                 level =
-                    indent // indentationQuantum
+                    indent // Config.indentationQuantum
 
                 itemVector =
                     case initialNumberedVector of
@@ -733,7 +730,7 @@ updateWithOrdinaryBlock name content tag id indent accumulator =
                 --- TODO: fix thereom labels
                 let
                     level =
-                        indent // indentationQuantum
+                        indent // Config.indentationQuantum
 
                     itemVector =
                         Vector.increment level accumulator.itemVector

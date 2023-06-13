@@ -25,7 +25,7 @@ f str =
 toExpressionBlockForestFromStringlist : List String -> Result Error (Forest ExpressionBlock)
 toExpressionBlockForestFromStringlist lines =
     lines
-        |> Generic.Pipeline.toExpressionBlockForestFromStringlist Config.idPrefix 0 M.Expression.parse
+        |> Generic.Pipeline.toExpressionBlockForestFromStringlist Config.expressionIdPrefix 0 M.Expression.parse
 
 
 toExpressionBlocksFromString : Int -> String -> List ExpressionBlock
