@@ -2,6 +2,15 @@ module Data.XMarkdown exposing (text)
 
 
 text =
+    """# XMarkdown Test Document!
+
+## Type Theory
+
+## Mathematics
+"""
+
+
+text1 =
     """
 
  # XMarkdown Test Document
@@ -11,9 +20,19 @@ text =
  *Type theory* brings together programming, logic, and mathematics.
  We outline
 
-   - **some of its history**
+I read the [New York Times](https://nytimes.com) every day.
 
-   - @[red Introduce] notions that will be studied in detail in what follows.
+  - **some of its history**
+
+  - @[red Introduce] notions that will be studied in detail in what follows.
+
+    . This
+
+    . That
+
+I read the [New York Times](https://nytimes.com) every day.
+
+![Divorce party](https://imagedelivery.net/9U-0Y4sEzXlO6BXzTnQnYQ/663d702e-ba37-4227-1019-85fe74261900/public)
 
  ## Mathematics
 
