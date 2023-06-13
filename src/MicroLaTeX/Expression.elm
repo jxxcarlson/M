@@ -632,7 +632,7 @@ boostMeta_ lineNumber tokenIndex { begin, end, index } =
 
 makeId : Int -> Int -> String
 makeId lineNumber tokenIndex =
-    Config.expressionIdPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex |> Debug.log "@makeId"
+    Config.expressionIdPrefix ++ String.fromInt lineNumber ++ "." ++ String.fromInt tokenIndex
 
 
 recoverFromError2 : State -> Step State State

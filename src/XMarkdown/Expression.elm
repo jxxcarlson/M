@@ -74,11 +74,9 @@ parse lineNumber str =
         |> Token.run
         |> Tools.forklogCyan "TOKENS" forkLogWidth Token.toString2
         |> initWithTokens lineNumber
-        |> Debug.log "@INIT_TOKENS"
         |> run
         |> .committed
         |> Tools.forklogCyan "LENGTH" forkLogWidth List.length
-        |> Debug.log "@TOKENS_OUT"
 
 
 parseToState : Int -> String -> State
@@ -146,7 +144,7 @@ pushToken token state =
 
                     _ ->
                         -- TODO: this is the place!
-                        pushOrCommit (token |> Debug.log "@PUSH_OR_COMMIT") state
+                        pushOrCommit token state
 
         W _ _ ->
             pushOrCommit token state
@@ -503,14 +501,12 @@ evalList macroName lineNumber tokens =
                             in
                             eval lineNumber aa
                                 ++ evalList Nothing lineNumber b
-                                |> Debug.log "@EVAL_LIST"
 
                 _ ->
                     case exprOfToken token of
                         Just expr ->
                             expr
                                 :: evalList Nothing lineNumber (List.drop 1 tokens)
-                                |> Debug.log "@EXPR_OF_TOKEN"
 
                         Nothing ->
                             [ errorMessage "•••?(7)" ]
@@ -543,7 +539,7 @@ isReducible : List Token -> Bool
 isReducible tokens =
     let
         preliminary =
-            tokens |> Debug.log "@IS_REDUCIBLE" |> List.reverse |> Symbol.convertTokens |> List.filter (\sym -> sym /= O) |> Tools.forklogYellow "SYMBOLS" forkLogWidth identity
+            tokens |> List.reverse |> Symbol.convertTokens |> List.filter (\sym -> sym /= O) |> Tools.forklogYellow "SYMBOLS" forkLogWidth identity
     in
     if preliminary == [] then
         False

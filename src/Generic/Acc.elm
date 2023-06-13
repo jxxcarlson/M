@@ -1,6 +1,7 @@
 module Generic.Acc exposing
     ( Accumulator
     , InitialAccumulatorData
+    , getMacroArg
     , initialData
     , transformAccumulate
     )
@@ -51,6 +52,7 @@ import Generic.TextMacro exposing (Macro)
 import Generic.Vector as Vector exposing (Vector)
 import List.Extra
 import Maybe.Extra
+import Parser exposing ((|.), (|=), Parser)
 import Tools.Utility as Utility
 import Tree exposing (Tree)
 
@@ -91,7 +93,6 @@ transformAccumulate : InitialAccumulatorData -> Forest ExpressionBlock -> ( Accu
 transformAccumulate data forest =
     List.foldl (\tree ( acc_, ast_ ) -> transformAccumulateTree tree acc_ |> mapper ast_) ( init data, [] ) forest
         |> (\( acc_, ast_ ) -> ( acc_, List.reverse ast_ ))
-        |> Debug.log "TRANSFORM ACCUMULATE"
 
 
 initialAccumulator : Accumulator
@@ -225,7 +226,7 @@ transformBlock acc block =
                     else
                         Vector.toString acc.headingIndex ++ "." ++ getCounterAsString "equation" acc.counter
             in
-            { block | properties = Dict.insert "equation-number" equationProp block.properties |> Debug.log "EQUATION" }
+            { block | properties = Dict.insert "equation-number" equationProp block.properties }
 
         ( Verbatim "aligned", _ ) ->
             let
@@ -355,9 +356,8 @@ type alias ReferenceDatum =
 
 makeReferenceDatum : String -> String -> String -> ReferenceDatum
 makeReferenceDatum id tag numRef =
-    -- TODO: test by setting tag = id
     { id = id
-    , tag = id
+    , tag = tag
     , numRef = numRef
     }
 
@@ -782,7 +782,7 @@ updateWithMathMacros content accumulator =
 
 
 updateWithVerbatimBlock : Maybe String -> List String -> String -> String -> Accumulator -> Accumulator
-updateWithVerbatimBlock name_ args tag_ id accumulator =
+updateWithVerbatimBlock name_ args body id accumulator =
     let
         ( inList, _ ) =
             listData accumulator name_
@@ -790,12 +790,15 @@ updateWithVerbatimBlock name_ args tag_ id accumulator =
         name =
             Maybe.withDefault "---" name_
 
-        dict =
-            Utility.keyValueDict args
-
         tag =
-            Dict.get "label" dict |> Maybe.withDefault tag_
+            case getMacroArg "label" body of
+                Ok str ->
+                    str
 
+                Err _ ->
+                    "???"
+
+        --Dict.get "label" dict |> Maybe.withDefault body
         isSimple =
             List.member name [ "quiver", "image" ]
 
@@ -948,3 +951,22 @@ addFootnotes termDataList ( dict1, dict2 ) =
 addFootnotesFromContent : String -> Either String (List Expression) -> ( Dict String TermLoc, Dict String Int ) -> ( Dict String TermLoc, Dict String Int )
 addFootnotesFromContent id content ( dict1, dict2 ) =
     addFootnotes (getFootnotes id content) ( dict1, dict2 )
+
+
+
+-- PARSER STUFF
+
+
+macroParser : String -> Parser String
+macroParser name =
+    Parser.succeed (\start end source -> String.slice start end source)
+        |. Parser.chompUntil ("\\" ++ name ++ "{")
+        |. Parser.symbol ("\\" ++ name ++ "{")
+        |= Parser.getOffset
+        |. Parser.chompUntil "}"
+        |= Parser.getOffset
+        |= Parser.getSource
+
+
+getMacroArg name str =
+    Parser.run (macroParser name) str

@@ -370,7 +370,7 @@ handleSpecial_ classifier line state =
                     { label | status = Filled } :: rest_
     in
     { state
-        | lineNumber = line.lineNumber |> Debug.log "@STATE_LINE_NUMBER"
+        | lineNumber = line.lineNumber
         , firstBlockLine = line.lineNumber
         , indent = line.indent
         , level = level

@@ -127,7 +127,7 @@ getCounter counterName dict =
 
 getLabel : String -> Dict String String -> String
 getLabel label dict =
-    Dict.get label dict |> Maybe.withDefault "" |> Debug.log "LABEL" |> String.trim
+    Dict.get label dict |> Maybe.withDefault "" |> String.trim
 
 
 aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg

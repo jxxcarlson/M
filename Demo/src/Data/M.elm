@@ -3,13 +3,17 @@ module Data.M exposing (text)
 
 text1 =
     """| title
- XMarkdown Test Document!
+M: Test
 
-| section
-Type Theory
+This is a test.
 
-| section
-Mathematics
+|| equation
+\\label{pythagoras}
+a^2 + b^2 = c^2
+
+Blah blah blah.
+
+Let's take a look at equation [eqref pythagoras].
 """
 
 
