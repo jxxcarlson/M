@@ -169,9 +169,9 @@ aligned count acc settings block =
     in
     Element.column [ Element.width (Element.px settings.width) ]
         [ Element.row
-            (rightToLeftSyncHelper block label)
+            (Element.width (Element.px settings.width) :: rightToLeftSyncHelper block label)
             [ Element.el
-                (highlightMath settings block)
+                (Element.centerX :: highlightMath settings block)
                 (mathText count str block.meta.id DisplayMathMode content)
             ]
         ]
