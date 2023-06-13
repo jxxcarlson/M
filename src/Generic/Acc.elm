@@ -69,6 +69,7 @@ type alias Accumulator =
     , counter : Dict String Int
     , blockCounter : Int
     , itemVector : Vector -- Used for section numbering
+    , deltaLevel : Int
     , numberedItemDict : Dict String { level : Int, index : Int }
     , numberedBlockNames : List String
     , inList : Bool
@@ -100,6 +101,7 @@ initialAccumulator =
     , counter = Dict.empty
     , blockCounter = 0
     , itemVector = Vector.init 4
+    , deltaLevel = 0
     , numberedItemDict = Dict.empty
     , numberedBlockNames = Generic.Settings.numberedBlockNames
     , inList = False
@@ -145,6 +147,7 @@ type alias InitialAccumulatorData =
 init : InitialAccumulatorData -> Accumulator
 init data =
     { headingIndex = Vector.init data.vectorSize
+    , deltaLevel = 0
     , documentIndex = Vector.init data.vectorSize
     , inList = False
     , counter = Dict.empty
@@ -163,7 +166,6 @@ init data =
     , qAndADict = Dict.empty
     }
         |> updateWithMathMacros data.mathMacros
-        |> updateWithTextMacros data.textMacros
 
 
 mapper ast_ ( acc_, tree_ ) =
@@ -524,6 +526,13 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
             in
             { accumulator | headingIndex = { content = [ n, 0, 0, 0 ], size = 4 } }
 
+        Ordinary "shiftandsetcounter" ->
+            let
+                n =
+                    List.head args |> Maybe.andThen String.toInt |> Maybe.withDefault 1
+            in
+            { accumulator | headingIndex = { content = [ n, 0, 0, 0 ], size = 4 }, deltaLevel = 1 }
+
         Ordinary "bibitem" ->
             updateBibItemBlock accumulator args block.meta.id
 
@@ -594,7 +603,7 @@ updateWithOrdinarySectionBlock accumulator name content level id =
             titleWords |> List.map (String.toLower >> Utility.compressWhitespace >> Utility.removeNonAlphaNum >> String.replace " " "-") |> String.join ""
 
         headingIndex =
-            Vector.increment (String.toInt level |> Maybe.withDefault 1 |> (\x -> x - 1)) accumulator.headingIndex
+            Vector.increment (String.toInt level |> Maybe.withDefault 1 |> (\x -> x - 1 + accumulator.deltaLevel)) accumulator.headingIndex
 
         blockCounter =
             0

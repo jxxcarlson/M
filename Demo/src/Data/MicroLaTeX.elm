@@ -6,14 +6,13 @@ text =
  \\title{Wave Packets and the Dispersion Relation}
  
  \\tags{jxxcarlson:wave-packets-dispersion, quantum-mechanics, system:startup, folder:krakow}
- 
+
+ \\shiftandsetcounter{2}
  
  \\contents
  
  | banner
  \\ilink{Quantum Mechanics Notes jxxcarlson:quantum-mechanics-notes}
- 
- \\setcounter{2}
  
  \\tags{system:startup jxxcarslon:wave-packets-dispersion}
  

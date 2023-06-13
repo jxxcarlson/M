@@ -334,6 +334,9 @@ handleSpecial_ classifier line state =
                                 "setcounter" ->
                                     ( "setcounter", [ ClassifyBlock.getArg name_ newBlock_.firstLine |> Result.withDefault "1" ] )
 
+                                "shiftandsetcounter" ->
+                                    ( "shiftandsetcounter", [ ClassifyBlock.getArg name_ newBlock_.firstLine |> Result.withDefault "1" ] )
+
                                 _ ->
                                     ( name_, [] )
                     in

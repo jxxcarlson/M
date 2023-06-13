@@ -202,6 +202,7 @@ blockDict =
         , ( "index", index )
         , ( "endnotes", endnotes )
         , ( "setcounter", \_ _ _ _ -> Element.none )
+        , ( "shiftandsetcounter", \_ _ _ _ -> Element.none )
         ]
 
 
@@ -315,7 +316,7 @@ section count acc settings block =
                     String.toFloat n |> Maybe.withDefault 3
 
         fontSize =
-            settings.maxHeadingFontSize / sqrt headingLevel |> round
+            settings.maxHeadingFontSize / sqrt (headingLevel - toFloat acc.deltaLevel) |> round
 
         sectionNumber =
             Element.el [ Font.size fontSize ] (Element.text (blockLabel block.properties ++ ". "))
