@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Events
 import Compiler
 import Data
 import Element exposing (..)
@@ -25,7 +26,7 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Browser.Events.onResize GotNewWindowDimensions
 
 
 type alias Model =
@@ -40,6 +41,7 @@ type Msg
     = NoOp
     | InputText String
     | Render MarkupMsg
+    | GotNewWindowDimensions Int Int
 
 
 type alias Flags =
@@ -77,6 +79,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        GotNewWindowDimensions width height ->
+            ( { model | windowWidth = width, windowHeight = height }, Cmd.none )
 
         InputText str ->
             ( { model
@@ -144,10 +149,10 @@ mainColumn model =
     column mainColumnStyle
         [ column [ width (px <| appWidth model), height (px <| appHeight model) ]
             [ -- title "Compiler Demo"
-              row [ spacing margin.between, centerX, paddingEach { paddingZero | left = margin.left, right = margin.right } ]
-                [ el [ paddingEach { paddingZero | left = margin.left } ] (inputText model)
+              row [ spacing margin.between, centerX, width (px <| model.windowWidth - margin.left - margin.right) ]
+                [ inputText model
                 , displayRenderedText model compiled.body |> Element.map Render
-                , el [ paddingEach { paddingZero | right = margin.right } ] (viewToc model compiled.toc) |> Element.map Render
+                , viewToc model compiled.toc |> Element.map Render
                 ]
             ]
         ]
