@@ -1,6 +1,24 @@
 module Data.MicroLaTeX exposing (text)
 
 
+text1 =
+    """
+\\title{Book}
+
+abc \\strong{def} ghi
+
+\\section{AA}
+
+blah blah blah
+
+\\section{BB}
+
+blah blah blah
+
+
+"""
+
+
 text =
     """
  \\title{Wave Packets and the Dispersion Relation}
