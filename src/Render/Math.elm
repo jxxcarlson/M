@@ -48,7 +48,7 @@ displayedMath count acc settings block =
                 |> List.filter (\line -> line /= "")
                 |> List.map (Generic.MathMacro.evalStr acc.mathMacroDict)
     in
-    Element.column (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines :: [])
+    Element.column (Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines :: [])
         [ Element.el (Render.Sync.highlighter block.args [ Element.centerX ])
             (mathText count w block.meta.id DisplayMathMode (filteredLines |> String.join "\n"))
         ]
@@ -79,32 +79,36 @@ equation count acc settings block =
         content =
             String.join "\n" filteredLines
 
-        labelText =
-            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "-") ++ ")"
-
-        label_ =
-            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
-
         label =
-            showIf settings content label_
+            equationLabel settings block.properties content
     in
     Element.column [ Element.width (Element.px settings.width) ]
         [ Element.row
-            ([ Element.centerX, Element.spacing 12, Element.inFront label ]
-                ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-                        :: [ Render.Utility.elementAttribute "id" block.meta.id ]
-                   )
-            )
+            (rightToLeftSyncHelper block label)
             [ Element.el
-                (Render.Sync.highlightIfIdSelected block.meta.id
-                    settings
-                    (Render.Sync.highlighter block.args
-                        []
-                    )
-                )
+                (highlightMath settings block)
                 (mathText count w block.meta.id DisplayMathMode content)
             ]
         ]
+
+
+highlightMath settings block =
+    Render.Sync.highlightIfIdSelected block.meta.id
+        settings
+        (Render.Sync.highlighter block.args
+            []
+        )
+
+
+equationLabel settings properties content =
+    let
+        labelText =
+            "(" ++ (Dict.get "equation-number" properties |> Maybe.withDefault "-") ++ ")"
+
+        label_ =
+            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
+    in
+    showIf settings content label_
 
 
 showIf : Render.Settings.RenderSettings -> String -> Element msg -> Element msg
@@ -160,32 +164,24 @@ aligned count acc settings block =
         content =
             String.join "\n" adjustedLines
 
-        labelText =
-            "(" ++ (Dict.get "equation-number" block.properties |> Maybe.withDefault "-") ++ ")"
-
-        label_ =
-            Element.el [ Font.size 12, Element.alignRight, Element.moveDown 35 ] (Element.text labelText)
-
         label =
-            showIf settings content label_
+            equationLabel settings block.properties content
     in
     Element.column [ Element.width (Element.px settings.width) ]
         [ Element.row
-            ([ Element.centerX, Element.spacing 12, Element.inFront label ]
-                ++ (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-                        :: [ Render.Utility.elementAttribute "id" block.meta.id ]
-                   )
-            )
+            (rightToLeftSyncHelper block label)
             [ Element.el
-                (Render.Sync.highlightIfIdSelected block.meta.id
-                    settings
-                    (Render.Sync.highlighter block.args
-                        []
-                    )
-                )
+                (highlightMath settings block)
                 (mathText count str block.meta.id DisplayMathMode content)
             ]
         ]
+
+
+rightToLeftSyncHelper block label =
+    [ Element.centerX, Element.spacing 12, Element.inFront label ]
+        ++ (Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                :: [ Render.Utility.elementAttribute "id" block.meta.id ]
+           )
 
 
 mathText : Int -> String -> String -> DisplayMode -> String -> Element msg

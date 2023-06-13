@@ -2,7 +2,7 @@ module Render.Sync exposing
     ( highlightIfIdIsSelected
     , highlightIfIdSelected
     , highlighter
-    , rightLeftSyncHelper
+    , rightToLeftSyncHelper
     )
 
 import Element exposing (Element, paddingEach)
@@ -14,7 +14,7 @@ import Render.Settings
 
 highlightIfIdIsSelected firstLineNumber numberOfLines settings =
     if String.fromInt firstLineNumber == settings.selectedId then
-        [ rightLeftSyncHelper firstLineNumber (firstLineNumber + numberOfLines)
+        [ rightToLeftSyncHelper firstLineNumber (firstLineNumber + numberOfLines)
         , Background.color (Element.rgb 0.8 0.8 1.0)
         ]
 
@@ -22,8 +22,8 @@ highlightIfIdIsSelected firstLineNumber numberOfLines settings =
         []
 
 
-rightLeftSyncHelper : Int -> Int -> Element.Attribute MarkupMsg
-rightLeftSyncHelper firstLineNumber numberOfLines =
+rightToLeftSyncHelper : Int -> Int -> Element.Attribute MarkupMsg
+rightToLeftSyncHelper firstLineNumber numberOfLines =
     Events.onClick (SendLineNumber { begin = firstLineNumber, end = firstLineNumber + numberOfLines })
 
 

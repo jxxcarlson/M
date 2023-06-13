@@ -46,7 +46,7 @@ render count acc settings block =
                             ""
             in
             Element.column
-                [ Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                [ Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
                 , Render.Utility.idAttributeFromInt block.meta.lineNumber
                 , Element.width (Element.px w)
                 ]

@@ -50,7 +50,7 @@ item count acc settings block =
             , Render.Utility.leftPadding settings.leftIndentation
             ]
             (Element.text label_)
-        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
+        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
             (Render.Helper.renderWithDefault "| item" count acc settings (Generic.Language.getExpressionContent block))
         ]
 
@@ -101,7 +101,7 @@ numbered count acc settings block =
             , Render.Utility.leftPadding settings.leftRightIndentation
             ]
             (Element.text (label_ ++ ". "))
-        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
+        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
             (Render.Helper.renderWithDefault "| numbered" count acc settings (Generic.Language.getExpressionContent block))
         ]
 
@@ -114,6 +114,6 @@ desc count acc settings block =
     in
     Element.row ([ Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
         [ Element.el [ Font.bold, Element.alignTop, Element.width (Element.px 100) ] (Element.text label)
-        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
+        , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
             (Render.Helper.renderWithDefault "| desc" count acc settings (Generic.Language.getExpressionContent block))
         ]

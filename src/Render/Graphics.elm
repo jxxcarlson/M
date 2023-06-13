@@ -107,7 +107,7 @@ image2 _ _ settings block =
 
         figureLabel =
             Element.el
-                (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                (Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
                     :: Render.Sync.highlighter block.args [ Element.width params.width, Render.Utility.elementAttribute "id" block.meta.id, Element.paddingXY 12 4 ]
                 )
                 (Element.el [ Element.centerX ] (Element.text label))
@@ -245,7 +245,7 @@ quiver _ _ settings block =
                 [ Element.image [ Element.width qArgs.width, params.placement ]
                     { src = params.url, description = desc }
                 , Element.el
-                    (Render.Sync.rightLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+                    (Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
                         :: Render.Sync.highlighter block.args [ params.placement, params.placement, Element.paddingXY 12 4, Render.Utility.elementAttribute "id" block.meta.id ]
                     )
                     (Element.text desc)

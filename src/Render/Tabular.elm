@@ -106,7 +106,7 @@ render count acc settings block =
     in
     Element.column
         [ Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
-        , Render.Sync.rightLeftSyncHelper block.meta.lineNumber (block.meta.lineNumber + block.meta.numberOfLines)
+        , Render.Sync.rightToLeftSyncHelper block.meta.lineNumber (block.meta.lineNumber + block.meta.numberOfLines)
         , Render.Utility.idAttributeFromInt block.meta.lineNumber
         ]
         (renderTable extendedFormatList parsedCells)
