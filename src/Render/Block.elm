@@ -230,8 +230,8 @@ verbatimDict =
         , ( "mathmacros", renderNothing )
         , ( "textmacros", renderNothing )
 
-        --, ( "datatable", Render.Data.table )
-        --, ( "chart", Render.Data.chart )
+        --, ( "datatable", Render.M.table )
+        --, ( "chart", Render.M.chart )
         , ( "svg", Render.Graphics.svg )
         , ( "quiver", Render.Graphics.quiver )
         , ( "image", Render.Graphics.image2 )

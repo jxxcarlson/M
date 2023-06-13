@@ -101,14 +101,17 @@ compileM width outerCount selectedId lines =
 -- makeSettings id selectedSlug scale windowWidth
 
 
-compileX : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileX : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
 compileX width outerCount selectedId lines =
     case parseX Config.idPrefix outerCount lines of
         Err err ->
-            [ Element.text "Oops something went wrong" ]
+            { body = [ Element.text "Oops something went wrong" ], toc = [] }
 
         Ok forest_ ->
             let
+                _ =
+                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock |> Debug.log "AST"
+
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
@@ -116,10 +119,14 @@ compileX width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
 
                 _ =
-                    accumulator |> Debug.log "ACC"
+                    accumulator
             in
-            Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
-                |> List.map Render.Tree.unravel
+            { body =
+                Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
+                    |> List.map Render.Tree.unravel
+            , toc =
+                Render.TOC.view renderData.count accumulator forest
+            }
 
 
 
@@ -136,15 +143,17 @@ parseL idPrefix outerCount lines =
     Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix outerCount lines
 
 
-compileL : Int -> Int -> String -> List String -> List (Element MarkupMsg)
+compileL : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
 compileL width outerCount selectedId lines =
-    -- TODO: case parseL renderData.idPrefix lines of
     case parseL Config.idPrefix outerCount lines of
         Err err ->
-            [ Element.text "Oops something went wrong" ]
+            { body = [ Element.text "Oops something went wrong" ], toc = [] }
 
         Ok forest_ ->
             let
+                _ =
+                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock |> Debug.log "AST"
+
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
@@ -154,8 +163,12 @@ compileL width outerCount selectedId lines =
                 _ =
                     accumulator
             in
-            Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
-                |> List.map Render.Tree.unravel
+            { body =
+                Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
+                    |> List.map Render.Tree.unravel
+            , toc =
+                Render.TOC.view renderData.count accumulator forest
+            }
 
 
 

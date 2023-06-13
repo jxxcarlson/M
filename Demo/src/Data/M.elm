@@ -1,4 +1,4 @@
-module Data exposing (initialText)
+module Data.M exposing (text)
 
 
 initialText1 =
@@ -14,7 +14,7 @@ abc
 """
 
 
-initialText =
+text =
     """
 
 | title

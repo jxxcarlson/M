@@ -3,7 +3,9 @@ module Main exposing (main)
 import Browser
 import Browser.Events
 import Compiler
-import Data
+import Data.M
+import Data.MicroLaTeX
+import Data.XMarkdown
 import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
@@ -34,6 +36,7 @@ type alias Model =
     , count : Int
     , windowWidth : Int
     , windowHeight : Int
+    , currentLanguage : Language
     }
 
 
@@ -42,6 +45,7 @@ type Msg
     | InputText String
     | Render MarkupMsg
     | GotNewWindowDimensions Int Int
+    | SetLanguage Language
 
 
 type alias Flags =
@@ -59,16 +63,25 @@ displaySettings counter =
     }
 
 
-initialText =
-    Data.initialText
+setSourceText currentLanguage =
+    case currentLanguage of
+        MLang ->
+            Data.M.text
+
+        MicroLaTeXLang ->
+            Data.MicroLaTeX.text
+
+        XMarkdownLang ->
+            Data.XMarkdown.text
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { sourceText = initialText
+    ( { sourceText = Data.M.text
       , count = 0
       , windowWidth = flags.window.windowWidth
       , windowHeight = flags.window.windowHeight
+      , currentLanguage = MLang
       }
     , Cmd.none
     )
@@ -91,6 +104,9 @@ update msg model =
             , Cmd.none
             )
 
+        SetLanguage lang ->
+            ( { model | currentLanguage = lang, sourceText = setSourceText lang }, Cmd.none )
+
         Render _ ->
             ( model, Cmd.none )
 
@@ -103,7 +119,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    layoutWith { options = [] }
+    layoutWith { options = [ Element.focusStyle noFocus ] }
         [ bgGray 0.2 ]
         (mainColumn model)
 
@@ -129,7 +145,7 @@ panelWidth model =
 
 panelHeight : Model -> Attribute msg
 panelHeight model =
-    height (px <| appHeight model - margin.bottom - margin.top)
+    height (px <| appHeight model - margin.bottom - margin.top - headerHeight)
 
 
 margin =
@@ -144,22 +160,94 @@ xPadding =
     16
 
 
+headerHeight =
+    40
+
+
 mainColumn : Model -> Element Msg
 mainColumn model =
     let
         compiled =
-            Compiler.compileM (panelWidth model - 2 * xPadding) model.count "(selectedId)" (String.lines model.sourceText)
+            case model.currentLanguage of
+                MLang ->
+                    Compiler.compileM (panelWidth model - 2 * xPadding)
+                        model.count
+                        "(selectedId)"
+                        (String.lines model.sourceText)
+
+                MicroLaTeXLang ->
+                    Compiler.compileL (panelWidth model - 2 * xPadding)
+                        model.count
+                        "(selectedId)"
+                        (String.lines model.sourceText)
+
+                XMarkdownLang ->
+                    Compiler.compileX (panelWidth model - 2 * xPadding)
+                        model.count
+                        "(selectedId)"
+                        (String.lines model.sourceText)
     in
     column mainColumnStyle
         [ column [ width (px <| appWidth model), height (px <| appHeight model) ]
             [ -- title "Compiler Demo"
-              row [ spacing margin.between, centerX, width (px <| model.windowWidth - margin.left - margin.right) ]
+              header model
+            , row [ spacing margin.between, centerX, width (px <| model.windowWidth - margin.left - margin.right) ]
                 [ inputText model
                 , displayRenderedText model compiled.body |> Element.map Render
                 , viewToc model compiled.toc |> Element.map Render
                 ]
             ]
         ]
+
+
+type Language
+    = MLang
+    | XMarkdownLang
+    | MicroLaTeXLang
+
+
+languageToString : Language -> String
+languageToString lang =
+    case lang of
+        MLang ->
+            "M"
+
+        XMarkdownLang ->
+            "XMarkdown"
+
+        MicroLaTeXLang ->
+            "MicroLaTeX"
+
+
+buttonBackground currentLanguage targetLanguage =
+    if currentLanguage == targetLanguage then
+        Background.color <| Element.rgb255 161 8 8
+
+    else
+        Background.color <| Element.rgb255 20 20 20
+
+
+languageButton currentLanguage targetLanguage =
+    Input.button [ buttonBackground currentLanguage targetLanguage ]
+        { onPress = Just <| SetLanguage targetLanguage
+        , label =
+            Element.el
+                [ buttonBackground currentLanguage targetLanguage
+                , Font.color (Element.rgb 1 1 1)
+                , Font.size 14
+                , Element.paddingXY 8 8
+                , Element.height (Element.px 32)
+                ]
+                (Element.text <| languageToString targetLanguage)
+        }
+
+
+noFocus : Element.FocusStyle
+noFocus =
+    { borderColor = Nothing
+    , backgroundColor = Nothing
+    , shadow = Nothing
+    }
 
 
 title : String -> Element msg
@@ -199,6 +287,14 @@ viewToc model compiledTOC =
             , scrollbarY
             ]
             compiledTOC
+        ]
+
+
+header model =
+    Element.row [ Element.spacing 32, Element.centerX, paddingEach { left = 0, right = 0, top = 0, bottom = 12 } ]
+        [ languageButton model.currentLanguage MLang
+        , languageButton model.currentLanguage MicroLaTeXLang
+        , languageButton model.currentLanguage XMarkdownLang
         ]
 
 
