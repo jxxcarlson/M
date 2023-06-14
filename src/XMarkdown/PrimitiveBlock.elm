@@ -24,7 +24,7 @@ parse initialId outerCount lines =
 functionData =
     { isVerbatimBlock = isVerbatimLine
     , getHeadingData = getHeadingData
-    , findTitlePrefix = findTitlePrefix
+    , findSectionPrefix = findSectionPrefix
     }
 
 
@@ -44,80 +44,121 @@ getHeadingData line_ =
         ( args1, properties ) =
             KV.argsAndProperties (String.words line)
     in
-    case findTitlePrefix line of
+    case findSectionPrefix line of
         Just prefix ->
             { heading = Ordinary "section", args = [ String.length prefix |> String.fromInt ], properties = Dict.singleton "section-type" "markdown" }
                 |> Ok
 
         Nothing ->
-            case args1 of
-                [] ->
-                    Err <| HEMissingPrefix
+            case findTitlePrefix line of
+                Just prefix ->
+                    { heading = Ordinary "title", args = [ String.length prefix |> String.fromInt ], properties = Dict.singleton "section-type" "markdown" }
+                        |> Ok
 
-                prefix :: args ->
-                    case prefix of
-                        "||" ->
-                            case args of
-                                [] ->
-                                    Err <| HEMissingName
+                Nothing ->
+                    case args1 of
+                        [] ->
+                            Err <| HEMissingPrefix
 
-                                name :: args2 ->
-                                    Ok <| { heading = Verbatim name, args = args2, properties = properties }
+                        prefix :: args ->
+                            case prefix of
+                                "||" ->
+                                    case args of
+                                        [] ->
+                                            Err <| HEMissingName
 
-                        "|" ->
-                            case args of
-                                [] ->
-                                    Err <| HEMissingName
+                                        name :: args2 ->
+                                            Ok <| { heading = Verbatim name, args = args2, properties = properties }
 
-                                name :: args2 ->
-                                    Ok <| { heading = Ordinary name, args = args2, properties = properties }
+                                "|" ->
+                                    case args of
+                                        [] ->
+                                            Err <| HEMissingName
 
-                        "-" ->
-                            let
-                                reducedLine =
-                                    String.replace "- " "" line
-                            in
-                            if String.isEmpty reducedLine then
-                                Err HENoContent
+                                        name :: args2 ->
+                                            Ok <| { heading = Ordinary name, args = args2, properties = properties }
 
-                            else
-                                Ok <|
-                                    { heading = Ordinary "item"
-                                    , args = []
-                                    , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
-                                    }
+                                "!!" ->
+                                    let
+                                        reducedLine =
+                                            String.replace "!! " "" line |> Debug.log "@REDUCED_LINE@"
+                                    in
+                                    if String.isEmpty reducedLine then
+                                        Err HENoContent
 
-                        "." ->
-                            let
-                                reducedLine =
-                                    String.replace ". " "" line
-                            in
-                            if String.isEmpty reducedLine then
-                                Err HENoContent
+                                    else
+                                        (Ok <|
+                                            { heading = Ordinary "title"
+                                            , args = []
+                                            , properties =
+                                                Dict.fromList
+                                                    [ ( "firstLine", String.replace "!! " "" line )
+                                                    , ( "section-type", "markdown" )
+                                                    ]
+                                            }
+                                        )
+                                            |> Debug.log "@HEADING_DATA@"
 
-                            else
-                                Ok <|
-                                    { heading = Ordinary "numbered"
-                                    , args = []
-                                    , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
-                                    }
+                                "-" ->
+                                    let
+                                        reducedLine =
+                                            String.replace "- " "" line
+                                    in
+                                    if String.isEmpty reducedLine then
+                                        Err HENoContent
 
-                        "$$" ->
-                            Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
+                                    else
+                                        Ok <|
+                                            { heading = Ordinary "item"
+                                            , args = []
+                                            , properties = Dict.singleton "firstLine" (String.replace "- " "" line)
+                                            }
 
-                        _ ->
-                            Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
+                                "." ->
+                                    let
+                                        reducedLine =
+                                            String.replace ". " "" line
+                                    in
+                                    if String.isEmpty reducedLine then
+                                        Err HENoContent
+
+                                    else
+                                        Ok <|
+                                            { heading = Ordinary "numbered"
+                                            , args = []
+                                            , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
+                                            }
+
+                                "$$" ->
+                                    Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
+
+                                _ ->
+                                    Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
 
 
-titlePrefixRegex : Regex.Regex
-titlePrefixRegex =
+sectionRegex : Regex.Regex
+sectionRegex =
     Maybe.withDefault Regex.never <|
-        Regex.fromString "^#+\\s*"
+        Regex.fromString "^(#+\\s*|!!\\s*)"
+
+
+findSectionPrefix : String -> Maybe String
+findSectionPrefix string =
+    Regex.find sectionRegex string
+        |> List.map .match
+        |> List.head
+        |> Maybe.map String.trim
+
+
+titleRegex : Regex.Regex
+titleRegex =
+    Maybe.withDefault Regex.never <|
+        Regex.fromString "^!!\\s"
 
 
 findTitlePrefix : String -> Maybe String
 findTitlePrefix string =
-    Regex.find titlePrefixRegex string
+    Regex.find titleRegex string
         |> List.map .match
         |> List.head
         |> Maybe.map String.trim

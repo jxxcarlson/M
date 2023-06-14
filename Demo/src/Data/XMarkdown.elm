@@ -1,11 +1,18 @@
 module Data.XMarkdown exposing (text)
 
 
+text1 =
+    """
+!! XMarkdown Test Document
+
+"""
+
+
 text =
     """
 
 
-@[title XMarkdown Test Document]
+!! XMarkdown Test Document
 
 
 @[hrule]
@@ -56,7 +63,7 @@ Here is some inline code: `a[0] = $1`.
 
 Here is some Python code:
 
-```python
+```
 def factorial(n):
     if n == 0:
         return 1
@@ -64,5 +71,11 @@ def factorial(n):
         return n * factorial(n - 1)
 ```
 
+|| code
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
 
  """

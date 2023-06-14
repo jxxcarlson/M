@@ -35,7 +35,7 @@ parse functionData initialId outerCount lines =
 type alias ParserFunctions =
     { isVerbatimBlock : String -> Bool
     , getHeadingData : String -> Result HeadingError HeadingData
-    , findTitlePrefix : String -> Maybe String
+    , findSectionPrefix : String -> Maybe String
     }
 
 
@@ -122,7 +122,7 @@ finalize block =
 {-|
 
     Recall: classify position lineNumber, where position
-    is the position of the first charabcter in the source
+    is the position of the first character in the source
     and lineNumber is the index of the current line in the source
 
 -}
@@ -224,9 +224,6 @@ nextStep state =
 
         Just rawLine ->
             let
-                _ =
-                    rawLine
-
                 newPosition =
                     state.position + String.length rawLine + 1
 
@@ -323,13 +320,13 @@ commitBlock state currentLine =
                                 Just "markdown" ->
                                     { block_ | body = block_.body |> Generic.BlockUtilities.dropLast }
                                         |> finalize
-                                        |> transformBlock state.parserFunctions.findTitlePrefix
-                                        |> fixMarkdownTitleBlock state.parserFunctions.findTitlePrefix
+                                        |> transformBlock state.parserFunctions.findSectionPrefix
+                                        |> fixMarkdownTitleBlock state.parserFunctions.findSectionPrefix
 
                                 _ ->
                                     { block_ | body = block_.body |> Generic.BlockUtilities.dropLast }
                                         |> finalize
-                                        |> transformBlock state.parserFunctions.findTitlePrefix
+                                        |> transformBlock state.parserFunctions.findSectionPrefix
 
                         Verbatim _ ->
                             if List.head block_.body == Just "```" then
@@ -358,7 +355,11 @@ fixMarkdownTitleBlock findTitlePrefix block =
             block
 
         Just prefix ->
-            { block | body = String.replace prefix "" block.firstLine :: block.body }
+            if prefix == "!!" then
+                { block | heading = Ordinary "title", body = String.replace prefix "" block.firstLine :: block.body }
+
+            else
+                { block | body = String.replace prefix "" block.firstLine :: block.body }
 
 
 {-|

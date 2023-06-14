@@ -835,10 +835,6 @@ elmDict =
 
 renderVerbatim : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 renderVerbatim _ _ _ block =
-    let
-        _ =
-            List.head block.args
-    in
     Element.column
         [ Font.family
             [ Font.typeface "Inconsolata"

@@ -52,11 +52,6 @@ pm str =
 
 parseM : String -> Int -> List String -> Result Error (Forest ExpressionBlock)
 parseM idPrefix outerCount lines =
-    let
-        _ =
-            Generic.Compiler.parse_ M.PrimitiveBlock.parse M.Expression.parse idPrefix outerCount lines
-                |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
-    in
     Generic.Compiler.parse_ M.PrimitiveBlock.parse M.Expression.parse idPrefix outerCount lines
 
 
@@ -77,9 +72,6 @@ compileM width outerCount selectedId lines =
 
         Ok forest_ ->
             let
-                _ =
-                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock
-
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
@@ -106,17 +98,11 @@ compileX width outerCount selectedId lines =
 
         Ok forest_ ->
             let
-                _ =
-                    forest_ |> Generic.Forest.map Generic.Language.simplifyExpressionBlock
-
                 renderData =
                     Generic.Compiler.defaultRenderData width outerCount selectedId
 
                 ( accumulator, forest ) =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
-
-                _ =
-                    accumulator
             in
             { body =
                 Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest

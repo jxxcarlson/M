@@ -1,17 +1,17 @@
-module M.Regex exposing (findTitlePrefix)
+module M.Regex exposing (findSectionPrefix)
 
 import Regex
 
 
-titlePrefixRegex : Regex.Regex
-titlePrefixRegex =
+titleSectionRegex : Regex.Regex
+titleSectionRegex =
     Maybe.withDefault Regex.never <|
         Regex.fromString "^#+\\s*"
 
 
-findTitlePrefix : String -> Maybe String
-findTitlePrefix string =
-    Regex.find titlePrefixRegex string
+findSectionPrefix : String -> Maybe String
+findSectionPrefix string =
+    Regex.find titleSectionRegex string
         |> List.map .match
         |> List.head
         |> Maybe.map String.trim

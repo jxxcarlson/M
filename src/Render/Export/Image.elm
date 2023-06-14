@@ -186,9 +186,6 @@ imageParametersForBlock settings (ExpressionBlock { content, args, properties })
                 Right _ ->
                     "bad block"
 
-        _ =
-            url
-
         caption =
             Dict.get "caption" properties |> Maybe.withDefault "" |> String.replace ":" ""
 

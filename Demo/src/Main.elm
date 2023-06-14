@@ -114,11 +114,6 @@ update msg model =
         Render msg_ ->
             case msg_ of
                 Render.Msg.SelectId id ->
-                    let
-                        _ =
-                            Debug.log "@@MAIN, NEW select id" id
-                    in
-                    -- TODO: work on this
                     if id == "title" then
                         ( { model | selectId = id }, jumpToTopOf "rendered-text" )
 
