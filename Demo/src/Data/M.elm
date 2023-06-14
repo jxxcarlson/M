@@ -2,18 +2,21 @@ module Data.M exposing (text)
 
 
 text1 =
-    """| title
-M: Test
+    """
+. AAA
 
-This is a test.
+. BBB
 
-|| equation
-\\label{pythagoras}
-a^2 + b^2 = c^2
+. CCC
 
-Blah blah blah.
+. DDD
 
-Let's take a look at equation [eqref pythagoras].
+. EEE
+
+. FFF
+
+. GGG
+
 """
 
 
