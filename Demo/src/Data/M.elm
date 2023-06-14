@@ -44,6 +44,50 @@ c &= a b \\\\
 
 [hrule]
 
+Here is some inline code: `a[0] = $1`.
+
+Here is some Python code:
+
+|| code
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
+
+
+```
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
+```
+
+
+[hrule]
+
+
+
+
+[large Groceries:]
+
+- Bread
+
+- Milk
+
+- Coffee
+
+[large Groceries:]
+
+. Bread
+
+. Milk
+
+. Coffee
+
+[hrule]
+
 | section
 Russell's paradox
 

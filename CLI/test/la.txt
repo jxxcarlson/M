@@ -1,14 +1,1 @@
-
 \title{Book}
-
-abc \strong{def} ghi
-
-\section{AA}
-
-blah blah blah
-
-\section{BB}
-
-blah blah blah
-
-

@@ -48,6 +48,7 @@ classifierParser =
         , verbatimBlockParser
         , itemParser
         , specialOrdinaryBlockParser "section"
+        , specialOrdinaryBlockParser "title"
         , specialOrdinaryBlockParser "subsection"
         , specialOrdinaryBlockParser "subsubsection"
         , specialOrdinaryBlockParser "subheading"

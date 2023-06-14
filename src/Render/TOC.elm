@@ -97,7 +97,9 @@ prepareTOC maximumLevel count acc settings ast =
                     "title"
             in
             Element.el [ Events.onClick (SelectId id), Font.size 18 ]
-                (Element.link [ Font.color (Element.rgb 0 0 0.8) ] { url = Render.Utility.internalLink id, label = Element.paragraph [] title })
+                (Element.link [ Font.color (Element.rgb 0 0 0.8) ]
+                    { url = Render.Utility.internalLink id, label = Element.paragraph [] title }
+                )
 
         toc =
             topItem

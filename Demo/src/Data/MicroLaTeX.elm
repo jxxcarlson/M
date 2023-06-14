@@ -1,26 +1,9 @@
 module Data.MicroLaTeX exposing (text)
 
 
-text1 =
-    """
-\\title{Book}
-
-abc \\strong{def} ghi
-
-\\section{AA}
-
-blah blah blah
-
-\\section{BB}
-
-blah blah blah
-
-
-"""
-
-
 text =
     """
+
  \\title{Wave Packets and the Dispersion Relation}
  
  \\tags{jxxcarlson:wave-packets-dispersion, quantum-mechanics, system:startup, folder:krakow}
@@ -35,6 +18,35 @@ text =
  \\tags{system:startup jxxcarslon:wave-packets-dispersion}
  
  \\image{https://psurl.s3.amazonaws.com/images/jc/sinc2-bcbf.png  caption:Wave packet width:300}
+
+
+\\hrule
+
+Here is some inline code: `a[0] = $1`.
+
+
+Here is some Python code:
+
+```
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
+```
+
+\\begin{code}
+def factorial(n):
+    if n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
+\\end{code} 
+
+\\red{The previous block behaves badly when not closed. But the one before
+it is OK.}
+
+\\hrule
  
  \\section{Introduction}
  
@@ -301,4 +313,5 @@ text =
  
  
  
- """
+ 
+"""
