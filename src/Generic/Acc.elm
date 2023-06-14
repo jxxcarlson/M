@@ -133,11 +133,6 @@ incrementCounter name dict =
     Dict.insert name (getCounter name dict + 1) dict
 
 
-transformST : InitialAccumulatorData -> Forest ExpressionBlock -> Forest ExpressionBlock
-transformST data ast =
-    ast |> transformAccumulate data |> Tuple.second
-
-
 type alias InitialAccumulatorData =
     { mathMacros : String
     , textMacros : String
@@ -320,11 +315,15 @@ updated inList.
 -}
 listData : Accumulator -> Maybe String -> ( Bool, Maybe Vector )
 listData accumulator name =
-    case ( accumulator.inList, name ) of
+    (case ( accumulator.inList, name ) of
         ( False, Just "numbered" ) ->
+            -- if you are not in a list and you encounter a numbered item,
+            -- then you begin a list
             ( True, Just (Vector.init 4 |> Vector.increment 0) )
 
         ( False, Just "item" ) ->
+            -- if you are not in a list and you encounter an ordinary item,
+            -- then you are now in a list
             ( True, Just (Vector.init 4 |> Vector.increment 0) )
 
         ( _, Nothing ) ->
@@ -345,6 +344,8 @@ listData accumulator name =
 
         ( True, _ ) ->
             ( False, Nothing )
+    )
+        |> Debug.log "@@listData"
 
 
 type alias ReferenceDatum =
@@ -419,27 +420,22 @@ getNameContentIdTag block =
         name =
             Dict.get "name" block.properties
 
-        content : Maybe (Either String (List Expression))
+        content : Either String (List Expression)
         content =
-            Just block.body
+            block.body
 
         id =
-            Dict.get "id" block.properties
+            block.meta.id
 
         tag =
-            Dict.get "tag" block.properties
+            Dict.get "tag" block.properties |> Maybe.withDefault id
     in
-    case tag of
+    case name of
         Nothing ->
             Nothing
 
-        Just tag_ ->
-            case ( name, content, id ) of
-                ( Just name_, Just content_, Just id_ ) ->
-                    Just { name = name_, content = content_, id = id_, tag = tag_ }
-
-                _ ->
-                    Nothing
+        Just name_ ->
+            Just { name = name_, content = block.body, id = id, tag = tag }
 
 
 getReferenceDatum : ExpressionBlock -> Maybe ReferenceDatum
@@ -537,13 +533,7 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
             updateBibItemBlock accumulator args block.meta.id
 
         Ordinary name_ ->
-            -- TODO: tighten up
-            case getNameContentIdTag block of
-                Just { name, content, id, tag } ->
-                    accumulator |> updateWithOrdinaryBlock (Just name_) content tag id indent
-
-                _ ->
-                    accumulator
+            accumulator |> updateWithOrdinaryBlock (Just name_) block.body (getTag block) block.meta.id indent
 
         -- provide for numbering of equations
         Verbatim "mathmacros" ->
@@ -658,14 +648,14 @@ updateBibItemBlock accumulator args id =
 
 
 updateWithOrdinaryBlock : Maybe String -> Either b (List Expression) -> String -> String -> Int -> Accumulator -> Accumulator
-updateWithOrdinaryBlock name content tag id indent accumulator =
+updateWithOrdinaryBlock name body tag id indent accumulator =
     let
         ( inList, initialNumberedVector ) =
             listData accumulator name
     in
     case name of
         Just "setcounter" ->
-            case content of
+            case body of
                 Left _ ->
                     accumulator
 
@@ -701,7 +691,7 @@ updateWithOrdinaryBlock name content tag id indent accumulator =
                     Vector.get level itemVector
 
                 numberedItemDict =
-                    Dict.insert id { level = level, index = index } accumulator.numberedItemDict
+                    Dict.insert id { level = level, index = index } accumulator.numberedItemDict |> Debug.log ("@@numberedItemDict: " ++ Debug.toString body)
 
                 referenceDatum =
                     makeReferenceDatum id tag (String.fromInt (Vector.get level itemVector))
@@ -970,3 +960,13 @@ macroParser name =
 
 getMacroArg name str =
     Parser.run (macroParser name) str
+
+
+getTag : ExpressionBlock -> String
+getTag block =
+    case Dict.get "tag" block.properties of
+        Just tag ->
+            tag
+
+        Nothing ->
+            block.meta.id

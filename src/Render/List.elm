@@ -33,7 +33,7 @@ item count acc settings block =
         label_ =
             case modBy 3 level_ of
                 0 ->
-                    String.fromChar '●'
+                    String.fromChar '•'
 
                 1 ->
                     String.fromChar '○'
@@ -59,7 +59,7 @@ numbered : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element Ma
 numbered count acc settings block =
     let
         id =
-            String.fromInt block.meta.lineNumber
+            block.meta.id
 
         alphabet =
             [ "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" ]
