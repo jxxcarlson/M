@@ -321,7 +321,7 @@ updated inList.
 -}
 nextInListState : Heading -> InListState -> InListState
 nextInListState heading state =
-    (case ( state, heading ) of
+    case ( state, heading ) of
         ( SNotInList, Ordinary "numbered" ) ->
             SInList
 
@@ -333,8 +333,6 @@ nextInListState heading state =
 
         ( SInList, _ ) ->
             SNotInList
-    )
-        |> Debug.log "!!nextInListState"
 
 
 type alias ReferenceDatum =
@@ -663,16 +661,16 @@ updateWithOrdinaryBlock block accumulator =
                 itemVector =
                     case accumulator.inListState of
                         SInList ->
-                            Vector.increment level accumulator.itemVector |> Debug.log "@@ItemVector (1)"
+                            Vector.increment level accumulator.itemVector
 
                         SNotInList ->
-                            Vector.init 4 |> Vector.increment 0 |> Debug.log "@@ItemVector (2)"
+                            Vector.init 4 |> Vector.increment 0
 
                 index =
                     Vector.get level itemVector
 
                 numberedItemDict =
-                    Dict.insert block.meta.id { level = level, index = index } accumulator.numberedItemDict |> Debug.log ("@@numberedItemDict: " ++ Debug.toString block.body)
+                    Dict.insert block.meta.id { level = level, index = index } accumulator.numberedItemDict
 
                 referenceDatum =
                     makeReferenceDatum block.meta.id (getTag block) (String.fromInt (Vector.get level itemVector))

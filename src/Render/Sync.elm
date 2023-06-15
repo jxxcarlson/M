@@ -38,10 +38,6 @@ highlighter args attrs =
 
 highlightIfIdSelected : String -> Render.Settings.RenderSettings -> List (Element.Attr () msg) -> List (Element.Attr () msg)
 highlightIfIdSelected id settings attrs =
-    let
-        _ =
-            Debug.log "@@highlightIfIdSelected" ( id, settings.selectedId )
-    in
     if id == settings.selectedId then
         Background.color selectedColor :: attrs
 

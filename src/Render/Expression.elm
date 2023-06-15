@@ -684,7 +684,7 @@ eqref acc exprList =
     in
     Element.link
         [ Font.color (Element.rgb 0 0 0.7)
-        , Events.onClick (SelectId (id |> Debug.log "@@click, SelectId@@"))
+        , Events.onClick (SelectId id)
 
         --, Events.onClick (HighlightId id)
         ]

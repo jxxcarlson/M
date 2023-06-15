@@ -81,13 +81,13 @@ getHeadingData line_ =
                                 "!!" ->
                                     let
                                         reducedLine =
-                                            String.replace "!! " "" line |> Debug.log "@REDUCED_LINE@"
+                                            String.replace "!! " "" line
                                     in
                                     if String.isEmpty reducedLine then
                                         Err HENoContent
 
                                     else
-                                        (Ok <|
+                                        Ok <|
                                             { heading = Ordinary "title"
                                             , args = []
                                             , properties =
@@ -96,8 +96,6 @@ getHeadingData line_ =
                                                     , ( "section-type", "markdown" )
                                                     ]
                                             }
-                                        )
-                                            |> Debug.log "@HEADING_DATA@"
 
                                 "-" ->
                                     let
