@@ -1,7 +1,7 @@
 module Data.MicroLaTeX exposing (text)
 
 
-text =
+text1 =
     """
 
 \\begin{theorem}
@@ -18,7 +18,7 @@ Wow! Great theorem!!
 """
 
 
-text1 =
+text =
     """
 
  \\title{Wave Packets and the Dispersion Relation}
@@ -29,12 +29,26 @@ text1 =
  
  \\contents
  
- | banner
+\\banner
  \\ilink{Quantum Mechanics Notes jxxcarlson:quantum-mechanics-notes}
  
  \\tags{system:startup jxxcarslon:wave-packets-dispersion}
  
  \\image{https://psurl.s3.amazonaws.com/images/jc/sinc2-bcbf.png  caption:Wave packet width:300}
+
+
+
+\\hrule
+
+\\begin{theorem}
+There are infinitely many primes.
+
+\\begin{equation}
+a^2 + b^2 = c^2
+\\end{equation}
+
+Wow! Great theorem!!
+\\end{theorem}
 
 
 \\hrule
