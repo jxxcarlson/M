@@ -54,7 +54,7 @@ classifierParser =
         , specialOrdinaryBlockParser "subheading"
         , specialOrdinaryBlockParser "setcounter"
         , specialOrdinaryBlockParser "shiftandsetcounter"
-        , specialOrdinaryBlockParser "banner"
+        , bannerParser
         , contentsParser
         , numberedParser
         ]
@@ -104,6 +104,11 @@ itemParser =
 contentsParser : Parser Classification
 contentsParser =
     pseudoBlockParser "contents" (LXOrdinaryBlock "contents")
+
+
+bannerParser : Parser Classification
+bannerParser =
+    pseudoBlockParser "banner" (LXOrdinaryBlock "banner")
 
 
 specialBlockParser : String -> LXSpecial -> Parser Classification
