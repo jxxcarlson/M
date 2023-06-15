@@ -1,2 +1,12 @@
 \begin{theorem}
+
 There are infinitely many primes.
+
+\begin{equation}
+p^2 = 23
+\end{equation}
+
+This is a test.
+\end{theorem}
+
+Ho ho ho!

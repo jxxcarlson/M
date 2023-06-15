@@ -57,7 +57,12 @@ forestFromBlocks defaultNode indentation blocks =
         |> Result.map Tree.children
 
 
-{-| -}
+{-|
+
+    Trasnform a list of blocks to a tree of blocks based
+    on the indentation of the blocks.
+
+-}
 fromBlocks : block -> (block -> Int) -> List block -> Result Error (Tree block)
 fromBlocks defaultNode indentation blocks =
     case init defaultNode indentation blocks of

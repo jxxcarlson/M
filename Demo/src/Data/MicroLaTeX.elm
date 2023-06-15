@@ -3,16 +3,17 @@ module Data.MicroLaTeX exposing (text)
 
 text =
     """
+
 \\begin{theorem}
 There are infinitely many primes.
 
-This is a test.
+\\begin{equation}
+a^2 + b^2 = c^2
+\\end{equation}
 
-\\begin{code}
-for i in x:
-  i = i + 1
+Wow! Great theorem!!
+\\end{theorem}
 
-So is this.
 
 """
 
