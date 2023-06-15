@@ -3,6 +3,22 @@ module Data.MicroLaTeX exposing (text)
 
 text =
     """
+\\numbered AAA
+
+\\numbered BBB
+
+Stuff
+
+\\numbered AAA
+
+\\numbered BBB
+
+\\numbered CCC
+"""
+
+
+text1 =
+    """
 
  \\title{Wave Packets and the Dispersion Relation}
  
