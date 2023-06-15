@@ -130,6 +130,9 @@ getHeadingData line_ =
                                 "$$" ->
                                     Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
 
+                                "```" ->
+                                    Ok <| { heading = Verbatim "code", args = [], properties = Dict.empty }
+
                                 _ ->
                                     Ok <| { heading = Paragraph, args = [], properties = Dict.empty }
 
