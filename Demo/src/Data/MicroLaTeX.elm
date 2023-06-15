@@ -1,7 +1,7 @@
 module Data.MicroLaTeX exposing (text)
 
 
-text =
+text1 =
     """
 \\numbered AAA
 
@@ -17,7 +17,7 @@ Stuff
 """
 
 
-text1 =
+text =
     """
 
  \\title{Wave Packets and the Dispersion Relation}

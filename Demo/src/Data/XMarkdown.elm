@@ -1,7 +1,7 @@
 module Data.XMarkdown exposing (text)
 
 
-text =
+text1 =
     """
 
 
@@ -24,7 +24,7 @@ Another list:
 """
 
 
-text1 =
+text =
     """
 
 
