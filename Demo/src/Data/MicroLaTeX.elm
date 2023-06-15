@@ -1,23 +1,23 @@
 module Data.MicroLaTeX exposing (text)
 
 
-text1 =
+text =
     """
-\\numbered AAA
+\\begin{theorem}
+There are infinitely many primes.
 
-\\numbered BBB
+This is a test.
 
-Stuff
+\\begin{code}
+for i in x:
+  i = i + 1
 
-\\numbered AAA
+So is this.
 
-\\numbered BBB
-
-\\numbered CCC
 """
 
 
-text =
+text1 =
     """
 
  \\title{Wave Packets and the Dispersion Relation}

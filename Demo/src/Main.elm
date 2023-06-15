@@ -55,17 +55,6 @@ type alias Flags =
     { window : { windowWidth : Int, windowHeight : Int } }
 
 
-displaySettings : Int -> Generic.Compiler.DisplaySettings
-displaySettings counter =
-    { windowWidth = 500
-    , counter = counter
-    , longEquationLimit = 100
-    , selectedId = "--"
-    , selectedSlug = Nothing
-    , scale = 0.8
-    }
-
-
 setSourceText currentLanguage =
     case currentLanguage of
         MLang ->
@@ -137,6 +126,10 @@ view model =
         (mainColumn model)
 
 
+
+-- GEOMETRY
+
+
 appWidth : Model -> Int
 appWidth model =
     model.windowWidth
@@ -144,7 +137,7 @@ appWidth model =
 
 appHeight : Model -> Int
 appHeight model =
-    model.windowHeight
+    model.windowHeight - headerHeight
 
 
 tocWidth =
@@ -158,11 +151,11 @@ panelWidth model =
 
 panelHeight : Model -> Attribute msg
 panelHeight model =
-    height (px <| appHeight model - margin.bottom - margin.top - headerHeight)
+    height (px <| appHeight model - margin.bottom - margin.top)
 
 
 margin =
-    { left = 20, right = 20, top = 20, bottom = 20, between = 20 }
+    { left = 20, right = 20, top = 20, bottom = 60, between = 20 }
 
 
 paddingZero =
@@ -183,25 +176,25 @@ mainColumn model =
         compiled =
             case model.currentLanguage of
                 MLang ->
-                    Compiler.compileM (panelWidth model - 2 * xPadding)
+                    Compiler.compileM (panelWidth model - 3 * xPadding)
                         model.count
                         model.selectId
                         (String.lines model.sourceText)
 
                 MicroLaTeXLang ->
-                    Compiler.compileL (panelWidth model - 2 * xPadding)
+                    Compiler.compileL (panelWidth model - 3 * xPadding)
                         model.count
                         model.selectId
                         (String.lines model.sourceText)
 
                 XMarkdownLang ->
-                    Compiler.compileX (panelWidth model - 2 * xPadding)
+                    Compiler.compileX (panelWidth model - 3 * xPadding)
                         model.count
                         model.selectId
                         (String.lines model.sourceText)
     in
     column mainColumnStyle
-        [ column [ width (px <| appWidth model), height (px <| appHeight model) ]
+        [ column [ width (px <| appWidth model), height (px <| appHeight model), clipY ]
             [ -- title "Compiler Demo"
               header model
             , row [ spacing margin.between, centerX, width (px <| model.windowWidth - margin.left - margin.right) ]

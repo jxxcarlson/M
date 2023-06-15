@@ -153,7 +153,7 @@ nextStep state_ =
         Just rawLine ->
             let
                 currentLine =
-                    Line.classify (getPosition rawLine state) state.lineNumber rawLine
+                    Line.classify (getPosition rawLine state) state.lineNumber rawLine |> Debug.log "CLASSIFY"
             in
             case ClassifyBlock.classify (currentLine.content ++ "\n") of
                 CBeginBlock label ->

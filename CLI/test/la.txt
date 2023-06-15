@@ -1,11 +1,2 @@
-\numbered AAA
-
-\numbered BBB
-
-Stuff
-
-\numbered AAA
-
-\numbered BBB
-
-\numbered CCC
+\begin{theorem}
+There are infinitely many primes.

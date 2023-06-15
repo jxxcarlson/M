@@ -15,14 +15,12 @@ import Generic.Compiler
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
-import Generic.Pipeline
 import M.Expression
 import M.PrimitiveBlock
 import MicroLaTeX.Expression
 import MicroLaTeX.PrimitiveBlock
 import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
-import Render.Settings
 import Render.TOC
 import Render.Tree
 import XMarkdown.Expression
