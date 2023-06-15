@@ -66,12 +66,13 @@ classify position lineNumber str =
             { indent = 0, content = "!!ERROR", prefix = "", position = position, lineNumber = lineNumber }
 
         Ok result ->
-            result
+            result |> Debug.log "classify"
 
 
 {-|
 
-    The prefix is the first word of the line
+    The prefix is the first word of the line.
+    The content field is the _raw_ line.
 
 -}
 prefixParser : Int -> Int -> Parser Line
@@ -80,7 +81,7 @@ prefixParser position lineNumber =
         (\prefixStart prefixEnd lineEnd content ->
             { indent = prefixEnd - prefixStart
             , prefix = String.slice 0 prefixEnd content
-            , content = String.slice prefixEnd lineEnd content
+            , content = content
             , position = position
             , lineNumber = lineNumber
             }
