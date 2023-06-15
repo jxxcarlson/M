@@ -372,7 +372,7 @@ fixMarkdownTitleBlock findTitlePrefix block =
 -}
 transformBlock : (String -> Maybe String) -> PrimitiveBlock -> PrimitiveBlock
 transformBlock findTitlePrefix block =
-    case Generic.BlockUtilities.getName block of
+    case Generic.BlockUtilities.getPrimitiveBlockName block of
         Just "section" ->
             let
                 fixedBlock =

@@ -1,14 +1,30 @@
 module Data.XMarkdown exposing (text)
 
 
-text1 =
+text =
     """
+
+
 !! XMarkdown Test Document
+
+. This
+
+. That
+
+. Other
+
+Another list:
+
+. This
+
+. That
+
+
 
 """
 
 
-text =
+text1 =
     """
 
 

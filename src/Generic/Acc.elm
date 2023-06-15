@@ -44,6 +44,7 @@ import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Generic.ASTTools
+import Generic.BlockUtilities
 import Generic.Forest exposing (Forest)
 import Generic.Language exposing (Expr(..), Expression, ExpressionBlock, Heading(..))
 import Generic.MathMacro
@@ -74,7 +75,7 @@ type alias Accumulator =
     , deltaLevel : Int
     , numberedItemDict : Dict String { level : Int, index : Int }
     , numberedBlockNames : List String
-    , inList : Bool
+    , inListState : InListState
     , reference : Dict String { id : String, numRef : String }
     , terms : Dict String TermLoc
     , footnotes : Dict String TermLoc
@@ -85,6 +86,11 @@ type alias Accumulator =
     , qAndAList : List ( String, String )
     , qAndADict : Dict String String
     }
+
+
+type InListState
+    = SInList
+    | SNotInList
 
 
 {-| Note that function transformAccumulate operates on initialized accumulator.
@@ -105,7 +111,7 @@ initialAccumulator =
     , deltaLevel = 0
     , numberedItemDict = Dict.empty
     , numberedBlockNames = Generic.Settings.numberedBlockNames
-    , inList = False
+    , inListState = SNotInList
     , reference = Dict.empty
     , terms = Dict.empty
     , footnotes = Dict.empty
@@ -145,7 +151,7 @@ init data =
     { headingIndex = Vector.init data.vectorSize
     , deltaLevel = 0
     , documentIndex = Vector.init data.vectorSize
-    , inList = False
+    , inListState = SNotInList
     , counter = Dict.empty
     , blockCounter = 0
     , itemVector = Vector.init data.vectorSize
@@ -313,48 +319,22 @@ expand dict block =
 {-| The first component of the return value (Bool, Maybe Vector) is the
 updated inList.
 -}
-listData : Accumulator -> Maybe String -> ( Bool, Maybe Vector )
-listData accumulator name =
-    (case ( accumulator.inList, name ) of
-        ( False, Just "numbered" ) ->
-            -- if you are not in a list and you encounter a numbered item,
-            -- then you begin a list
-            ( True, Just (Vector.init 4 |> Vector.increment 0) )
+nextInListState : Heading -> InListState -> InListState
+nextInListState heading state =
+    (case ( state, heading ) of
+        ( SNotInList, Ordinary "numbered" ) ->
+            SInList
 
-        ( False, Just "item" ) ->
-            -- if you are not in a list and you encounter an ordinary item,
-            -- then you are now in a list
-            ( True, Just (Vector.init 4 |> Vector.increment 0) )
+        ( SNotInList, _ ) ->
+            SNotInList
 
-        ( _, Nothing ) ->
-            -- Don't change state if there are anonymous blocks
-            -- TODO: think about this, consistent with markdown semantics but not LaTeX
-            -- TODO: however it does fix a numbering bug (see MicroLaTeX Visual OTNetworkTest)
-            -- ( accumulator.inList, Nothing )
-            ( False, Nothing )
+        ( SInList, Ordinary "numbered" ) ->
+            SInList
 
-        ( False, _ ) ->
-            ( False, Nothing )
-
-        ( True, Just "numbered" ) ->
-            ( True, Nothing )
-
-        ( True, Just "item" ) ->
-            ( False, Nothing )
-
-        ( True, _ ) ->
-            ( False, Nothing )
+        ( SInList, _ ) ->
+            SNotInList
     )
-        |> Debug.log "@@listData"
-
-
-initList : Accumulator -> Accumulator
-initList acc =
-    { acc
-        | inList = False
-        , itemVector = Vector.init 4 |> Vector.increment 0
-    }
-        |> Debug.log "@@initList"
+        |> Debug.log "!!nextInListState"
 
 
 type alias ReferenceDatum =
@@ -544,8 +524,8 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
         Ordinary "bibitem" ->
             updateBibItemBlock accumulator args block.meta.id
 
-        Ordinary name_ ->
-            accumulator |> updateWithOrdinaryBlock (Just name_) block.body (getTag block) block.meta.id indent
+        Ordinary _ ->
+            updateWithOrdinaryBlock block accumulator
 
         -- provide for numbering of equations
         Verbatim "mathmacros" ->
@@ -567,7 +547,7 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
         Verbatim name_ ->
             case block.body of
                 Left str ->
-                    updateWithVerbatimBlock (Just name_) args str block.meta.id accumulator
+                    updateWithVerbatimBlock block accumulator
 
                 Right _ ->
                     accumulator
@@ -575,10 +555,10 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
         Paragraph ->
             case getNameContentIdTag block of
                 Nothing ->
-                    accumulator
+                    { accumulator | inListState = nextInListState block.heading accumulator.inListState }
 
                 Just { name, content, id, tag } ->
-                    accumulator |> updateWithParagraph Nothing content id
+                    accumulator |> updateWithParagraph block
 
 
 normalzeLines : List String -> List String
@@ -589,9 +569,6 @@ normalzeLines lines =
 updateWithOrdinarySectionBlock : Accumulator -> Maybe String -> Either String (List Expression) -> String -> String -> Accumulator
 updateWithOrdinarySectionBlock accumulator name content level id =
     let
-        ( inList, _ ) =
-            listData accumulator name
-
         titleWords =
             case content of
                 Left str ->
@@ -615,8 +592,7 @@ updateWithOrdinarySectionBlock accumulator name content level id =
     in
     -- TODO: take care of numberedItemIndex = 0 here and elsewhere
     { accumulator
-        | inList = inList
-        , headingIndex = headingIndex
+        | headingIndex = headingIndex
         , blockCounter = blockCounter
         , counter = Dict.insert "equation" 0 accumulator.counter --TODO: this is strange!!
     }
@@ -626,9 +602,6 @@ updateWithOrdinarySectionBlock accumulator name content level id =
 updateWithOrdinaryDocumentBlock : Accumulator -> Maybe String -> Either String (List Expression) -> String -> String -> Accumulator
 updateWithOrdinaryDocumentBlock accumulator name content level id =
     let
-        ( inList, _ ) =
-            listData accumulator name
-
         title =
             case content of
                 Left str ->
@@ -647,7 +620,7 @@ updateWithOrdinaryDocumentBlock accumulator name content level id =
             makeReferenceDatum id sectionTag (Vector.toString documentIndex)
     in
     -- TODO: take care of numberedItemIndex = 0 here and elsewhere
-    { accumulator | inList = inList, documentIndex = documentIndex } |> updateReference referenceDatum
+    { accumulator | documentIndex = documentIndex } |> updateReference referenceDatum
 
 
 updateBibItemBlock accumulator args id =
@@ -659,15 +632,11 @@ updateBibItemBlock accumulator args id =
             { accumulator | reference = Dict.insert label { id = id, numRef = "_irrelevant_" } accumulator.reference }
 
 
-updateWithOrdinaryBlock : Maybe String -> Either b (List Expression) -> String -> String -> Int -> Accumulator -> Accumulator
-updateWithOrdinaryBlock name body tag id indent accumulator =
-    let
-        ( inList, initialNumberedVector ) =
-            listData accumulator name
-    in
-    case name of
+updateWithOrdinaryBlock : ExpressionBlock -> Accumulator -> Accumulator
+updateWithOrdinaryBlock block accumulator =
+    case Generic.BlockUtilities.getExpressionBlockName block of
         Just "setcounter" ->
-            case body of
+            case block.body of
                 Left _ ->
                     accumulator
 
@@ -689,49 +658,38 @@ updateWithOrdinaryBlock name body tag id indent accumulator =
         Just "numbered" ->
             let
                 level =
-                    indent // Config.indentationQuantum
+                    block.indent // Config.indentationQuantum
 
                 itemVector =
-                    case initialNumberedVector of
-                        Just v ->
-                            v
+                    case accumulator.inListState of
+                        SInList ->
+                            Vector.increment level accumulator.itemVector |> Debug.log "@@ItemVector (1)"
 
-                        Nothing ->
-                            Vector.increment level accumulator.itemVector
+                        SNotInList ->
+                            Vector.init 4 |> Vector.increment 0 |> Debug.log "@@ItemVector (2)"
 
                 index =
                     Vector.get level itemVector
 
                 numberedItemDict =
-                    Dict.insert id { level = level, index = index } accumulator.numberedItemDict |> Debug.log ("@@numberedItemDict: " ++ Debug.toString body)
+                    Dict.insert block.meta.id { level = level, index = index } accumulator.numberedItemDict |> Debug.log ("@@numberedItemDict: " ++ Debug.toString block.body)
 
                 referenceDatum =
-                    makeReferenceDatum id tag (String.fromInt (Vector.get level itemVector))
+                    makeReferenceDatum block.meta.id (getTag block) (String.fromInt (Vector.get level itemVector))
             in
-            { accumulator | inList = inList, itemVector = itemVector, numberedItemDict = numberedItemDict }
+            { accumulator
+                | inListState = nextInListState block.heading accumulator.inListState
+                , itemVector = itemVector
+                , numberedItemDict = numberedItemDict
+            }
                 |> updateReference referenceDatum
 
         Just "item" ->
             let
                 level =
-                    indent // Config.indentationQuantum
-
-                itemVector =
-                    case initialNumberedVector of
-                        Just v ->
-                            v
-
-                        Nothing ->
-                            Vector.increment level accumulator.itemVector
-
-                numberedItemDict =
-                    Dict.insert id { level = level, index = Vector.get level itemVector } accumulator.numberedItemDict
-
-                referenceDatum =
-                    makeReferenceDatum id tag (String.fromInt (Vector.get level itemVector))
+                    block.indent // Config.indentationQuantum
             in
-            { accumulator | inList = inList, itemVector = itemVector, numberedItemDict = numberedItemDict }
-                |> updateReference referenceDatum
+            { accumulator | inListState = nextInListState block.heading accumulator.inListState }
 
         Just name_ ->
             if List.member name_ [ "title", "contents", "banner", "a" ] then
@@ -741,22 +699,27 @@ updateWithOrdinaryBlock name body tag id indent accumulator =
                 --- TODO: fix thereom labels
                 let
                     level =
-                        indent // Config.indentationQuantum
+                        block.indent // Config.indentationQuantum
 
                     itemVector =
                         Vector.increment level accumulator.itemVector
 
                     numberedItemDict =
-                        Dict.insert id { level = level, index = Vector.get level itemVector } accumulator.numberedItemDict
+                        Dict.insert block.meta.id { level = level, index = Vector.get level itemVector } accumulator.numberedItemDict
 
                     referenceDatum =
-                        makeReferenceDatum id tag (String.fromInt (Vector.get level itemVector))
+                        makeReferenceDatum block.meta.id (getTag block) (String.fromInt (Vector.get level itemVector))
                 in
-                { accumulator | blockCounter = accumulator.blockCounter + 1, itemVector = itemVector, numberedItemDict = numberedItemDict }
+                { accumulator
+                    | inListState = nextInListState block.heading accumulator.inListState
+                    , blockCounter = accumulator.blockCounter + 1
+                    , itemVector = itemVector
+                    , numberedItemDict = numberedItemDict
+                }
                     |> updateReference referenceDatum
 
             else
-                accumulator
+                { accumulator | inListState = nextInListState block.heading accumulator.inListState }
 
         _ ->
             accumulator
@@ -783,41 +746,43 @@ updateWithMathMacros content accumulator =
     { accumulator | mathMacroDict = mathMacroDict }
 
 
-updateWithVerbatimBlock : Maybe String -> List String -> String -> String -> Accumulator -> Accumulator
-updateWithVerbatimBlock name_ args body id accumulator =
-    let
-        ( inList, _ ) =
-            listData accumulator name_
+updateWithVerbatimBlock : ExpressionBlock -> Accumulator -> Accumulator
+updateWithVerbatimBlock block accumulator =
+    case block.body of
+        Right _ ->
+            accumulator
 
-        name =
-            Maybe.withDefault "---" name_
+        Left content ->
+            let
+                name =
+                    Generic.BlockUtilities.getExpressionBlockName block |> Maybe.withDefault ""
 
-        tag =
-            case getMacroArg "label" body of
-                Ok str ->
-                    str
+                tag =
+                    case getMacroArg "label" content of
+                        Ok str ->
+                            str
 
-                Err _ ->
-                    "???"
+                        Err _ ->
+                            "???"
 
-        --Dict.get "label" dict |> Maybe.withDefault body
-        isSimple =
-            List.member name [ "quiver", "image" ]
+                --Dict.get "label" dict |> Maybe.withDefault body
+                isSimple =
+                    List.member name [ "quiver", "image" ]
 
-        -- Increment the appropriate counter, e.g., "equation" and "aligned"
-        -- reduceName maps these both to "equation"
-        newCounter =
-            if List.member name accumulator.numberedBlockNames then
-                incrementCounter (reduceName name) accumulator.counter
+                -- Increment the appropriate counter, e.g., "equation" and "aligned"
+                -- reduceName maps these both to "equation"
+                newCounter =
+                    if List.member name accumulator.numberedBlockNames then
+                        incrementCounter (reduceName name) accumulator.counter
 
-            else
-                accumulator.counter
+                    else
+                        accumulator.counter
 
-        referenceDatum =
-            makeReferenceDatum id tag (verbatimBlockReference isSimple accumulator.headingIndex name newCounter)
-    in
-    { accumulator | inList = inList, counter = newCounter }
-        |> updateReference referenceDatum
+                referenceDatum =
+                    makeReferenceDatum block.meta.id tag (verbatimBlockReference isSimple accumulator.headingIndex name newCounter)
+            in
+            { accumulator | inListState = nextInListState block.heading accumulator.inListState, counter = newCounter }
+                |> updateReference referenceDatum
 
 
 verbatimBlockReference : Bool -> Vector -> String -> Dict String Int -> String
@@ -833,17 +798,15 @@ verbatimBlockReference isSimple headingIndex name newCounter =
         a ++ "." ++ (getCounter (reduceName name) newCounter |> String.fromInt)
 
 
-updateWithParagraph name content id accumulator =
+updateWithParagraph block accumulator =
     let
-        ( inList, _ ) =
-            listData accumulator name
-
         ( footnotes, footnoteNumbers ) =
-            addFootnotesFromContent id content ( accumulator.footnotes, accumulator.footnoteNumbers )
+            addFootnotesFromContent block ( accumulator.footnotes, accumulator.footnoteNumbers )
     in
     { accumulator
-        | inList = inList
-        , terms = addTermsFromContent id content accumulator.terms
+        | inListState = nextInListState block.heading accumulator.inListState
+
+        --, terms = addTermsFromContent block.meta.id block.body accumulator.terms
         , footnotes = footnotes
         , footnoteNumbers = footnoteNumbers
     }
@@ -950,9 +913,9 @@ addFootnotes termDataList ( dict1, dict2 ) =
     List.foldl (\data ( d1, d2 ) -> ( addFootnote data d1, addFootnoteLabel data d2 )) ( dict1, dict2 ) termDataList
 
 
-addFootnotesFromContent : String -> Either String (List Expression) -> ( Dict String TermLoc, Dict String Int ) -> ( Dict String TermLoc, Dict String Int )
-addFootnotesFromContent id content ( dict1, dict2 ) =
-    addFootnotes (getFootnotes id content) ( dict1, dict2 )
+addFootnotesFromContent : ExpressionBlock -> ( Dict String TermLoc, Dict String Int ) -> ( Dict String TermLoc, Dict String Int )
+addFootnotesFromContent block ( dict1, dict2 ) =
+    addFootnotes (getFootnotes block.meta.id block.body) ( dict1, dict2 )
 
 
 

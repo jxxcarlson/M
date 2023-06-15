@@ -1,7 +1,13 @@
-module Generic.BlockUtilities exposing (argsAndProperties, dropLast, getName, updateMeta)
+module Generic.BlockUtilities exposing
+    ( argsAndProperties
+    , dropLast
+    , getExpressionBlockName
+    , getPrimitiveBlockName
+    , updateMeta
+    )
 
 import Dict exposing (Dict)
-import Generic.Language exposing (BlockMeta, Heading(..), PrimitiveBlock)
+import Generic.Language exposing (BlockMeta, ExpressionBlock, Heading(..), PrimitiveBlock)
 import Tools.KV as KV
 
 
@@ -32,8 +38,21 @@ argsAndProperties words =
     ( words, properties )
 
 
-getName : PrimitiveBlock -> Maybe String
-getName block =
+getPrimitiveBlockName : PrimitiveBlock -> Maybe String
+getPrimitiveBlockName block =
+    case block.heading of
+        Paragraph ->
+            Nothing
+
+        Ordinary name ->
+            Just name
+
+        Verbatim name ->
+            Just name
+
+
+getExpressionBlockName : ExpressionBlock -> Maybe String
+getExpressionBlockName block =
     case block.heading of
         Paragraph ->
             Nothing
