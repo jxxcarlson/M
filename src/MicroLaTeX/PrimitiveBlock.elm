@@ -15,6 +15,7 @@ module MicroLaTeX.PrimitiveBlock exposing (getLevel, parse, parseLoop, print, pr
 
 -}
 
+import Config
 import Dict exposing (Dict)
 import Generic.BlockUtilities
 import Generic.Language exposing (Heading(..), PrimitiveBlock)
@@ -1232,7 +1233,7 @@ blockFromLine idPrefix count level ({ indent, lineNumber, position, prefix, cont
         { position = 0
         , lineNumber = lineNumber
         , numberOfLines = 0
-        , id = idPrefix ++ String.fromInt count
+        , id = Config.idPrefix ++ "-" ++ String.fromInt lineNumber
         , messages = []
         , sourceText = ""
         , error = Nothing
