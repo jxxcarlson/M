@@ -954,7 +954,7 @@ emptyLine currentLine state =
 
                     else
                         -- if the top of the labelstack is  (CBeginBlock name) and empty line
-                        -- is encounter, keep going to try to find (CEndBlock name)
+                        -- is encountered, keep going to try to find (CEndBlock name)
                         Loop <| state
 
                 CSpecialBlock LXPseudoBlock ->
@@ -1224,7 +1224,7 @@ showStatus status =
 blockFromLine : String -> Int -> Int -> Line -> PrimitiveBlock
 blockFromLine idPrefix count level ({ indent, lineNumber, position, prefix, content } as line) =
     { heading = getHeading line.content
-    , indent = indent
+    , indent = level
     , args = []
     , properties = statusStarted |> Dict.insert "level" (String.fromInt level)
     , firstLine = line.content
