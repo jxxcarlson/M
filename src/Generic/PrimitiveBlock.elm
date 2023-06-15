@@ -58,38 +58,6 @@ type alias State =
     }
 
 
-length : PrimitiveBlock -> Int
-length block =
-    List.length block.body
-
-
-listLength : List PrimitiveBlock -> Int
-listLength blocks =
-    case List.Extra.unconsLast blocks of
-        Nothing ->
-            0
-
-        Just ( lastBlock, _ ) ->
-            lastBlock.meta.lineNumber + length lastBlock - 1
-
-
-eq : PrimitiveBlock -> PrimitiveBlock -> Bool
-eq b1 b2 =
-    if b1.meta.sourceText /= b2.meta.sourceText then
-        False
-
-    else if b1.heading /= b2.heading then
-        False
-
-    else
-        True
-
-
-empty : PrimitiveBlock
-empty =
-    Generic.Language.primitiveBlockEmpty
-
-
 {-|
 
     Reverse the order of the strings in the body.
@@ -448,3 +416,39 @@ createBlock state currentLine =
                 , currentBlock = Just newBlock
                 , blocks = blocks
             }
+
+
+
+--HELPERS
+
+
+length : PrimitiveBlock -> Int
+length block =
+    List.length block.body
+
+
+listLength : List PrimitiveBlock -> Int
+listLength blocks =
+    case List.Extra.unconsLast blocks of
+        Nothing ->
+            0
+
+        Just ( lastBlock, _ ) ->
+            lastBlock.meta.lineNumber + length lastBlock - 1
+
+
+eq : PrimitiveBlock -> PrimitiveBlock -> Bool
+eq b1 b2 =
+    if b1.meta.sourceText /= b2.meta.sourceText then
+        False
+
+    else if b1.heading /= b2.heading then
+        False
+
+    else
+        True
+
+
+empty : PrimitiveBlock
+empty =
+    Generic.Language.primitiveBlockEmpty
