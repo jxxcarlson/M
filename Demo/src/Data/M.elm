@@ -83,6 +83,18 @@ def factorial(n):
 
 [large Groceries:]
 
+| list
+
+. Bread
+
+. Milk
+
+. Coffee
+
+[large More Groceries:]
+
+| list
+
 . Bread
 
 . Milk

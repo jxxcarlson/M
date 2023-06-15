@@ -348,6 +348,15 @@ listData accumulator name =
         |> Debug.log "@@listData"
 
 
+initList : Accumulator -> Accumulator
+initList acc =
+    { acc
+        | inList = False
+        , itemVector = Vector.init 4 |> Vector.increment 0
+    }
+        |> Debug.log "@@initList"
+
+
 type alias ReferenceDatum =
     { id : String
     , tag : String
@@ -490,6 +499,9 @@ updateAccumulator ({ heading, indent, args, body, meta, properties } as block) a
 
                 _ ->
                     accumulator
+
+        Ordinary "list" ->
+            { accumulator | itemVector = Vector.init 4 }
 
         Ordinary "section" ->
             let

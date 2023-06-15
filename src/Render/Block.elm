@@ -203,6 +203,7 @@ blockDict =
         , ( "endnotes", endnotes )
         , ( "setcounter", \_ _ _ _ -> Element.none )
         , ( "shiftandsetcounter", \_ _ _ _ -> Element.none )
+        , ( "list", \_ _ _ _ -> Element.none )
         ]
 
 

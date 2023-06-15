@@ -31,8 +31,19 @@ text =
 
   . Bar
 
-@[hrule]
 
+
+Another list:
+
+. This
+
+. That
+
+  . Foo
+
+  . Bar
+
+@[hrule]
 
 I read the [New York Times](https://nytimes.com) every day.
 
