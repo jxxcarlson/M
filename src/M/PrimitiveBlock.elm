@@ -103,6 +103,13 @@ getHeadingData line_ =
                                     , properties = Dict.singleton "firstLine" (String.replace ". " "" line)
                                     }
 
+                        "```" ->
+                            Ok <|
+                                { heading = Verbatim "code"
+                                , args = []
+                                , properties = Dict.empty
+                                }
+
                         "$$" ->
                             Ok <| { heading = Verbatim "math", args = [], properties = Dict.empty }
 
