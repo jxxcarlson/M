@@ -9,7 +9,6 @@ module MicroLaTeX.Expression exposing
     , reduceTokens
     )
 
-import Config
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
 import MicroLaTeX.Helpers as Helpers exposing (Step(..), loop)
@@ -17,6 +16,7 @@ import MicroLaTeX.LogTools as Tools
 import MicroLaTeX.Match
 import MicroLaTeX.Symbol as Symbol exposing (Symbol(..))
 import MicroLaTeX.Token as Token exposing (Token(..), TokenType(..))
+import Scripta.Config as Config
 
 
 

@@ -1,12 +1,12 @@
 module M.Parser exposing (f, toExpressionBlockForestFromStringlist, toExpressionBlocksFromString)
 
-import Config
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform exposing (Error)
 import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import M.Expression
 import M.PrimitiveBlock
+import Scripta.Config as Config
 
 
 {-|

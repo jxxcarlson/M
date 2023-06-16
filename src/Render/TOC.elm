@@ -2,7 +2,6 @@ module Render.TOC exposing (view)
 
 -- import Render.Block
 
-import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Element exposing (Element)
@@ -17,6 +16,7 @@ import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
 import Render.Utility
+import Scripta.Config as Config
 import Tree
 
 

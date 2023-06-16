@@ -3,7 +3,6 @@ module Main exposing (main)
 import Browser
 import Browser.Dom
 import Browser.Events
-import Compiler
 import Data.M
 import Data.MicroLaTeX
 import Data.XMarkdown
@@ -16,6 +15,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings
+import Scripta.Compiler as Compiler
 import Task
 
 

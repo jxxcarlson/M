@@ -40,7 +40,6 @@ module Generic.Acc exposing
 
 -}
 
-import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Generic.ASTTools
@@ -54,6 +53,7 @@ import Generic.Vector as Vector exposing (Vector)
 import List.Extra
 import Maybe.Extra
 import Parser exposing ((|.), (|=), Parser)
+import Scripta.Config as Config
 import Tools.Utility as Utility
 import Tree exposing (Tree)
 

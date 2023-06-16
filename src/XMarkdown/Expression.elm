@@ -10,10 +10,10 @@ module XMarkdown.Expression exposing
 
 -- import L0.Parser.Expression
 
-import Config
 import Generic.Language exposing (Expr(..), Expression)
 import List.Extra
 import M.Expression exposing (parseWithMessages)
+import Scripta.Config as Config
 import Tools.Loop exposing (Step(..), loop)
 import XMarkdown.ForkLog as Tools
 import XMarkdown.Match as M

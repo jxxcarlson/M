@@ -15,7 +15,6 @@ module MicroLaTeX.PrimitiveBlock exposing (getLevel, parse, parseLoop, print, pr
 
 -}
 
-import Config
 import Dict exposing (Dict)
 import Generic.BlockUtilities
 import Generic.Language exposing (Heading(..), PrimitiveBlock)
@@ -24,6 +23,7 @@ import List.Extra
 import MicroLaTeX.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
 import MicroLaTeX.Line as Line exposing (Line)
 import MicroLaTeX.Util
+import Scripta.Config as Config
 
 
 type alias State =

@@ -1,5 +1,7 @@
-module Compiler exposing
-    ( compileL
+module Scripta.Compiler exposing
+    ( Lang
+    , compile
+    , compileL
     , compileM
     , compileX
     , parseL
@@ -10,7 +12,6 @@ module Compiler exposing
 
 --import Render.Block
 
-import Config
 import Element exposing (Element)
 import Generic.Acc
 import Generic.Compiler
@@ -26,8 +27,28 @@ import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.TOC
 import Render.Tree
+import Scripta.Config as Config
 import XMarkdown.Expression
 import XMarkdown.PrimitiveBlock
+
+
+compile : Lang -> Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
+compile lang width outerCount selectedId lines =
+    case lang of
+        MLang ->
+            compileM width outerCount selectedId lines
+
+        MicroLaTeXLang ->
+            compileL width outerCount selectedId lines
+
+        XMarkdownLang ->
+            compileX width outerCount selectedId lines
+
+
+type Lang
+    = MicroLaTeXLang
+    | MLang
+    | XMarkdownLang
 
 
 {-|
