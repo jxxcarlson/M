@@ -21,8 +21,11 @@ indentationScale =
     15
 
 
-item : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-item count acc settings block =
+
+-- item : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+item count acc settings attr block =
     let
         id =
             String.fromInt block.meta.lineNumber
@@ -51,12 +54,15 @@ item count acc settings block =
             ]
             (Element.text label_)
         , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
-            (Render.Helper.renderWithDefault "| item" count acc settings (Generic.Language.getExpressionContent block))
+            (Render.Helper.renderWithDefault "| item" count acc settings attr (Generic.Language.getExpressionContent block))
         ]
 
 
-numbered : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-numbered count acc settings block =
+
+-- numbered : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+numbered count acc settings attr block =
     let
         id =
             block.meta.id
@@ -102,12 +108,15 @@ numbered count acc settings block =
             ]
             (Element.text (label_ ++ ". "))
         , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
-            (Render.Helper.renderWithDefault "| numbered" count acc settings (Generic.Language.getExpressionContent block))
+            (Render.Helper.renderWithDefault "| numbered" count acc settings attr (Generic.Language.getExpressionContent block))
         ]
 
 
-desc : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-desc count acc settings block =
+
+-- desc : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+desc count acc settings attr block =
     let
         label =
             Render.Utility.argString block.args
@@ -115,5 +124,5 @@ desc count acc settings block =
     Element.row ([ Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
         [ Element.el [ Font.bold, Element.alignTop, Element.width (Element.px 100) ] (Element.text label)
         , Element.paragraph [ Render.Utility.leftPadding settings.leftIndentation, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ]
-            (Render.Helper.renderWithDefault "| desc" count acc settings (Generic.Language.getExpressionContent block))
+            (Render.Helper.renderWithDefault "| desc" count acc settings attr (Generic.Language.getExpressionContent block))
         ]

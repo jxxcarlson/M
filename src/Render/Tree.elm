@@ -1,5 +1,7 @@
 module Render.Tree exposing (renderTreeL, renderTreeQ, unravelL, unravelM)
 
+-- import Render.Block
+
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
@@ -96,20 +98,24 @@ renderTreeL count accumulator settings tree =
         (Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree
 
 
-renderTreeQ : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
-renderTreeQ count accumulator settings tree =
+renderTreeQ : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> Tree ExpressionBlock -> Element MarkupMsg
+renderTreeQ count accumulator settings attrs_ tree =
     let
         root =
             Tree.label tree
     in
     case Tree.children tree of
         [] ->
-            Element.column (Render.Block2.renderAttributes count accumulator settings root)
-                (Render.Block2.renderBody count accumulator settings root)
+            Element.column (Render.Block2.renderAttributes settings root)
+                (Render.Block2.renderBody count accumulator settings attrs_ root)
 
         children ->
-            Element.column (Render.Block2.renderAttributes count accumulator settings root)
-                (Render.Block2.renderBody count accumulator settings root ++ List.map (renderTreeQ count accumulator settings) children)
+            let
+                attrs =
+                    Render.Block2.renderAttributes settings root
+            in
+            Element.column (attrs_ ++ attrs)
+                (Render.Block2.renderBody count accumulator settings attrs_ root ++ List.map (renderTreeQ count accumulator settings (attrs_ ++ attrs)) children)
 
 
 

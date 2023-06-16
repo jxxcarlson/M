@@ -19,7 +19,7 @@ import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import Render.Color as Color
-import Render.Expression
+import Render.Expression2
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -59,7 +59,7 @@ renderParagraph : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Ele
 renderParagraph count acc settings block =
     case block.body of
         Right exprs ->
-            List.map (Render.Expression.render count acc settings) exprs
+            List.map (Render.Expression2.render count acc settings) exprs
                 |> clickableParagraph block.meta.lineNumber block.meta.numberOfLines (selectedColor block.meta.id settings)
                 |> indentParagraph block.indent
 
@@ -225,7 +225,8 @@ verbatimDict =
         , ( "code", renderCode )
         , ( "verse", renderVerse )
         , ( "verbatim", renderVerbatim )
-        , ( "tabular", Render.Tabular.render )
+
+        -- , ( "tabular", Render.Tabular.render )
         , ( "hide", renderNothing )
         , ( "texComment", renderNothing )
         , ( "docinfo", renderNothing )
@@ -264,7 +265,7 @@ noSuchOrdinaryBlock : Int -> Accumulator -> RenderSettings -> ExpressionBlock ->
 noSuchOrdinaryBlock count acc settings block =
     Element.column [ Element.spacing 4 ]
         [ Element.paragraph [ Font.color (Element.rgb255 180 0 0) ] [ Element.text <| "No such block:" ++ (block.args |> String.join " ") ]
-        , Element.paragraph [] (List.map (Render.Expression.render count acc settings) (Generic.Language.getExpressionContent block))
+        , Element.paragraph [] (List.map (Render.Expression2.render count acc settings) (Generic.Language.getExpressionContent block))
         ]
 
 
@@ -283,12 +284,12 @@ renderWithDefaultWithSize size default count acc settings exprs =
         [ Element.el [ Font.color settings.redColor, Font.size size ] (Element.text default) ]
 
     else
-        List.map (Render.Expression.render count acc settings) exprs
+        List.map (Render.Expression2.render count acc settings) exprs
 
 
 renderWithDefault2 : String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
 renderWithDefault2 _ count acc settings exprs =
-    List.map (Render.Expression.render count acc settings) exprs
+    List.map (Render.Expression2.render count acc settings) exprs
 
 
 

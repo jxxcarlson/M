@@ -14,7 +14,7 @@ import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import Render.Color as Color
-import Render.Expression
+import Render.Expression2
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -31,14 +31,14 @@ import String.Extra
 import Tools.Utility as Utility
 
 
-renderAttributes : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> List (Element.Attribute MarkupMsg)
-renderAttributes count accumulator settings block =
+renderAttributes : RenderSettings -> ExpressionBlock -> List (Element.Attribute MarkupMsg)
+renderAttributes settings block =
     case block.heading of
         Paragraph ->
             standardAttributes settings block
 
         Ordinary name ->
-            standardAttributes settings block ++ OrdinaryBlock.attributes name
+            standardAttributes settings block ++ OrdinaryBlock.getAttributes name
 
         Verbatim _ ->
             standardAttributes settings block
@@ -48,28 +48,31 @@ standardAttributes settings block =
     [ Render.Utility.idAttributeFromInt block.meta.lineNumber
     , Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
     ]
+        ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
 
 
-renderBody : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> List (Element MarkupMsg)
-renderBody count acc settings block =
+renderBody : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> List (Element MarkupMsg)
+renderBody count acc settings attrs block =
     case block.heading of
         Paragraph ->
-            [ renderParagraphBody count acc settings block ]
+            [ renderParagraphBody count acc settings attrs block ]
 
         Ordinary name ->
-            [ OrdinaryBlock.render count acc settings block ]
+            [ OrdinaryBlock.render count acc settings attrs block ]
 
         Verbatim name ->
             [ VerbatimBlock.render count acc settings block |> Render.Helper.showError block.meta.error ]
 
 
-renderParagraphBody : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-renderParagraphBody count acc settings block =
+renderParagraphBody : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+renderParagraphBody count acc settings attrs block =
     case block.body of
         Right exprs ->
-            List.map (Render.Expression.render count acc settings) exprs
-                |> clickableParagraph block.meta.lineNumber block.meta.numberOfLines (Render.Helper.selectedColor block.meta.id settings)
-                |> indentParagraph block.indent
+            Element.paragraph attrs
+                [ List.map (Render.Expression2.render count acc settings attrs) exprs
+                    |> clickableParagraph block.meta.lineNumber block.meta.numberOfLines (Render.Helper.selectedColor block.meta.id settings)
+                    |> indentParagraph block.indent
+                ]
 
         Left _ ->
             Element.none

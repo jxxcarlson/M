@@ -1,5 +1,7 @@
 module Render.TOC exposing (view)
 
+-- import Render.Block
+
 import Config
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -11,8 +13,7 @@ import Generic.Acc exposing (Accumulator)
 import Generic.Forest exposing (Forest)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
-import Render.Block
-import Render.Expression
+import Render.Expression2
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
 import Render.Utility
@@ -54,7 +55,7 @@ viewTocItem count acc settings ({ args, body, properties } as block) =
 
                 label : Element MarkupMsg
                 label =
-                    Element.paragraph [ tocIndent args ] (sectionNumber :: List.map (Render.Expression.render count acc settings) exprs)
+                    Element.paragraph [ tocIndent args ] (sectionNumber :: List.map (Render.Expression2.render count acc settings) exprs)
             in
             Element.el [ Events.onClick (SelectId id) ]
                 (Element.link [ Font.color (Element.rgb 0 0 0.8) ] { url = Render.Utility.internalLink id, label = label })
@@ -89,7 +90,7 @@ prepareTOC maximumLevel count acc settings ast =
         title : List (Element MarkupMsg)
         title =
             headings.title
-                |> List.map (Render.Expression.render count acc settings)
+                |> List.map (Render.Expression2.render count acc settings)
 
         topItem =
             let

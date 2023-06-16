@@ -3,7 +3,7 @@ module Render.Export.Check exposing (nonExportableBlocks, nonExportableExpressio
 import Compiler.ASTTools
 import Parser.Block
 import Render.Block
-import Render.Expression
+import Render.Expression2
 import Tree exposing (Tree)
 
 
@@ -14,7 +14,7 @@ nonExportableBlocks forest =
 
 nonExportableExpressions : List (Tree.Tree Parser.Block.ExpressionBlock) -> List String
 nonExportableExpressions forest =
-    forest |> Compiler.ASTTools.expressionNames |> List.filter (\expr -> List.member expr Render.Expression.nonstandardElements)
+    forest |> Compiler.ASTTools.expressionNames |> List.filter (\expr -> List.member expr Render.Expression2.nonstandardElements)
 
 
 nonExportableBlockNameList =

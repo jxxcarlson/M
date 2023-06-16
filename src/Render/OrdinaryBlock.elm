@@ -1,4 +1,4 @@
-module Render.OrdinaryBlock exposing (attributes, render)
+module Render.OrdinaryBlock exposing (getAttributes, render)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -14,7 +14,7 @@ import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import Render.Color as Color
-import Render.Expression
+import Render.Expression2
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -30,19 +30,7 @@ import String.Extra
 import Tools.Utility as Utility
 
 
-attributes : String -> List (Element.Attribute MarkupMsg)
-attributes name =
-    case Dict.get name blockDict of
-        Nothing ->
-            -- This is an env block, e.g., theorem
-            [ Font.italic ]
-
-        Just _ ->
-            []
-
-
-render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-render count acc settings block =
+render count acc settings attr block =
     case block.body of
         Left _ ->
             Element.none
@@ -52,32 +40,51 @@ render count acc settings block =
                 Ordinary functionName ->
                     case Dict.get functionName blockDict of
                         Nothing ->
-                            env count acc settings block
+                            env count acc settings attr block
                                 |> indentOrdinaryBlock block.indent (String.fromInt block.meta.lineNumber) settings
 
                         Just f ->
-                            f count acc settings block
+                            f count acc settings attr block
                                 |> indentOrdinaryBlock block.indent (String.fromInt block.meta.lineNumber) settings
 
                 _ ->
                     Element.none
 
 
-blockDict : Dict String (Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg)
+getAttributes : String -> List (Element.Attribute MarkupMsg)
+getAttributes name =
+    case Dict.get name attributeDict of
+        Nothing ->
+            []
+
+        Just attrs ->
+            attrs
+
+
+attributeDict : Dict String (List (Element.Attribute MarkupMsg))
+attributeDict =
+    Dict.fromList
+        [ ( "box", [ Background.color (Element.rgb 0.9 0.9 1.0) ] )
+        , ( "theorem", [ Font.italic ] )
+        ]
+
+
+blockDict : Dict String (Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg)
 blockDict =
     Dict.fromList
         [ --( "indent", indented )
           --, ( "center", centered )
-          --, ( "box", box )
-          --, ( "quotation", quotation )
-          --, ( "set-key", \_ _ _ _ -> Element.none )
-          --, ( "comment", comment )
-          --, ( "q", question ) -- xx
-          --, ( "a", answer ) -- xx
-          --, ( "document", document )
-          --, ( "collection", collection )
-          --, ( "bibitem", bibitem )
-          ( "section", section ) -- xx
+          ( "box", box )
+
+        --, ( "quotation", quotation )
+        --, ( "set-key", \_ _ _ _ -> Element.none )
+        --, ( "comment", comment )
+        --, ( "q", question ) -- xx
+        --, ( "a", answer ) -- xx
+        --, ( "document", document )
+        --, ( "collection", collection )
+        --, ( "bibitem", bibitem )
+        , ( "section", section ) -- xx
         , ( "subheading", subheading ) -- xx
 
         --, ( "runninghead_", \_ _ _ _ -> Element.none ) -- DEPRECATED
@@ -103,17 +110,29 @@ blockDict =
         ]
 
 
-subheading : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-subheading count acc settings block =
+box : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+box count acc settings attr block =
+    Element.column []
+        [ Element.el [ Font.bold ] (Element.text (blockHeading block))
+        , Element.paragraph
+            []
+            (Render.Helper.renderWithDefault "box" count acc settings attr (Generic.Language.getExpressionContent block))
+        ]
+
+
+
+-- subheading : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+subheading count acc settings attr block =
     Element.link
-        (sectionBlockAttributes block settings [ topPadding 10 ])
+        (sectionBlockAttributes block settings ([ topPadding 10 ] ++ attr))
         { url = Render.Utility.internalLink (settings.titlePrefix ++ "title")
-        , label = Element.paragraph [] (Render.Helper.renderWithDefault "| subheading" count acc settings (Generic.Language.getExpressionContent block))
+        , label = Element.paragraph [] (Render.Helper.renderWithDefault "| subheading" count acc settings attr (Generic.Language.getExpressionContent block))
         }
 
 
-section : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-section count acc settings block =
+section count acc settings attr block =
     -- level 1 is reserved for titles
     let
         headingLevel =
@@ -136,12 +155,11 @@ section count acc settings block =
     Element.link
         (sectionBlockAttributes block settings [ topPadding 20, Font.size fontSize ])
         { url = Render.Utility.internalLink (settings.titlePrefix ++ "title")
-        , label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??!!" count acc settings exprs)
+        , label = Element.paragraph [] (sectionNumber :: renderWithDefaultWithSize 18 "??!!" count acc settings attr exprs)
         }
 
 
-title : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-title count acc settings block =
+title count acc settings attr block =
     let
         fontSize =
             settings.titleSize
@@ -149,7 +167,7 @@ title count acc settings block =
         exprs =
             Generic.Language.getExpressionContent block
     in
-    Element.paragraph [ Font.size fontSize, elementAttribute "id" "title" ] (renderWithDefaultWithSize fontSize "??!!" count acc settings exprs)
+    Element.paragraph [ Font.size fontSize, elementAttribute "id" "title" ] (renderWithDefaultWithSize fontSize "??!!" count acc settings attr exprs)
 
 
 sectionBlockAttributes : ExpressionBlock -> RenderSettings -> List (Element.Attr () MarkupMsg) -> List (Element.Attr () MarkupMsg)
@@ -166,13 +184,16 @@ topPadding k =
     Element.paddingEach { top = k, bottom = 0, left = 0, right = 0 }
 
 
-renderWithDefaultWithSize : Int -> String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
-renderWithDefaultWithSize size default count acc settings exprs =
+
+-- renderWithDefaultWithSize : Int -> String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
+
+
+renderWithDefaultWithSize size default count acc settings attr exprs =
     if List.isEmpty exprs then
-        [ Element.el [ Font.color settings.redColor, Font.size size ] (Element.text default) ]
+        [ Element.el ([ Font.color settings.redColor, Font.size size ] ++ attr) (Element.text default) ]
 
     else
-        List.map (Render.Expression.render count acc settings) exprs
+        List.map (Render.Expression2.render count acc settings attr) exprs
 
 
 indentOrdinaryBlock : Int -> String -> RenderSettings -> Element msg -> Element msg
@@ -189,8 +210,13 @@ indentOrdinaryBlock indent id settings x =
     Used to render generic LaTeX environments
 
 -}
-env_ : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-env_ count acc settings block =
+
+
+
+-- env_ : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+env_ count acc settings attr block =
     case List.head block.args of
         Nothing ->
             Element.paragraph
@@ -201,7 +227,7 @@ env_ count acc settings block =
                 [ Element.text "| env (missing name!)" ]
 
         Just _ ->
-            env count acc settings block
+            env count acc settings attr block
 
 
 {-|
@@ -209,8 +235,13 @@ env_ count acc settings block =
     Used to render generic LaTeX environments
 
 -}
-env : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-env count acc settings block =
+
+
+
+-- env : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+
+
+env count acc settings attr block =
     case block.body of
         Left _ ->
             Element.none
@@ -226,13 +257,16 @@ env count acc settings block =
                     [ Font.italic
                     , Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
                     ]
-                    (renderWithDefault2 ("??" ++ (Generic.Language.getNameFromHeading block.heading |> Maybe.withDefault "(name)")) count acc settings exprs)
+                    (renderWithDefault2 ("??" ++ (Generic.Language.getNameFromHeading block.heading |> Maybe.withDefault "(name)")) count acc settings attr exprs)
                 ]
 
 
-renderWithDefault2 : String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
-renderWithDefault2 _ count acc settings exprs =
-    List.map (Render.Expression.render count acc settings) exprs
+
+-- renderWithDefault2 : String -> Int -> Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
+
+
+renderWithDefault2 _ count acc settings attr exprs =
+    List.map (Render.Expression2.render count acc settings attr) exprs
 
 
 {-|

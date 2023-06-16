@@ -18,7 +18,7 @@ import Element.Font as Font
 import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (Expr(..), Expression, ExpressionBlock, Heading(..))
 import Html.Attributes
-import Render.Expression
+import Render.Expression2
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (RenderSettings)
 
@@ -90,7 +90,9 @@ noSuchOrdinaryBlock : Int -> Accumulator -> RenderSettings -> ExpressionBlock ->
 noSuchOrdinaryBlock count acc settings block =
     Element.column [ Element.spacing 4 ]
         [ Element.paragraph [ Font.color (Element.rgb255 180 0 0) ] [ Element.text <| "No such block:" ++ (block.args |> String.join " ") ]
-        , Element.paragraph [] (List.map (Render.Expression.render count acc settings) (Generic.Language.getExpressionContent block))
+
+        -- TODO fix this
+        --, Element.paragraph [] (List.map (Render.Expression2.render count acc settings) (Generic.Language.getExpressionContent block))
         ]
 
 
@@ -99,10 +101,10 @@ renderNothing _ _ _ _ =
     Element.none
 
 
-renderWithDefault : String -> Int -> Generic.Acc.Accumulator -> RenderSettings -> List Expression -> List (Element MarkupMsg)
-renderWithDefault default count acc settings exprs =
+renderWithDefault : String -> Int -> Generic.Acc.Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> List Expression -> List (Element MarkupMsg)
+renderWithDefault default count acc settings attr exprs =
     if List.isEmpty exprs then
         [ Element.el [ Font.color settings.redColor, Font.size 14 ] (Element.text default) ]
 
     else
-        List.map (Render.Expression.render count acc settings) exprs
+        List.map (Render.Expression2.render count acc settings attr) exprs

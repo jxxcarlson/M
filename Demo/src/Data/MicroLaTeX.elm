@@ -40,6 +40,21 @@ text =
 
 \\hrule
 
+
+\\begin{box}
+
+This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff.
+
+\\begin{equation}
+a^2 + b^2 = c^2
+\\end{equation}
+
+This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff.
+
+\\end{box}
+
+\\hrule
+
 \\begin{theorem}
 There are infinitely many primes.
 

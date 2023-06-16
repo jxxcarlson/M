@@ -8,6 +8,8 @@ module Compiler exposing
     , pm
     )
 
+--import Render.Block
+
 import Config
 import Element exposing (Element)
 import Generic.Acc
@@ -20,7 +22,6 @@ import M.PrimitiveBlock
 import MicroLaTeX.Expression
 import MicroLaTeX.PrimitiveBlock
 import MicroLaTeX.Util
-import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.TOC
 import Render.Tree
@@ -140,7 +141,7 @@ compileL width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
             in
             { body =
-                List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings) forest
+                List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
 
             -- |> List.map Render.Tree.unravelL
             , toc =
