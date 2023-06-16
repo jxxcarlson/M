@@ -140,7 +140,7 @@ compileL width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
             in
             { body =
-                List.map (Render.Tree.renderTreeL renderData.count accumulator renderData.settings) forest
+                List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings) forest
 
             -- |> List.map Render.Tree.unravelL
             , toc =

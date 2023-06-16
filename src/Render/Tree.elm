@@ -1,4 +1,4 @@
-module Render.Tree exposing (renderTreeL, unravelL, unravelM)
+module Render.Tree exposing (renderTreeL, renderTreeQ, unravelL, unravelM)
 
 import Element exposing (Element)
 import Element.Background as Background
@@ -12,6 +12,7 @@ import Generic.Pipeline
 import Generic.Settings
 import M.Expression
 import Render.Block
+import Render.Block2
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings exposing (RenderSettings)
 import Tree exposing (Tree)
@@ -93,6 +94,22 @@ renderTreeL count accumulator settings tree =
 
     else
         (Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree
+
+
+renderTreeQ : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
+renderTreeQ count accumulator settings tree =
+    let
+        root =
+            Tree.label tree
+    in
+    case Tree.children tree of
+        [] ->
+            Element.column (Render.Block2.renderAttributes count accumulator settings root)
+                (Render.Block2.renderBody count accumulator settings root)
+
+        children ->
+            Element.column (Render.Block2.renderAttributes count accumulator settings root)
+                (Render.Block2.renderBody count accumulator settings root ++ List.map (renderTreeQ count accumulator settings) children)
 
 
 
