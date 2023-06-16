@@ -109,6 +109,13 @@ update msg model =
                     else
                         ( { model | selectId = id }, Cmd.none )
 
+                Render.Msg.SendLineNumber line ->
+                    let
+                        _ =
+                            Debug.log "@@line" line
+                    in
+                    ( model, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
