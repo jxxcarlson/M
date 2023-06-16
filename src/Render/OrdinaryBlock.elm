@@ -64,8 +64,8 @@ getAttributes name =
 attributeDict : Dict String (List (Element.Attribute MarkupMsg))
 attributeDict =
     Dict.fromList
-        [ ( "box", [ Background.color (Element.rgb 0.9 0.9 1.0) ] )
-        , ( "theorem", [ Font.italic ] )
+        [--( "box", [ Background.color (Element.rgb 0.9 0.9 1.0) ] )
+         --, ( "theorem", [ Font.italic ] )
         ]
 
 

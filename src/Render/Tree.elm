@@ -108,18 +108,51 @@ renderTreeQ count accumulator settings attrs_ tree =
     in
     case Tree.children tree of
         [] ->
-            Element.column (Render.Block.renderAttributes settings root)
+            Element.column (Render.Block.renderAttributes settings root ++ rootAttributes root)
                 (Render.Block.renderBody count accumulator settings attrs_ root)
 
         children ->
-            let
-                attrs =
-                    Render.Block.renderAttributes settings root
-            in
-            Element.column attrs
-                (Render.Block.renderBody count accumulator settings attrs root
-                    ++ List.map (renderTreeQ count accumulator settings attrs) children
+            Element.column (rootAttributes root)
+                (Render.Block.renderBody count accumulator settings (rootAttributes root) root
+                    ++ List.map (renderTreeQ count accumulator settings attrs_) children
                 )
+
+
+
+--
+--renderTreeQ1 : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
+--renderTreeQ1 count accumulator settings tree =
+--    let
+--        attr =
+--            if Generic.BlockUtilities.getExpressionBlockName root == Just "box" then
+--                [ Font.italic, Element.paddingXY 32 12, Background.color (Element.rgb 0.9 0.9 1.0) ]
+--
+--            else
+--                []
+--
+--        root =
+--            Tree.label tree
+--    in
+--    case Tree.children tree of
+--        [] ->
+--            Element.column (Render.Block2.renderAttributes count accumulator settings root ++ attr)
+--                (Render.Block2.renderBody count accumulator settings root)
+--
+--        children ->
+--            Element.column (Render.Block2.renderAttributes count accumulator settings root ++ attr)
+--                (Render.Block2.renderBody count accumulator settings root ++ List.map (renderTreeQ1 count accumulator settings) children)
+
+
+rootAttributes rootBlock =
+    case Generic.BlockUtilities.getExpressionBlockName rootBlock of
+        Just "box" ->
+            [ Element.paddingXY 32 12, Background.color (Element.rgb 0.9 0.9 1.0) ]
+
+        Just "theorem" ->
+            [ Font.italic ]
+
+        _ ->
+            []
 
 
 
