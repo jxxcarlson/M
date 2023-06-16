@@ -33,6 +33,8 @@ Introduction
 
 | contents
 
+[image https://imagedelivery.net/9U-0Y4sEzXlO6BXzTnQnYQ/5479f0db-9558-4549-137f-766759241b00/public]
+
 | center
 Type theory brings together programming, logic, and mathematics.
 We outline some of its history, introducing notions that will be studied in detail in what follows.

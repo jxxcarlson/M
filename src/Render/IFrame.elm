@@ -14,8 +14,8 @@ import Render.Sync
 import Render.Utility
 
 
-render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-render count acc settings block =
+render : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+render count acc settings attrs block =
     case parseIFrame (Render.Utility.getVerbatimContent block) of
         Nothing ->
             Element.el [] (Element.text "Error parsing iframe or unregistered src")
@@ -46,10 +46,10 @@ render count acc settings block =
                             ""
             in
             Element.column
-                [ Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
-                , Render.Utility.idAttributeFromInt block.meta.lineNumber
-                , Element.width (Element.px w)
-                ]
+                ([ Element.width (Element.px w)
+                 ]
+                    ++ attrs
+                )
                 [ Html.iframe
                     [ Html.Attributes.src <| iframeProperties.src
                     , Html.Attributes.style "border" "none"

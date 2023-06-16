@@ -149,7 +149,7 @@ markupDict =
         , ( "label", \_ _ _ _ _ -> Element.none )
         , ( "cite", \_ acc _ attr exprList -> cite acc attr exprList )
         , ( "table", \g acc s attr exprList -> table g acc s attr exprList )
-        , ( "image", \_ _ s attr exprList -> Render.Graphics.image s exprList )
+        , ( "image", \_ _ s attr exprList -> Render.Graphics.image s attr exprList )
         , ( "tags", \_ _ _ _ _ -> Element.none )
         , ( "vspace", vspace )
 

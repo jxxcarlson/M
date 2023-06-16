@@ -30,8 +30,8 @@ type alias ImageParameters msg =
     }
 
 
-image : Render.Settings.RenderSettings -> List Expression -> Element msg
-image settings body =
+image : Render.Settings.RenderSettings -> List (Element.Attribute MarkupMsg) -> List Expression -> Element MarkupMsg
+image settings attrs body =
     let
         params =
             body |> argumentsFromAST |> imageParameters settings
@@ -51,7 +51,7 @@ image settings body =
                 , el [ params.placement ] params.caption
                 ]
     in
-    Element.newTabLink []
+    Element.newTabLink attrs
         { url = params.url
         , label = inner
         }
@@ -59,8 +59,8 @@ image settings body =
 
 {-| For \\image and [image ...]
 -}
-image2 : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-image2 _ _ settings block =
+image2 : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+image2 _ _ settings attrs block =
     let
         caption =
             getCaption block.properties
@@ -118,7 +118,7 @@ image2 _ _ settings block =
                 , label = inner
                 }
     in
-    Element.column [ Element.width (Element.px settings.width) ]
+    Element.column ([ Element.width (Element.px settings.width) ] ++ attrs)
         [ Element.column [ Element.width params.width, Element.centerX ] [ outer, Element.el [] figureLabel ] ]
 
 
@@ -161,14 +161,16 @@ getVerbatimContent { body } =
             ""
 
 
-svg : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-svg count acc settings block =
+svg : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+svg count acc settings attrs block =
     case SvgParser.parse (getVerbatimContent block) of
         Ok html_ ->
             Element.column
-                [ Element.paddingEach { left = 0, right = 0, top = 24, bottom = 0 }
-                , Element.width (Element.px settings.width)
-                ]
+                ([ Element.paddingEach { left = 0, right = 0, top = 24, bottom = 0 }
+                 , Element.width (Element.px settings.width)
+                 ]
+                    ++ attrs
+                )
                 [ Element.column [ Element.centerX ] [ html_ |> Element.html ]
                 ]
 
@@ -178,8 +180,8 @@ svg count acc settings block =
 
 {-| Create elements from HTML markup. On parsing error, output no elements.
 -}
-tikz : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-tikz count acc settings block =
+tikz : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+tikz count acc settings attrs block =
     let
         maybePair_ =
             case String.split "---" (getVerbatimContent block) of
@@ -198,15 +200,15 @@ tikz count acc settings block =
                 params =
                     String.words imageData |> imageParameters settings
             in
-            Element.column [ Element.spacing 8, Element.width (Element.px settings.width), params.placement, Element.paddingXY 0 18 ]
+            Element.column ([ Element.spacing 8, Element.width (Element.px settings.width), params.placement, Element.paddingXY 0 18 ] ++ attrs)
                 [ Element.image [ Element.width params.width, params.placement ]
                     { src = params.url, description = params.description }
                 , Element.el [ params.placement ] params.caption
                 ]
 
 
-quiver : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-quiver _ _ settings block =
+quiver : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+quiver _ _ settings attrs block =
     let
         -- arguments: ["width:250","caption:Fig","1"]
         qArgs : { caption : String, description : String, placement : Element.Attribute a, width : Element.Length }
@@ -239,9 +241,11 @@ quiver _ _ settings block =
                             "Figure " ++ getFigureLabel block.properties ++ ". " ++ qArgs.caption
             in
             Element.column
-                [ Element.spacing 8
-                , Element.width (Element.px settings.width)
-                ]
+                ([ Element.spacing 8
+                 , Element.width (Element.px settings.width)
+                 ]
+                    ++ attrs
+                )
                 [ Element.image [ Element.width qArgs.width, params.placement ]
                     { src = params.url, description = desc }
                 , Element.el

@@ -56,25 +56,25 @@ verbatimDict =
         , ( "equation", Render.Math.equation )
         , ( "aligned", Render.Math.aligned )
         , ( "code", renderCode )
+        , ( "verse", renderVerse )
+        , ( "verbatim", renderVerbatim )
 
-        --, ( "verse", renderVerse )
-        --, ( "verbatim", renderVerbatim )
         --, ( "tabular", Render.Tabular.render )
-        --, ( "hide", renderNothing )
-        --, ( "texComment", renderNothing )
-        --, ( "docinfo", renderNothing )
-        --, ( "mathmacros", renderNothing )
-        --, ( "textmacros", renderNothing )
-        --
-        ----, ( "datatable", Render.M.table )
+        , ( "hide", Render.Helper.renderNothing )
+        , ( "texComment", Render.Helper.renderNothing )
+        , ( "docinfo", Render.Helper.renderNothing )
+        , ( "mathmacros", Render.Helper.renderNothing )
+        , ( "textmacros", Render.Helper.renderNothing )
+
+        --, ( "datatable", Render.M.table )
         ----, ( "chart", Render.M.chart )
-        --, ( "svg", Render.Graphics.svg )
-        --, ( "quiver", Render.Graphics.quiver )
-        --, ( "image", Render.Graphics.image2 )
-        --, ( "tikz", Render.Graphics.tikz )
-        --, ( "load-files", renderNothing )
-        --, ( "include", renderNothing )
-        --, ( "iframe", Render.IFrame.render )
+        , ( "svg", Render.Graphics.svg )
+        , ( "quiver", Render.Graphics.quiver )
+        , ( "image", Render.Graphics.image2 )
+        , ( "tikz", Render.Graphics.tikz )
+        , ( "load-files", Render.Helper.renderNothing )
+        , ( "include", Render.Helper.renderNothing )
+        , ( "iframe", Render.IFrame.render )
         ]
 
 
@@ -103,6 +103,21 @@ renderCode count acc settings attr block =
         )
 
 
+renderVerbatim : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+renderVerbatim _ _ _ attrs block =
+    Element.column
+        ([ Font.family
+            [ Font.typeface "Inconsolata"
+            , Font.monospace
+            ]
+         , Element.spacing 8
+         , Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
+         ]
+            ++ attrs
+        )
+        (List.map (renderVerbatimLine "none") (String.lines (String.trim (Render.Utility.getVerbatimContent block))))
+
+
 renderVerbatimLine : String -> String -> Element msg
 renderVerbatimLine lang str =
     if String.trim str == "" then
@@ -113,6 +128,24 @@ renderVerbatimLine lang str =
 
     else
         Element.paragraph [ Element.height (Element.px 22) ] (renderedColoredLine lang str)
+
+
+renderVerse : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+renderVerse _ _ _ attrs block =
+    Element.column
+        (verbatimBlockAttributes block.meta.lineNumber block.meta.numberOfLines [] ++ attrs)
+        (List.map (renderVerbatimLine "plain") (String.lines (String.trim (Render.Utility.getVerbatimContent block))))
+
+
+verbatimBlockAttributes lineNumber numberOfLines attrs =
+    [ Render.Sync.rightToLeftSyncHelper lineNumber numberOfLines
+    , Render.Utility.idAttributeFromInt lineNumber
+    ]
+        ++ attrs
+
+
+
+-- HELPERS
 
 
 renderedColoredLine lang str =

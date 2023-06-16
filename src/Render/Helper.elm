@@ -96,8 +96,8 @@ noSuchOrdinaryBlock count acc settings block =
         ]
 
 
-renderNothing : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-renderNothing _ _ _ _ =
+renderNothing : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+renderNothing _ _ _ _ _ =
     Element.none
 
 
