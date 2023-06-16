@@ -15,6 +15,7 @@ import Generic.Settings
 import M.Expression
 import Render.Block
 import Render.Msg exposing (MarkupMsg)
+import Render.OrdinaryBlock as OrdinaryBlock exposing (getAttributesForBlock)
 import Render.Settings exposing (RenderSettings)
 import Tree exposing (Tree)
 
@@ -105,6 +106,9 @@ renderTreeQ count accumulator settings attrs_ tree =
     let
         root =
             Tree.label tree
+
+        blockAttrs =
+            OrdinaryBlock.getAttributesForBlock root
     in
     case Tree.children tree of
         [] ->
@@ -114,7 +118,7 @@ renderTreeQ count accumulator settings attrs_ tree =
         children ->
             Element.column (rootAttributes root)
                 (Render.Block.renderBody count accumulator settings (rootAttributes root) root
-                    ++ List.map (renderTreeQ count accumulator settings attrs_) children
+                    ++ List.map (renderTreeQ count accumulator settings (attrs_ ++ blockAttrs)) children
                 )
 
 

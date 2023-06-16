@@ -1,25 +1,9 @@
 module Data.MicroLaTeX exposing (text)
 
 
-text1 =
-    """
-
-\\begin{theorem}
-There are infinitely many primes.
-
-\\begin{equation}
-a^2 + b^2 = c^2
-\\end{equation}
-
-Wow! Great theorem!!
-\\end{theorem}
-
-
-"""
-
-
 text =
     """
+
 
  \\title{Wave Packets and the Dispersion Relation}
  
@@ -36,7 +20,11 @@ text =
  
  \\image{https://psurl.s3.amazonaws.com/images/jc/sinc2-bcbf.png  caption:Wave packet width:300}
 
+\\hrule
 
+\\begin{box}
+(XXX)  This is stuff. This is stuff. \\red{This is stuff.} This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff
+\\end{box}
 
 \\hrule
 
@@ -197,7 +185,7 @@ it is OK.}
  Putting this all together, we have
  
  \\begin{equation}
- \\psi(x,t) \\sim a(k_0)\\Delta k_0\\, e^{i(k_0x - \\omega(k_0)t)} \\allowbreak \\\\ \\text{sinc}(  (\\Delta k/2)(x - \\omega'(k_0)t)  )
+ \\psi(x,t) \\sim a(k_0)\\Delta k_0\\, e^{i(k_0x - \\omega(k_0)t)} \\allowbreak \\ \\text{sinc}(  (\\Delta k/2)(x - \\omega'(k_0)t)  )
  \\end{equation}
  
  Thus the body of the sinc packet moves steadily to the right at velocity $v_{group} = \\omega'(k_0)$
@@ -226,7 +214,7 @@ it is OK.}
  we expand $\\omega(k)$ in a Taylor series up to order two, so that 
  
  \\begin{equation}
- \\phi(k) = k_0x + (k - k_0)x - \\omega_0t - \\frac{d\\omega}{dk}(k_0) t \\\\ - \\frac{1}{2}\\frac{ d^2\\omega }{ dk^2 }(k_0)( k - k_0)^2 t
+ \\phi(k) = k_0x + (k - k_0)x - \\omega_0t - \\frac{d\\omega}{dk}(k_0) t \\ - \\frac{1}{2}\\frac{ d^2\\omega }{ dk^2 }(k_0)( k - k_0)^2 t
  \\end{equation}
  
  Writing $\\phi(k) = k_0x - \\omega_0t + \\phi_2(k,x,t)$, we find that
@@ -360,5 +348,7 @@ it is OK.}
  
  
  
+ 
+
  
 """

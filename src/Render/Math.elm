@@ -9,6 +9,7 @@ module Render.Math exposing
 import Dict exposing (Dict)
 import Either exposing (Either(..))
 import Element exposing (Element)
+import Element.Background as Background
 import Element.Font as Font
 import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (ExpressionBlock)
@@ -83,12 +84,9 @@ equation count acc settings attrs block =
             equationLabel settings block.properties content
     in
     Element.column ([ Element.width (Element.px settings.width) ] ++ attrs)
-        [ Element.row
-            (rightToLeftSyncHelper block label)
-            [ Element.el
-                (highlightMath settings block)
-                (mathText count w block.meta.id DisplayMathMode content)
-            ]
+        [ Element.el
+            (highlightMath settings block)
+            (mathText count w block.meta.id DisplayMathMode content)
         ]
 
 

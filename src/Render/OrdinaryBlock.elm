@@ -1,4 +1,4 @@
-module Render.OrdinaryBlock exposing (getAttributes, render)
+module Render.OrdinaryBlock exposing (getAttributes, getAttributesForBlock, render)
 
 import Dict exposing (Dict)
 import Either exposing (Either(..))
@@ -9,6 +9,7 @@ import Element.Font as Font
 import Element.Input
 import Generic.ASTTools as ASTTools
 import Generic.Acc exposing (Accumulator)
+import Generic.BlockUtilities
 import Generic.Language exposing (Expr(..), Expression, ExpressionBlock, Heading(..))
 import Html.Attributes
 import List.Extra
@@ -51,6 +52,16 @@ render count acc settings attr block =
                     Element.none
 
 
+getAttributesForBlock : ExpressionBlock -> List (Element.Attribute MarkupMsg)
+getAttributesForBlock block =
+    case Generic.BlockUtilities.getExpressionBlockName block of
+        Nothing ->
+            []
+
+        Just name ->
+            getAttributes name
+
+
 getAttributes : String -> List (Element.Attribute MarkupMsg)
 getAttributes name =
     case Dict.get name attributeDict of
@@ -64,8 +75,9 @@ getAttributes name =
 attributeDict : Dict String (List (Element.Attribute MarkupMsg))
 attributeDict =
     Dict.fromList
-        [--( "box", [ Background.color (Element.rgb 0.9 0.9 1.0) ] )
-         --, ( "theorem", [ Font.italic ] )
+        [ ( "box", [ Background.color (Element.rgb 0.9 0.9 1.0) ] )
+
+        --, ( "theorem", [ Font.italic ] )
         ]
 
 
@@ -126,14 +138,14 @@ bibitem count acc settings attrs block =
             , Element.width (Element.px 34)
             ]
             (Element.text label)
-        , Element.paragraph ([ Element.paddingEach { left = 25, right = 0, top = 0, bottom = 0 }, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+        , Element.paragraph []
             (Render.Helper.renderWithDefault "bibitem" count acc settings attrs (Generic.Language.getExpressionContent block))
         ]
 
 
 box : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
 box count acc settings attr block =
-    Element.column [ Element.spacing 12 ]
+    Element.paragraph [ Element.height Element.fill ]
         [ Element.el [ Font.bold ] (Element.text (blockHeading block))
         , Element.paragraph
             []
