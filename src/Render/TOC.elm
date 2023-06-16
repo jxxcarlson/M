@@ -13,15 +13,15 @@ import Generic.Acc exposing (Accumulator)
 import Generic.Forest exposing (Forest)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
-import Render.Expression2
+import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings
 import Render.Utility
 import Tree
 
 
-view : Int -> Accumulator -> Forest ExpressionBlock -> List (Element Render.Msg.MarkupMsg)
-view counter acc ast =
+view : Int -> Accumulator -> List (Element.Attribute MarkupMsg) -> Forest ExpressionBlock -> List (Element Render.Msg.MarkupMsg)
+view counter acc attr ast =
     let
         maximumLevel =
             case Dict.get "contentsdepth" acc.keyValueDict of
@@ -31,11 +31,11 @@ view counter acc ast =
                 Nothing ->
                     3
     in
-    prepareTOC maximumLevel counter acc Render.Settings.defaultSettings ast
+    prepareTOC maximumLevel counter acc Render.Settings.defaultSettings attr ast
 
 
-viewTocItem : Int -> Accumulator -> Render.Settings.RenderSettings -> ExpressionBlock -> Element MarkupMsg
-viewTocItem count acc settings ({ args, body, properties } as block) =
+viewTocItem : Int -> Accumulator -> Render.Settings.RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+viewTocItem count acc settings attr ({ args, body, properties } as block) =
     case body of
         Left _ ->
             Element.none
@@ -55,7 +55,7 @@ viewTocItem count acc settings ({ args, body, properties } as block) =
 
                 label : Element MarkupMsg
                 label =
-                    Element.paragraph [ tocIndent args ] (sectionNumber :: List.map (Render.Expression2.render count acc settings) exprs)
+                    Element.paragraph [ tocIndent args ] (sectionNumber :: List.map (Render.Expression.render count acc settings attr) exprs)
             in
             Element.el [ Events.onClick (SelectId id) ]
                 (Element.link [ Font.color (Element.rgb 0 0 0.8) ] { url = Render.Utility.internalLink id, label = label })
@@ -76,8 +76,8 @@ tocLevel k { args } =
             (String.toInt level |> Maybe.withDefault 4) <= k
 
 
-prepareTOC : Int -> Int -> Accumulator -> Render.Settings.RenderSettings -> Forest ExpressionBlock -> List (Element MarkupMsg)
-prepareTOC maximumLevel count acc settings ast =
+prepareTOC : Int -> Int -> Accumulator -> Render.Settings.RenderSettings -> List (Element.Attribute MarkupMsg) -> Forest ExpressionBlock -> List (Element MarkupMsg)
+prepareTOC maximumLevel count acc settings attr ast =
     let
         rawToc : List ExpressionBlock
         rawToc =
@@ -90,7 +90,7 @@ prepareTOC maximumLevel count acc settings ast =
         title : List (Element MarkupMsg)
         title =
             headings.title
-                |> List.map (Render.Expression2.render count acc settings)
+                |> List.map (Render.Expression.render count acc settings attr)
 
         topItem =
             let
@@ -104,7 +104,7 @@ prepareTOC maximumLevel count acc settings ast =
 
         toc =
             topItem
-                :: (rawToc |> List.map (viewTocItem count acc settings))
+                :: (rawToc |> List.map (viewTocItem count acc settings attr))
     in
     toc
 

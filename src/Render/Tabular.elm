@@ -6,7 +6,7 @@ import Generic.Acc exposing (Accumulator)
 import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
 import M.Expression
-import Render.Expression2
+import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (RenderSettings)
 import Render.Sync
@@ -86,7 +86,7 @@ foo =
 --
 --        -- renderer : Expression -> Element MarkupMsg
 --        renderer attr =
---            Render.Expression2.render count acc settings attr
+--            Render.Expression.render count acc settings attr
 --
 --        tableCell : ( Int, Element.Attribute MarkupMsg ) -> List (Element MarkupMsg) -> Element MarkupMsg
 --        tableCell ( colWidth, fmt ) list =

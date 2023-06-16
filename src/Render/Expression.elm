@@ -1,4 +1,4 @@
-module Render.Expression2 exposing (nonstandardElements, render)
+module Render.Expression exposing (nonstandardElements, render)
 
 import Dict exposing (Dict)
 import Element exposing (Element, column, el, newTabLink, spacing)

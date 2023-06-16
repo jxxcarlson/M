@@ -34,8 +34,8 @@ leftPadding =
     Element.paddingEach { left = 0, right = 0, top = 0, bottom = 0 }
 
 
-displayedMath : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-displayedMath count acc settings block =
+displayedMath : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+displayedMath count acc settings attrs block =
     let
         w =
             String.fromInt settings.width ++ "px"
@@ -48,7 +48,7 @@ displayedMath count acc settings block =
                 |> List.filter (\line -> line /= "")
                 |> List.map (Generic.MathMacro.evalStr acc.mathMacroDict)
     in
-    Element.column (Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines :: [])
+    Element.column attrs
         [ Element.el (Render.Sync.highlighter block.args [ Element.centerX ])
             (mathText count w block.meta.id DisplayMathMode (filteredLines |> String.join "\n"))
         ]
@@ -64,8 +64,8 @@ getContent { body } =
             ""
 
 
-equation : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-equation count acc settings block =
+equation : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+equation count acc settings attrs block =
     let
         w =
             String.fromInt settings.width ++ "px"
@@ -82,7 +82,7 @@ equation count acc settings block =
         label =
             equationLabel settings block.properties content
     in
-    Element.column [ Element.width (Element.px settings.width) ]
+    Element.column ([ Element.width (Element.px settings.width) ] ++ attrs)
         [ Element.row
             (rightToLeftSyncHelper block label)
             [ Element.el
@@ -130,8 +130,8 @@ getLabel label dict =
     Dict.get label dict |> Maybe.withDefault "" |> String.trim
 
 
-aligned : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-aligned count acc settings block =
+aligned : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+aligned count acc settings attrs block =
     let
         str =
             case block.body of
@@ -167,7 +167,7 @@ aligned count acc settings block =
         label =
             equationLabel settings block.properties content
     in
-    Element.column [ Element.width (Element.px settings.width) ]
+    Element.column ([ Element.width (Element.px settings.width) ] ++ attrs)
         [ Element.row
             (Element.width (Element.px settings.width) :: rightToLeftSyncHelper block label)
             [ Element.el

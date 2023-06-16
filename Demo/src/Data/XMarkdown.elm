@@ -76,9 +76,9 @@ I read the [New York Times](https://nytimes.com) every day.
 
 # Mathematics
 
- Pythagoras said that $z^2 = x^2 + y^2$.
+Pythagoras said that $z^2 = x^2 + y^2$.
 
- Newton said that
+Newton said that
 
  $$
  \\int_0^1 x^2 dx = \\frac{1}{3}

@@ -309,7 +309,7 @@ Let's talk about the work of Russel (see [eqref russell]).
 
 
 
-|section 2
+| section 2
 Supplementary Readings
 
 | bibitem Loader

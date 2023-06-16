@@ -14,7 +14,7 @@ import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import Render.Color as Color
-import Render.Expression2
+import Render.Expression
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -83,7 +83,7 @@ blockDict =
         --, ( "a", answer ) -- xx
         --, ( "document", document )
         --, ( "collection", collection )
-        --, ( "bibitem", bibitem )
+        , ( "bibitem", bibitem )
         , ( "section", section ) -- xx
         , ( "subheading", subheading ) -- xx
 
@@ -94,25 +94,46 @@ blockDict =
         --, ( "subtitle", \_ _ _ _ -> Element.none )
         --, ( "author", \_ _ _ _ -> Element.none )
         --, ( "date", \_ _ _ _ -> Element.none )
-        --, ( "contents", \_ _ _ _ -> Element.none )
+        , ( "contents", \_ _ _ _ _ -> Element.none )
+
         --, ( "tags", \_ _ _ _ -> Element.none )
         --, ( "type", \_ _ _ _ -> Element.none )
         , ( "env", env_ )
+        , ( "item", Render.List.item )
+        , ( "desc", Render.List.desc )
+        , ( "numbered", Render.List.numbered )
 
-        --, ( "item", Render.List.item )
-        --, ( "desc", Render.List.desc )
-        --, ( "numbered", Render.List.numbered )
         --, ( "index", index )
         --, ( "endnotes", endnotes )
-        --, ( "setcounter", \_ _ _ _ -> Element.none )
-        --, ( "shiftandsetcounter", \_ _ _ _ -> Element.none )
+        , ( "setcounter", \_ _ _ _ _ -> Element.none )
+        , ( "shiftandsetcounter", \_ _ _ _ _ -> Element.none )
+
         --, ( "list", \_ _ _ _ -> Element.none )
+        ]
+
+
+bibitem : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+bibitem count acc settings attrs block =
+    let
+        label =
+            List.Extra.getAt 0 block.args |> Maybe.withDefault "(12)" |> (\s -> "[" ++ s ++ "]")
+    in
+    Element.row ([ Element.alignTop, Render.Utility.idAttributeFromInt block.meta.lineNumber, Render.Utility.vspace 0 settings.topMarginForChildren ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+        [ Element.el
+            [ Font.size 14
+            , Element.alignTop
+            , Font.bold
+            , Element.width (Element.px 34)
+            ]
+            (Element.text label)
+        , Element.paragraph ([ Element.paddingEach { left = 25, right = 0, top = 0, bottom = 0 }, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+            (Render.Helper.renderWithDefault "bibitem" count acc settings attrs (Generic.Language.getExpressionContent block))
         ]
 
 
 box : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
 box count acc settings attr block =
-    Element.column []
+    Element.column [ Element.spacing 12 ]
         [ Element.el [ Font.bold ] (Element.text (blockHeading block))
         , Element.paragraph
             []
@@ -193,7 +214,7 @@ renderWithDefaultWithSize size default count acc settings attr exprs =
         [ Element.el ([ Font.color settings.redColor, Font.size size ] ++ attr) (Element.text default) ]
 
     else
-        List.map (Render.Expression2.render count acc settings attr) exprs
+        List.map (Render.Expression.render count acc settings attr) exprs
 
 
 indentOrdinaryBlock : Int -> String -> RenderSettings -> Element msg -> Element msg
@@ -266,7 +287,7 @@ env count acc settings attr block =
 
 
 renderWithDefault2 _ count acc settings attr exprs =
-    List.map (Render.Expression2.render count acc settings attr) exprs
+    List.map (Render.Expression.render count acc settings attr) exprs
 
 
 {-|

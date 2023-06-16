@@ -22,6 +22,7 @@ import M.PrimitiveBlock
 import MicroLaTeX.Expression
 import MicroLaTeX.PrimitiveBlock
 import MicroLaTeX.Util
+import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.TOC
 import Render.Tree
@@ -79,10 +80,9 @@ compileM width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
             in
             { body =
-                Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
-                    |> List.map Render.Tree.unravelM
+                List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
             , toc =
-                Render.TOC.view renderData.count accumulator forest
+                Render.TOC.view renderData.count accumulator [] forest
             }
 
 
@@ -105,10 +105,9 @@ compileX width outerCount selectedId lines =
                     Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
             in
             { body =
-                Generic.Forest.map (Render.Block.render renderData.count accumulator renderData.settings) forest
-                    |> List.map Render.Tree.unravelM
+                List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
             , toc =
-                Render.TOC.view renderData.count accumulator forest
+                Render.TOC.view renderData.count accumulator [] forest
             }
 
 
@@ -145,7 +144,7 @@ compileL width outerCount selectedId lines =
 
             -- |> List.map Render.Tree.unravelL
             , toc =
-                Render.TOC.view renderData.count accumulator forest
+                Render.TOC.view renderData.count accumulator [] forest
             }
 
 

@@ -1,4 +1,4 @@
-module Render.Tree exposing (renderTreeL, renderTreeQ, unravelL, unravelM)
+module Render.Tree exposing (renderTreeQ)
 
 -- import Render.Block
 
@@ -14,7 +14,6 @@ import Generic.Pipeline
 import Generic.Settings
 import M.Expression
 import Render.Block
-import Render.Block2
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings exposing (RenderSettings)
 import Tree exposing (Tree)
@@ -84,18 +83,21 @@ r1 k a s block =
     [ Font.italic ]
 
 
-renderTreeL : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
-renderTreeL count accumulator settings tree =
-    let
-        blockName =
-            Generic.BlockUtilities.getExpressionBlockName (Tree.label tree)
-                |> Maybe.withDefault "---"
-    in
-    if List.member blockName Generic.Settings.numberedBlockNames then
-        Element.el [ Font.italic ] ((Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree)
 
-    else
-        (Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree
+--
+--renderTreeL : Int -> Accumulator -> RenderSettings -> Tree ExpressionBlock -> Element MarkupMsg
+--renderTreeL count accumulator settings tree =
+--    let
+--        blockName =
+--            Generic.BlockUtilities.getExpressionBlockName (Tree.label tree)
+--                |> Maybe.withDefault "---"
+--    in
+--    if List.member blockName Generic.Settings.numberedBlockNames then
+--        Element.el [ Font.italic ] ((Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree)
+--
+--    else
+--        (Tree.map (Render.Block.render count accumulator settings) >> unravelL) tree
+--
 
 
 renderTreeQ : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> Tree ExpressionBlock -> Element MarkupMsg
@@ -106,16 +108,18 @@ renderTreeQ count accumulator settings attrs_ tree =
     in
     case Tree.children tree of
         [] ->
-            Element.column (Render.Block2.renderAttributes settings root)
-                (Render.Block2.renderBody count accumulator settings attrs_ root)
+            Element.column (Render.Block.renderAttributes settings root)
+                (Render.Block.renderBody count accumulator settings attrs_ root)
 
         children ->
             let
                 attrs =
-                    Render.Block2.renderAttributes settings root
+                    Render.Block.renderAttributes settings root
             in
-            Element.column (attrs_ ++ attrs)
-                (Render.Block2.renderBody count accumulator settings attrs_ root ++ List.map (renderTreeQ count accumulator settings (attrs_ ++ attrs)) children)
+            Element.column attrs
+                (Render.Block.renderBody count accumulator settings attrs root
+                    ++ List.map (renderTreeQ count accumulator settings attrs) children
+                )
 
 
 

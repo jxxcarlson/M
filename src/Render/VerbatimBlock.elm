@@ -14,7 +14,7 @@ import Html.Attributes
 import List.Extra
 import Maybe.Extra
 import Render.Color as Color
-import Render.Expression2
+import Render.Expression
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -29,8 +29,8 @@ import String.Extra
 import Tools.Utility as Utility
 
 
-render : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
-render count acc settings block =
+render : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+render count acc settings attrs block =
     case block.body of
         Right _ ->
             Element.none
@@ -43,20 +43,20 @@ render count acc settings block =
                             Render.Helper.noSuchVerbatimBlock functionName str
 
                         Just f ->
-                            Element.el [ Render.Helper.selectedColor block.meta.id settings ] (f count acc settings block)
+                            Element.el [ Render.Helper.selectedColor block.meta.id settings ] (f count acc settings attrs block)
 
                 _ ->
                     Element.none
 
 
-verbatimDict : Dict String (Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg)
+verbatimDict : Dict String (Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg)
 verbatimDict =
     Dict.fromList
-        [ --( "math", Render.Math.displayedMath )
-          ( "equation", Render.Math.equation )
+        [ ( "math", Render.Math.displayedMath )
+        , ( "equation", Render.Math.equation )
+        , ( "aligned", Render.Math.aligned )
+        , ( "code", renderCode )
 
-        --, ( "aligned", Render.Math.aligned )
-        --, ( "code", renderCode )
         --, ( "verse", renderVerse )
         --, ( "verbatim", renderVerbatim )
         --, ( "tabular", Render.Tabular.render )
@@ -75,4 +75,84 @@ verbatimDict =
         --, ( "load-files", renderNothing )
         --, ( "include", renderNothing )
         --, ( "iframe", Render.IFrame.render )
+        ]
+
+
+renderCode : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+renderCode count acc settings attr block =
+    Element.column
+        ([ Font.color settings.codeColor
+         , Font.family
+            [ Font.typeface "Inconsolata"
+            , Font.monospace
+            ]
+
+         --, Element.spacing 8
+         , Element.paddingEach { left = 24, right = 0, top = 0, bottom = 0 }
+         , Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+         , Render.Utility.idAttributeFromInt block.meta.lineNumber
+         ]
+            ++ attr
+        )
+        (case List.head block.args of
+            Just arg ->
+                List.map (renderVerbatimLine arg) (String.lines (String.trim (Render.Utility.getVerbatimContent block)))
+
+            Nothing ->
+                List.map (renderVerbatimLine "plain") (String.lines (String.trim (Render.Utility.getVerbatimContent block)))
+        )
+
+
+renderVerbatimLine : String -> String -> Element msg
+renderVerbatimLine lang str =
+    if String.trim str == "" then
+        Element.el [ Element.height (Element.px 11) ] (Element.text "")
+
+    else if lang == "plain" then
+        Element.el [ Element.height (Element.px 22) ] (Element.text str)
+
+    else
+        Element.paragraph [ Element.height (Element.px 22) ] (renderedColoredLine lang str)
+
+
+renderedColoredLine lang str =
+    str
+        |> String.words
+        |> List.map (renderedColoredWord lang)
+
+
+renderedColoredWord lang word =
+    case lang of
+        "elm" ->
+            case Dict.get word elmDict of
+                Just color ->
+                    Element.el [ color ] (Element.text (word ++ " "))
+
+                Nothing ->
+                    Element.el [] (Element.text (word ++ " "))
+
+        _ ->
+            Element.el [] (Element.text (word ++ " "))
+
+
+orange =
+    Font.color (Element.rgb255 227 81 18)
+
+
+green =
+    Font.color (Element.rgb255 11 158 26)
+
+
+cyan =
+    Font.color (Element.rgb255 11 143 158)
+
+
+elmDict =
+    Dict.fromList
+        [ ( "type", orange )
+        , ( "LB", green )
+        , ( "RB", green )
+        , ( "S", green )
+        , ( "String", green )
+        , ( "Meta", cyan )
         ]

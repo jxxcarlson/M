@@ -49,7 +49,8 @@ This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This 
 a^2 + b^2 = c^2
 \\end{equation}
 
-This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff.
+\\strong{This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff.
+This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff. This is stuff.}
 
 \\end{box}
 
