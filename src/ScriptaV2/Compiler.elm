@@ -1,4 +1,4 @@
-module Scripta.Compiler exposing
+module ScriptaV2.Compiler exposing
     ( Language(..)
     , compile
     , compileL
@@ -27,7 +27,7 @@ import Render.Block
 import Render.Msg exposing (MarkupMsg(..))
 import Render.TOC
 import Render.Tree
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 import XMarkdown.Expression
 import XMarkdown.PrimitiveBlock
 
@@ -35,7 +35,7 @@ import XMarkdown.PrimitiveBlock
 compile : Language -> Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
 compile lang width outerCount selectedId lines =
     case lang of
-        MLang ->
+        L0Lang ->
             compileM width outerCount selectedId lines
 
         MicroLaTeXLang ->
@@ -47,7 +47,7 @@ compile lang width outerCount selectedId lines =
 
 type Language
     = MicroLaTeXLang
-    | MLang
+    | L0Lang
     | XMarkdownLang
 
 

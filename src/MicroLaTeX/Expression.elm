@@ -16,7 +16,7 @@ import MicroLaTeX.LogTools as Tools
 import MicroLaTeX.Match
 import MicroLaTeX.Symbol as Symbol exposing (Symbol(..))
 import MicroLaTeX.Token as Token exposing (Token(..), TokenType(..))
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 
 
 

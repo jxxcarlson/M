@@ -23,7 +23,7 @@ import List.Extra
 import MicroLaTeX.ClassifyBlock as ClassifyBlock exposing (Classification(..), LXSpecial(..))
 import MicroLaTeX.Line as Line exposing (Line)
 import MicroLaTeX.Util
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 
 
 type alias State =

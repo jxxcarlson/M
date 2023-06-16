@@ -11,7 +11,7 @@ import List.Extra
 import M.Match as M
 import M.Symbol as Symbol exposing (Symbol(..))
 import M.Tokenizer as Token exposing (Token, TokenType(..), Token_(..))
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 import Tools.Loop exposing (Step(..), loop)
 import Tools.ParserHelpers as Helpers
 

@@ -53,7 +53,7 @@ import Generic.Vector as Vector exposing (Vector)
 import List.Extra
 import Maybe.Extra
 import Parser exposing ((|.), (|=), Parser)
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 import Tools.Utility as Utility
 import Tree exposing (Tree)
 

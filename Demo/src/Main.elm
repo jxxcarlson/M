@@ -15,7 +15,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Render.Msg exposing (MarkupMsg)
 import Render.Settings
-import Scripta.Compiler as Compiler
+import ScriptaV2.Compiler as Compiler
 import Task
 
 

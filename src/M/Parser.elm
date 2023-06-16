@@ -6,7 +6,7 @@ import Generic.Language exposing (ExpressionBlock)
 import Generic.Pipeline
 import M.Expression
 import M.PrimitiveBlock
-import Scripta.Config as Config
+import ScriptaV2.Config as Config
 
 
 {-|
