@@ -1,6 +1,10 @@
 module Render.Helper exposing
-    ( blockLabel
+    ( blockAttributes
+    , blockLabel
+    , fontColor
+    , getLabel
     , htmlId
+    , labeledArgs
     , noSuchOrdinaryBlock
     , noSuchVerbatimBlock
     , nonExportableVerbatimBlocks
@@ -21,6 +25,8 @@ import Html.Attributes
 import Render.Expression
 import Render.Msg exposing (MarkupMsg(..))
 import Render.Settings exposing (RenderSettings)
+import Render.Sync
+import Render.Utility
 
 
 
@@ -47,6 +53,35 @@ nonExportableVerbatimBlocks =
 blockLabel : Dict String String -> String
 blockLabel properties =
     Dict.get "label" properties |> Maybe.withDefault ""
+
+
+blockAttributes settings block attrs =
+    [ Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines
+    , Render.Utility.idAttributeFromInt block.meta.lineNumber
+    ]
+        ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings
+        ++ attrs
+
+
+fontColor selectedId selectedSlug docId =
+    if selectedId == docId then
+        Font.color (Element.rgb 0.8 0 0)
+
+    else if selectedSlug == Just docId then
+        Font.color (Element.rgb 0.8 0 0)
+
+    else
+        Font.color (Element.rgb 0 0 0.9)
+
+
+getLabel : Dict String String -> String
+getLabel dict =
+    Dict.get "label" dict |> Maybe.withDefault ""
+
+
+labeledArgs : List String -> String
+labeledArgs args =
+    List.map (\s -> String.replace "label:" "" s) args |> String.join " "
 
 
 selectedColor id settings =

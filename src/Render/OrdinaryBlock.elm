@@ -16,6 +16,7 @@ import List.Extra
 import Maybe.Extra
 import Render.Color as Color
 import Render.Expression
+import Render.Footnote
 import Render.Graphics
 import Render.Helper
 import Render.IFrame
@@ -87,36 +88,31 @@ blockDict =
         [ --( "indent", indented )
           ( "center", centered )
         , ( "box", box )
-
-        --, ( "quotation", quotation )
-        --, ( "set-key", \_ _ _ _ -> Element.none )
-        --, ( "comment", comment )
-        --, ( "q", question ) -- xx
-        --, ( "a", answer ) -- xx
-        --, ( "document", document )
-        --, ( "collection", collection )
+        , ( "quotation", quotation )
+        , ( "set-key", \_ _ _ _ _ -> Element.none )
+        , ( "comment", comment )
+        , ( "q", question ) -- xx
+        , ( "a", answer ) -- xx
+        , ( "document", document )
+        , ( "collection", collection )
         , ( "bibitem", bibitem )
         , ( "section", section ) -- xx
-        , ( "subheading", subheading ) -- xx
-
-        --, ( "runninghead_", \_ _ _ _ -> Element.none ) -- DEPRECATED
-        --, ( "banner", \_ _ _ _ -> Element.none )
+        , ( "subheading", subheading )
+        , ( "runninghead_", \_ _ _ _ _ -> Element.none )
+        , ( "banner", \_ _ _ _ _ -> Element.none )
         , ( "title", \c a s b -> title c a s b )
-
-        --, ( "subtitle", \_ _ _ _ -> Element.none )
-        --, ( "author", \_ _ _ _ -> Element.none )
-        --, ( "date", \_ _ _ _ -> Element.none )
+        , ( "subtitle", \_ _ _ _ _ -> Element.none )
+        , ( "author", \_ _ _ _ _ -> Element.none )
+        , ( "date", \_ _ _ _ _ -> Element.none )
         , ( "contents", \_ _ _ _ _ -> Element.none )
-
-        --, ( "tags", \_ _ _ _ -> Element.none )
-        --, ( "type", \_ _ _ _ -> Element.none )
+        , ( "tags", \_ _ _ _ _ -> Element.none )
+        , ( "type", \_ _ _ _ _ -> Element.none )
         , ( "env", env_ )
         , ( "item", Render.List.item )
         , ( "desc", Render.List.desc )
         , ( "numbered", Render.List.numbered )
-
-        --, ( "index", index )
-        --, ( "endnotes", endnotes )
+        , ( "index", Render.Footnote.index )
+        , ( "endnotes", Render.Footnote.endnotes )
         , ( "setcounter", \_ _ _ _ _ -> Element.none )
         , ( "shiftandsetcounter", \_ _ _ _ _ -> Element.none )
 
@@ -162,10 +158,192 @@ centered count acc settings attr block =
         )
 
 
+{-| -}
+comment count acc settings attrs block =
+    let
+        author_ =
+            String.join " " block.args
 
--- subheading : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
+        author =
+            if author_ == "" then
+                ""
+
+            else
+                author_ ++ ":"
+    in
+    Element.column [ Element.spacing 6 ]
+        [ Element.el [ Font.bold, Font.color Color.blue ] (Element.text author)
+        , Element.paragraph ([ Font.italic, Font.color Color.blue, Render.Sync.rightToLeftSyncHelper block.meta.lineNumber block.meta.numberOfLines, Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+            (Render.Helper.renderWithDefault "| comment" count acc settings attrs (Generic.Language.getExpressionContent block))
+        ]
 
 
+{-|
+
+    A block of the form "| collection" informs Scripta that the body
+    of the document is a collection of links to other documents and
+    that it should be interpreted as a kind of table of contents
+
+    A collection document might look like this:
+
+    | title
+    Quantum Mechanics Notes
+
+    [tags jxxcarlson:quantum-mechanics-notes, collection, system:startup, folder:krakow]
+
+    | collection
+
+    | document jxxcarlson:qmnotes-trajectories-uncertainty
+    Trajectories and Uncertainty
+
+    | document jxxcarlson:wave-packets-dispersion
+    Wave Packets and the Dispersion Relation
+
+    | document jxxcarlson:wave-packets-schroedinger
+    Wave Packets and Schrödinger's Equation
+
+-}
+collection : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+collection _ _ _ _ _ =
+    Element.none
+
+
+{-|
+
+    Use a document block to include another document in a collection, e.g,
+
+        | document jxxcarlson:wave-packets-schroedinger
+        Wave Packets and Schrödinger's Equation
+
+-}
+document : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+document _ _ settings attrs block =
+    let
+        docId =
+            case block.args |> List.head of
+                Just idx ->
+                    idx
+
+                Nothing ->
+                    case block.properties |> Dict.toList |> List.head |> Maybe.map (\( a, b ) -> a ++ ":" ++ b) of
+                        Just ident ->
+                            ident
+
+                        Nothing ->
+                            "(noId)"
+
+        level =
+            List.Extra.getAt 1 block.args |> Maybe.withDefault "1" |> String.toInt |> Maybe.withDefault 1
+
+        title_ =
+            List.map ASTTools.getText (Generic.Language.getExpressionContent block) |> Maybe.Extra.values |> String.join " " |> Utility.truncateString 35
+
+        sectionNumber =
+            case Dict.get "label" block.properties of
+                Just "-" ->
+                    "- "
+
+                Just s ->
+                    s ++ ". "
+
+                Nothing ->
+                    "- "
+    in
+    Element.row
+        [ Element.alignTop
+        , Render.Utility.elementAttribute "id" settings.selectedId
+        , Render.Utility.vspace 0 settings.topMarginForChildren
+        , Element.moveRight (15 * (level - 1) |> toFloat)
+        , Render.Helper.fontColor settings.selectedId settings.selectedSlug docId
+        ]
+        [ Element.el
+            [ Font.size 14
+            , Element.alignTop
+            , Element.width (Element.px 30)
+            ]
+            (Element.text sectionNumber)
+        , ilink title_ settings.selectedId settings.selectedSlug docId
+        ]
+
+
+ilink : String -> String -> Maybe String -> String -> Element MarkupMsg
+ilink docTitle selectedId selecteSlug docId =
+    Element.Input.button []
+        { onPress = Just (GetPublicDocument Render.Msg.MHStandard docId)
+
+        -- { onPress = Just (GetDocumentById docId)
+        , label =
+            Element.el
+                [ Element.centerX
+                , Element.centerY
+                , Font.size 14
+                , Render.Helper.fontColor selectedId selecteSlug docId
+                ]
+                (Element.text docTitle)
+        }
+
+
+
+-- QUESTIONS AND ANSWERS (FOR TEACHING)
+
+
+question : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+question count acc settings attrs block =
+    let
+        title_ =
+            String.join " " block.args
+
+        label =
+            " " ++ Render.Helper.getLabel block.properties
+
+        qId =
+            Dict.get block.meta.id acc.qAndADict |> Maybe.withDefault block.meta.id
+    in
+    Element.column [ Element.spacing 12 ]
+        -- TODO: clean up?
+        [ Element.el [ Font.bold, Font.color Color.blue, Events.onClick (HighlightId qId) ] (Element.text (title_ ++ " " ++ label))
+        , Element.paragraph ([ Font.italic, Events.onClick (HighlightId qId), Render.Utility.idAttributeFromInt block.meta.lineNumber ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+            (Render.Helper.renderWithDefault "..." count acc settings attrs (Generic.Language.getExpressionContent block))
+        ]
+
+
+answer : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+answer count acc settings attrs block =
+    let
+        title_ =
+            String.join " " (List.drop 1 block.args)
+
+        clicker =
+            if settings.selectedId == block.meta.id then
+                Events.onClick (ProposeSolution Render.Msg.Unsolved)
+
+            else
+                Events.onClick (ProposeSolution (Render.Msg.Solved block.meta.id))
+    in
+    Element.column [ Element.spacing 12, Element.paddingEach { top = 0, bottom = 24, left = 0, right = 0 } ]
+        [ Element.el [ Font.bold, Font.color Color.blue, clicker ] (Element.text title_)
+        , if settings.selectedId == block.meta.id then
+            -- TODO: clean up?
+            Element.el [ Events.onClick (ProposeSolution Render.Msg.Unsolved) ]
+                (Element.paragraph ([ Font.italic, Render.Utility.idAttributeFromInt block.meta.lineNumber, Element.paddingXY 8 8 ] ++ Render.Sync.highlightIfIdIsSelected block.meta.lineNumber block.meta.numberOfLines settings)
+                    (Render.Helper.renderWithDefault "..." count acc settings attrs (Generic.Language.getExpressionContent block))
+                )
+
+          else
+            Element.none
+        ]
+
+
+quotation : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
+quotation count acc settings attrs block =
+    Element.column [ Element.spacing 12 ]
+        [ Element.paragraph
+            (Render.Helper.blockAttributes settings block [ Render.Utility.leftPadding settings.leftIndentation, Font.italic ])
+            (Render.Helper.renderWithDefault "!!! (quotation)" count acc settings attrs (Generic.Language.getExpressionContent block))
+        ]
+
+
+subheading : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
 subheading count acc settings attr block =
     Element.link
         (sectionBlockAttributes block settings ([ topPadding 10 ] ++ attr))
