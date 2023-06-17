@@ -1,8 +1,15 @@
 module ScriptaV2.Config exposing
-    ( expressionIdPrefix
+    ( defaultLanguage
+    , expressionIdPrefix
     , idPrefix
     , indentationQuantum
     )
+
+import ScriptaV2.Language exposing (Language(..))
+
+
+defaultLanguage =
+    MicroLaTeXLang
 
 
 idPrefix =

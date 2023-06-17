@@ -1,4 +1,4 @@
-module Compiler.Differ exposing (DiffRecord, diff, differentialTransform)
+module Differential.Differ exposing (DiffRecord, diff, differentialTransform)
 
 
 type alias DiffRecord p =

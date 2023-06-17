@@ -9,6 +9,7 @@ module Generic.Language exposing
     , SimpleExpressionBlock
     , SimplePrimitiveBlock
     , emptyBlockMeta
+    , expressionBlockEmpty
     , getExpressionContent
     , getFunctionName
     , getName
@@ -232,6 +233,18 @@ primitiveBlockEmpty =
     , properties = Dict.empty
     , firstLine = ""
     , body = []
+    , meta = emptyBlockMeta
+    }
+
+
+expressionBlockEmpty : ExpressionBlock
+expressionBlockEmpty =
+    { heading = Paragraph
+    , indent = 0
+    , args = []
+    , properties = Dict.empty
+    , firstLine = ""
+    , body = Right []
     , meta = emptyBlockMeta
     }
 

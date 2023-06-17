@@ -1,6 +1,6 @@
-module Compiler.DifferForest exposing (backwardClosure, diff, forwardClosure)
+module Differential.DifferForest exposing (backwardClosure, diff, forwardClosure)
 
-import Compiler.Differ exposing (DiffRecord)
+import Differential.Differ exposing (DiffRecord)
 import List.Extra
 
 

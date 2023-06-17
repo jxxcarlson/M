@@ -1,9 +1,9 @@
-module Compiler.AbstractDifferentialCompiler exposing (EditRecord, differentialParser, init, update)
+module Differential.AbstractDifferentialCompiler exposing (EditRecord, differentialParser, init, update)
 
 -- See commit 5e24aba for why we can't use Element from elm-ui in the edit record (hidden type definition)
 
-import Compiler.Differ as Differ
-import Scripta.Language exposing (Language)
+import Differential.Differ as Differ
+import ScriptaV2.Language exposing (Language)
 
 
 type alias EditRecord chunk parsedChunk renderedChunk accumulator =

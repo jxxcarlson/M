@@ -10,42 +10,46 @@ module Compiler.DifferentialParser exposing
     , update
     )
 
-import Compiler.AbstractDifferentialParser
-import Compiler.Acc
-import Compiler.Differ
-import Compiler.Transform
+-- import Compiler.Transform
+--import MicroLaTeX.Parser.Expression
+--import Parser.Block exposing (ExpressionBlock(..), ExpressionBlockData)
+--import Parser.Expr
+--import Parser.PrimitiveBlock exposing (PrimitiveBlock)
+--import Parser.Transform
+--import Parser.Tree
+--import Parser.Utility
+
 import Dict exposing (Dict)
+import Differential.AbstractDifferentialParser
+import Differential.Differ
+import Differential.Utility
 import Either exposing (Either)
-import L0.Parser.Expression
-import Markup
-import MicroLaTeX.Parser.Expression
-import Parser.Block exposing (ExpressionBlock(..), ExpressionBlockData)
-import Parser.Expr
-import Parser.PrimitiveBlock exposing (PrimitiveBlock)
-import Parser.Transform
-import Parser.Tree
-import Parser.Utility
-import Scripta.Language exposing (Language(..))
+import Generic.Acc
+import Generic.ForestTransform
+import Generic.Language exposing (ExpressionBlock, PrimitiveBlock)
+import Generic.PrimitiveBlock
+import ScriptaV2.Language exposing (Language(..))
 import Tree exposing (Tree)
 import XMarkdown.Expression
 
 
 type alias EditRecord =
-    Compiler.AbstractDifferentialParser.EditRecord PrimitiveBlock ExpressionBlock Compiler.Acc.Accumulator
+    Differential.AbstractDifferentialParser.EditRecord PrimitiveBlock ExpressionBlock Generic.Acc.Accumulator
 
 
 type alias ExpBlockData =
-    { name : Maybe String, args : List String, properties : Dict String String, indent : Int, lineNumber : Int, numberOfLines : Int, id : String, tag : String, blockType : Parser.Block.BlockType, content : Either String (List Parser.Expr.Expr), messages : List String, sourceText : String }
+    { name : Maybe String, args : List String, properties : Dict String String, indent : Int, lineNumber : Int, numberOfLines : Int, id : String, tag : String, content : Either String (List Generic.Language.Expression), messages : List String, sourceText : String }
 
 
 indentation : ExpressionBlock -> Int
-indentation (ExpressionBlock data) =
-    data.indent
+indentation block =
+    block.indent
 
 
 forestFromBlocks : List ExpressionBlock -> List (Tree ExpressionBlock)
 forestFromBlocks blocks =
-    Parser.Tree.forestFromBlocks Parser.Block.empty indentation blocks |> Result.withDefault []
+    -- TODO: alternative for expressionBlockEmpty?
+    Generic.ForestTransform.forestFromBlocks Generic.Language.expressionBlockEmpty indentation blocks |> Result.withDefault []
 
 
 init : Dict String String -> Language -> String -> EditRecord
@@ -55,14 +59,14 @@ init inclusionData lang str =
         initialData =
             makeInitialData inclusionData lang
     in
-    Compiler.AbstractDifferentialParser.init (updateFunctions lang) initialData (str ++ "\n")
+    Differential.AbstractDifferentialParser.init (updateFunctions lang) initialData (str ++ "\n")
 
 
 default lang =
-    { language = lang
-    , mathMacros = ""
+    { mathMacros = ""
     , textMacros = ""
     , vectorSize = 4
+    , language = lang
     }
 
 
@@ -93,16 +97,16 @@ makeInitialData inclusionData lang =
                             macroText
                     in
                     { language = lang
-                    , mathMacros = Parser.Utility.getKeyedParagraph "|| mathmacros" macroText |> Maybe.withDefault ""
-                    , textMacros = Parser.Utility.getKeyedParagraph "|| textmacros" macroText |> Maybe.withDefault ""
+                    , mathMacros = Differential.Utility.getKeyedParagraph "|| mathmacros" macroText |> Maybe.withDefault ""
+                    , textMacros = Differential.Utility.getKeyedParagraph "|| textmacros" macroText |> Maybe.withDefault ""
                     , vectorSize = 4
                     }
 
 
-updateFunctions : Language -> Compiler.AbstractDifferentialParser.UpdateFunctions PrimitiveBlock ExpressionBlock Compiler.Acc.Accumulator
+updateFunctions : Language -> Differential.AbstractDifferentialParser.UpdateFunctions PrimitiveBlock ExpressionBlock Generic.Acc.Accumulator
 updateFunctions lang =
     { chunker = chunker lang -- String -> List PrimitiveBlock
-    , chunkEq = Parser.PrimitiveBlock.eq -- PrimitiveBlock -> PrimitiveBlock -> Bool
+    , chunkEq = Generic.PrimitiveBlock.eq -- PrimitiveBlock -> PrimitiveBlock -> Bool
     , lineNumber = \pb -> pb.lineNumber -- PrimitiveBlock -> Maybe Int
     , pLineNumber = Parser.Block.getLineNumber
     , changeLineNumber = changeLineNumber

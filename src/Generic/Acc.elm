@@ -54,6 +54,7 @@ import List.Extra
 import Maybe.Extra
 import Parser exposing ((|.), (|=), Parser)
 import ScriptaV2.Config as Config
+import ScriptaV2.Language exposing (Language)
 import Tools.Utility as Utility
 import Tree exposing (Tree)
 
@@ -63,6 +64,7 @@ initialData =
     { mathMacros = ""
     , textMacros = ""
     , vectorSize = 4
+    , language = Config.defaultLanguage
     }
 
 
@@ -143,6 +145,7 @@ type alias InitialAccumulatorData =
     { mathMacros : String
     , textMacros : String
     , vectorSize : Int
+    , language : Language
     }
 
 

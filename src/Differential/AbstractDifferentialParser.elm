@@ -1,10 +1,9 @@
-module Compiler.AbstractDifferentialParser exposing (EditRecord, InitialData, UpdateFunctions, differentialParser, init, update)
+module Differential.AbstractDifferentialParser exposing (EditRecord, InitialData, UpdateFunctions, differentialParser, init, update)
 
-import Compiler.Acc
-import Compiler.Differ
-import Compiler.DifferForest
-import Parser.Block
-import Scripta.Language exposing (Language)
+import Differential.Differ as Differ
+import Differential.DifferForest as DifferForest
+import Generic.Acc
+import ScriptaV2.Language exposing (Language)
 import Tree exposing (Tree)
 
 
@@ -27,19 +26,19 @@ type alias UpdateFunctions chunk parsedChunk acc =
     , pLineNumber : parsedChunk -> Int
     , setLineNumber : Int -> parsedChunk -> parsedChunk
     , changeLineNumber : Int -> parsedChunk -> parsedChunk
-    , diffPostProcess : Compiler.Differ.DiffRecord chunk -> Compiler.Differ.DiffRecord chunk
+    , diffPostProcess : Differ.DiffRecord chunk -> Differ.DiffRecord chunk
     , chunkParser : chunk -> parsedChunk
     , forestFromBlocks : List parsedChunk -> List (Tree parsedChunk)
     , getMessages : List (Tree parsedChunk) -> List String
-    , accMaker : Compiler.Acc.InitialAccumulatorData -> List (Tree parsedChunk) -> ( acc, List (Tree parsedChunk) )
+    , accMaker : Generic.Acc.InitialAccumulatorData -> List (Tree parsedChunk) -> ( acc, List (Tree parsedChunk) )
     }
 
 
 type alias InitialData =
-    { language : Language
-    , mathMacros : String
+    { mathMacros : String
     , textMacros : String
     , vectorSize : Int
+    , language : Language
     }
 
 
@@ -62,10 +61,10 @@ init f initialData content =
         ( newAccumulator, tree ) =
             f.accMaker initialData tree_
     in
-    { lang = initialData.language
-    , chunks = chunks
+    { chunks = chunks
     , parsed = parsed_
     , tree = tree
+    , lang = initialData.language
     , accumulator = newAccumulator
     , messages = f.getMessages tree
     , initialData = initialData
@@ -98,7 +97,7 @@ update f sourceText editRecord =
         renumber lineNumbers chunks =
             List.map2 f.setLineNumber lineNumbers chunks
 
-        renumberIf : Compiler.Differ.DiffRecord chunk -> List parsedChunk -> List parsedChunk
+        renumberIf : Differ.DiffRecord chunk -> List parsedChunk -> List parsedChunk
         renumberIf dr chunks =
             if dr.middleSegmentInSource == [] && dr.middleSegmentInTarget == [] && dr.commonSuffix == [] then
                 renumber newLineNumbers chunks
@@ -106,9 +105,9 @@ update f sourceText editRecord =
             else
                 chunks
 
-        diffRecord : Compiler.Differ.DiffRecord chunk
+        diffRecord : Differ.DiffRecord chunk
         diffRecord =
-            Compiler.DifferForest.diff f.chunkEq f.chunkLevel editRecord.chunks newChunks |> f.diffPostProcess
+            DifferForest.diff f.chunkEq f.chunkLevel editRecord.chunks newChunks |> f.diffPostProcess
 
         parsed_ : List parsedChunk
         parsed_ =
@@ -138,7 +137,7 @@ differentialParser :
     -> (parsedChunk -> Int)
     -> (Int -> parsedChunk -> parsedChunk)
     -> (chunk -> parsedChunk)
-    -> Compiler.Differ.DiffRecord chunk
+    -> Differ.DiffRecord chunk
     -> EditRecord chunk parsedChunk acc
     -> List parsedChunk
 differentialParser lineNumber pLineNumber pChangeLineNumber parser diffRecord editRecord =

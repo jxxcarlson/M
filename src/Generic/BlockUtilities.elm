@@ -11,7 +11,17 @@ import Generic.Language exposing (BlockMeta, ExpressionBlock, Heading(..), Primi
 import Tools.KV as KV
 
 
-updateMeta : (BlockMeta -> BlockMeta) -> PrimitiveBlock -> PrimitiveBlock
+getLineNumber : { a | meta : BlockMeta } -> Int
+getLineNumber b =
+    b.meta.lineNumber
+
+
+setLineNumber : Int -> { a | meta : BlockMeta } -> { a | meta : BlockMeta }
+setLineNumber k b =
+    updateMeta (\m -> { m | lineNumber = k }) b
+
+
+updateMeta : (BlockMeta -> BlockMeta) -> { a | meta : BlockMeta } -> { a | meta : BlockMeta }
 updateMeta transformMeta block =
     let
         oldMeta =
