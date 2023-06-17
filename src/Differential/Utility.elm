@@ -9,7 +9,7 @@ module Differential.Utility exposing
     )
 
 import Parser exposing ((|.), (|=), Parser)
-import Scripta.Language exposing (Language(..))
+import ScriptaV2.Language exposing (Language(..))
 
 
 getLeadingBlanks : String -> String

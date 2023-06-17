@@ -1,4 +1,4 @@
-module Compiler.Differential exposing (EditRecord, differentialCompiler, init, update)
+module Differential.Differential exposing (EditRecord, differentialCompiler, init, update)
 
 import Differential.Differ as Differ
 
@@ -10,7 +10,12 @@ type alias EditRecord chunk parsedChunk renderedChunk =
     }
 
 
-init : (String -> List chunk) -> (chunk -> parsedChunk) -> (parsedChunk -> renderedChunk) -> String -> EditRecord chunk parsedChunk renderedChunk
+init :
+    (String -> List chunk)
+    -> (chunk -> parsedChunk)
+    -> (parsedChunk -> renderedChunk)
+    -> String
+    -> EditRecord chunk parsedChunk renderedChunk
 init chunker parser renderer text =
     let
         chunks =

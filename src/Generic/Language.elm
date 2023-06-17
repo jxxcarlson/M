@@ -16,6 +16,7 @@ module Generic.Language exposing
     , getNameFromHeading
     , getVerbatimContent
     , primitiveBlockEmpty
+    , setName
     , simplifyBlock
     , simplifyExpr
     , simplifyExpressionBlock
@@ -267,6 +268,19 @@ emptyBlockMeta =
 getName : ExpressionBlock -> Maybe String
 getName block =
     getNameFromHeading block.heading
+
+
+setName : String -> ExpressionBlock -> ExpressionBlock
+setName name block =
+    case block.heading of
+        Paragraph ->
+            block
+
+        Ordinary _ ->
+            { block | heading = Ordinary name }
+
+        Verbatim _ ->
+            { block | heading = Verbatim name }
 
 
 getNameFromHeading : Heading -> Maybe String

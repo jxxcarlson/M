@@ -2,13 +2,21 @@ module Generic.BlockUtilities exposing
     ( argsAndProperties
     , dropLast
     , getExpressionBlockName
+    , getLineNumber
+    , getMessages
     , getPrimitiveBlockName
+    , setLineNumber
     , updateMeta
     )
 
 import Dict exposing (Dict)
 import Generic.Language exposing (BlockMeta, ExpressionBlock, Heading(..), PrimitiveBlock)
 import Tools.KV as KV
+
+
+getMessages : ExpressionBlock -> List String
+getMessages b =
+    b.meta.messages
 
 
 getLineNumber : { a | meta : BlockMeta } -> Int
