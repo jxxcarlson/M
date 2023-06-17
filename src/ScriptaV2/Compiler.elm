@@ -1,6 +1,5 @@
 module ScriptaV2.Compiler exposing
-    ( Language(..)
-    , compile
+    ( compile
     , compileL
     , compileM
     , compileX
@@ -13,6 +12,7 @@ module ScriptaV2.Compiler exposing
 --import Render.Block
 
 import Element exposing (Element)
+import Generic.ASTTools
 import Generic.Acc
 import Generic.Compiler
 import Generic.Forest exposing (Forest)
@@ -28,11 +28,12 @@ import Render.Msg exposing (MarkupMsg(..))
 import Render.TOC
 import Render.Tree
 import ScriptaV2.Config as Config
+import ScriptaV2.Language exposing (Language(..))
 import XMarkdown.Expression
 import XMarkdown.PrimitiveBlock
 
 
-compile : Language -> Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
+compile : Language -> Int -> Int -> String -> List String -> CompilerOutput
 compile lang width outerCount selectedId lines =
     case lang of
         L0Lang ->
@@ -43,12 +44,6 @@ compile lang width outerCount selectedId lines =
 
         XMarkdownLang ->
             compileX width outerCount selectedId lines
-
-
-type Language
-    = MicroLaTeXLang
-    | L0Lang
-    | XMarkdownLang
 
 
 {-|
@@ -86,11 +81,18 @@ parseX idPrefix outerCount lines =
 -- M compiler
 
 
-compileM : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
+type alias CompilerOutput =
+    { body : List (Element MarkupMsg)
+    , banner : Maybe (Element MarkupMsg)
+    , toc : List (Element MarkupMsg)
+    }
+
+
+compileM : Int -> Int -> String -> List String -> CompilerOutput
 compileM width outerCount selectedId lines =
     case parseM Config.idPrefix outerCount lines of
         Err err ->
-            { body = [ Element.text "Oops something went wrong" ], toc = [] }
+            { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
             let
@@ -102,6 +104,7 @@ compileM width outerCount selectedId lines =
             in
             { body =
                 List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
+            , banner = Nothing --Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
             , toc =
                 Render.TOC.view renderData.count accumulator [] forest
             }
@@ -111,11 +114,11 @@ compileM width outerCount selectedId lines =
 -- makeSettings id selectedSlug scale windowWidth
 
 
-compileX : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
+compileX : Int -> Int -> String -> List String -> CompilerOutput
 compileX width outerCount selectedId lines =
     case parseX Config.idPrefix outerCount lines of
         Err err ->
-            { body = [ Element.text "Oops something went wrong" ], toc = [] }
+            { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
             let
@@ -127,6 +130,7 @@ compileX width outerCount selectedId lines =
             in
             { body =
                 List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
+            , banner = Nothing --Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
             , toc =
                 Render.TOC.view renderData.count accumulator [] forest
             }
@@ -146,11 +150,11 @@ parseL idPrefix outerCount lines =
     Generic.Compiler.parse_ MicroLaTeX.PrimitiveBlock.parse MicroLaTeX.Expression.parse idPrefix outerCount lines
 
 
-compileL : Int -> Int -> String -> List String -> { body : List (Element MarkupMsg), toc : List (Element MarkupMsg) }
+compileL : Int -> Int -> String -> List String -> CompilerOutput
 compileL width outerCount selectedId lines =
     case parseL Config.idPrefix outerCount lines of
         Err err ->
-            { body = [ Element.text "Oops something went wrong" ], toc = [] }
+            { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
             let
@@ -162,8 +166,7 @@ compileL width outerCount selectedId lines =
             in
             { body =
                 List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings []) forest
-
-            -- |> List.map Render.Tree.unravelL
+            , banner = Nothing -- Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
             , toc =
                 Render.TOC.view renderData.count accumulator [] forest
             }

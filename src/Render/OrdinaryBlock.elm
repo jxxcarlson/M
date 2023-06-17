@@ -32,6 +32,7 @@ import String.Extra
 import Tools.Utility as Utility
 
 
+render : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
 render count acc settings attr block =
     case block.body of
         Left _ ->
@@ -461,6 +462,7 @@ env_ count acc settings attr block =
 -- env : Int -> Accumulator -> RenderSettings -> ExpressionBlock -> Element MarkupMsg
 
 
+env : Int -> Accumulator -> RenderSettings -> List (Element.Attribute MarkupMsg) -> ExpressionBlock -> Element MarkupMsg
 env count acc settings attr block =
     case block.body of
         Left _ ->

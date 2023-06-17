@@ -17,6 +17,7 @@ module Generic.ASTTools exposing
     , filterForestOnLabelNames
     , filterNotBlocksOnName
     , filterOutExpressionsOnName
+    , flattenForest
     , frontMatterDict
     , getBlockArgsByName
     , getText
@@ -26,7 +27,6 @@ module Generic.ASTTools exposing
     , matchingIdsInAST
     , normalize
     , rawBlockNames
-    , runninghead
     , stringValueOfList
     , tableOfContents
     , title
@@ -57,6 +57,11 @@ normalize exprs =
 filterForestForExpressionsWithName : String -> Forest Expression -> List Expression
 filterForestForExpressionsWithName name forest =
     filterExpressionsOnName name (List.map Tree.flatten forest |> List.concat)
+
+
+flattenForest : Forest ExpressionBlock -> List ExpressionBlock
+flattenForest forest =
+    forest |> List.map Tree.flatten |> List.concat
 
 
 blockNames : List (Tree.Tree ExpressionBlock) -> List String
@@ -237,12 +242,9 @@ getBlockByName name ast =
         |> List.head
 
 
-runninghead ast =
-    getBlockByName "runninghead" ast
-
-
+banner : List (Tree ExpressionBlock) -> Maybe ExpressionBlock
 banner ast =
-    getBlockByName "banner" ast
+    ast |> getBlockByName "banner"
 
 
 frontMatterDict : List (Tree ExpressionBlock) -> Dict String String
