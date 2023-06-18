@@ -6,8 +6,8 @@ module ScriptaV2.Compiler exposing
     , parseL
     , parseM
     , parseX
-    , renderForest
     , pm
+    , renderForest
     )
 
 --import Render.Block
@@ -98,23 +98,7 @@ compileM width outerCount selectedId lines =
             { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
-            let
-                renderData =
-                    Generic.Compiler.defaultRenderData width outerCount selectedId
-
-                ( accumulator, forest ) =
-                    Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
-            in
-            { body =
-                renderForest renderData accumulator forest
-            , banner = Nothing --Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
-            , toc =
-                Render.TOC.view renderData.count accumulator [] forest
-            }
-
-
-
--- makeSettings id selectedSlug scale windowWidth
+            render width selectedId outerCount forest_
 
 
 compileX : Int -> Int -> String -> List String -> CompilerOutput
@@ -124,19 +108,8 @@ compileX width outerCount selectedId lines =
             { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
-            let
-                renderData =
-                    Generic.Compiler.defaultRenderData width outerCount selectedId
+            render width selectedId outerCount forest_
 
-                ( accumulator, forest ) =
-                    Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
-            in
-            { body =
-               renderForest renderData accumulator forest
-            , banner = Nothing --Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
-            , toc =
-                Render.TOC.view renderData.count accumulator [] forest
-            }
 
 
 -- LaTeX compiler
@@ -159,22 +132,30 @@ compileL width outerCount selectedId lines =
             { body = [ Element.text "Oops something went wrong" ], banner = Nothing, toc = [] }
 
         Ok forest_ ->
-            let
-                renderData =
-                    Generic.Compiler.defaultRenderData width outerCount selectedId
-
-                ( accumulator, forest ) =
-                    Generic.Acc.transformAccumulate renderData.initialAccumulatorData forest_
-            in
-            { body =
-                 renderForest renderData accumulator forest
-            , banner = Nothing -- Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
-            , toc =
-                Render.TOC.view renderData.count accumulator [] forest
-            }
+            render width selectedId outerCount forest_
 
 
-renderForest : { a | count : Int, settings : Render.Settings.RenderSettings } -> Generic.Acc.Accumulator -> List (Tree ExpressionBlock) -> List (Element MarkupMsg)
-renderForest renderData accumulator = List.map (Render.Tree.renderTreeQ renderData.count accumulator renderData.settings [])
+render : Int -> String -> Int -> Forest ExpressionBlock -> CompilerOutput
+render width selectedId outerCount forest_ =
+    let
+        renderSettings =
+            Generic.Compiler.defaultRenderSettings width selectedId
+
+        ( accumulator, forest ) =
+            Generic.Acc.transformAccumulate Generic.Acc.initialData forest_
+    in
+    { body =
+        renderForest outerCount renderSettings accumulator forest
+    , banner = Nothing -- Generic.ASTTools.banner forest |> Maybe.map (Render.Block.renderBody renderData.count accumulator renderData.settings [])
+    , toc =
+        Render.TOC.view outerCount accumulator [] forest
+    }
+
+
+renderForest : Int -> Render.Settings.RenderSettings -> Generic.Acc.Accumulator -> List (Tree ExpressionBlock) -> List (Element MarkupMsg)
+renderForest count renderSettings accumulator =
+    List.map (Render.Tree.renderTreeQ count accumulator renderSettings [])
+
+
 
 --

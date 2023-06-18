@@ -1,6 +1,7 @@
 module ScriptaV2.DifferentialCompiler exposing
     ( EditRecord
     , init
+    , renderEditRecord
     , update
     )
 
@@ -9,8 +10,10 @@ import Differential.AbstractDifferentialParser
 import Differential.Differ
 import Differential.Utility
 import Either exposing (Either)
+import Element exposing (Element)
 import Generic.Acc
 import Generic.BlockUtilities
+import Generic.Compiler
 import Generic.Forest exposing (Forest)
 import Generic.ForestTransform
 import Generic.Language exposing (ExpressionBlock, PrimitiveBlock)
@@ -20,11 +23,26 @@ import M.Expression
 import M.PrimitiveBlock
 import MicroLaTeX.Expression
 import MicroLaTeX.PrimitiveBlock
+import Render.Msg exposing (MarkupMsg)
+import Render.Settings
+import ScriptaV2.Compiler
 import ScriptaV2.Config
 import ScriptaV2.Language exposing (Language(..))
 import Tree exposing (Tree)
 import XMarkdown.Expression
 import XMarkdown.PrimitiveBlock
+
+
+renderEditRecord : Generic.Compiler.DisplaySettings -> EditRecord -> List (Element MarkupMsg)
+renderEditRecord displaySettings editRecord =
+    let
+        renderSettings =
+            ScriptaV2.Language.renderSettingsFromDisplaySettings displaySettings
+
+        counter =
+            displaySettings.counter
+    in
+    ScriptaV2.Compiler.renderForest counter renderSettings editRecord.accumulator editRecord.tree
 
 
 type alias EditRecord =

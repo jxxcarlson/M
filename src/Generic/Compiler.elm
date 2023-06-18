@@ -1,4 +1,10 @@
-module Generic.Compiler exposing (DisplaySettings, RenderData, defaultRenderData, parse_)
+module Generic.Compiler exposing
+    ( DisplaySettings
+    , RenderData
+    , defaultRenderData
+    , defaultRenderSettings
+    , parse_
+    )
 
 import Generic.Acc
 import Generic.Forest exposing (Forest)
@@ -49,6 +55,11 @@ defaultRenderData width outerCount selectedId =
     , settings = Render.Settings.default selectedId width
     , initialAccumulatorData = Generic.Acc.initialData
     }
+
+
+defaultRenderSettings : Int -> String -> Render.Settings.RenderSettings
+defaultRenderSettings width selectedId =
+    Render.Settings.default selectedId width
 
 
 type alias DisplaySettings =
