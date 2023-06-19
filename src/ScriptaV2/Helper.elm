@@ -22,6 +22,7 @@ import Render.Export.LaTeX
 import Render.Settings
 import Render.TOC
 import Time
+import Tools.Utility
 import Tree
 
 
@@ -30,7 +31,7 @@ type alias RenderSettings =
 
 
 banner =
-    Generic.ASTTools.banner
+    ASTTools.banner
 
 
 getName =
@@ -50,7 +51,7 @@ setName =
 
 
 title =
-    Generic.ASTTools.title
+    ASTTools.title
 
 
 viewToc counter acc attr ast =
@@ -167,7 +168,7 @@ The PDF module in Example2 requires these.
 
 
 matchingIdsInAST =
-    Generic.ASTTools.matchingIdsInAST
+    ASTTools.matchingIdsInAST
 
 
 
@@ -298,12 +299,12 @@ extractUrl str =
 
 compressWhitespace : String -> String
 compressWhitespace string =
-    userReplace "\\s\\s+" (\_ -> " ") string
+    Tools.Utility.userReplace "\\s\\s+" (\_ -> " ") string
 
 
 removeNonAlphaNum : String -> String
 removeNonAlphaNum string =
-    userReplace "[^A-Za-z0-9\\-]" (\_ -> "") string
+    Tools.Utility.userReplace "[^A-Za-z0-9\\-]" (\_ -> "") string
 
 
 {-| -}
