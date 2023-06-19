@@ -3,6 +3,7 @@ module ScriptaV2.Compiler exposing
     , compileL
     , compileM
     , compileX
+    , parse
     , parseFromString
     , parseL
     , parseM
