@@ -1,20 +1,20 @@
 module Render.Export.Check exposing (nonExportableBlocks, nonExportableExpressions)
 
-import Compiler.ASTTools
-import Parser.Block
+import Generic.ASTTools
+import Generic.Language
 import Render.Block
 import Render.Expression
 import Tree exposing (Tree)
 
 
-nonExportableBlocks : List (Tree.Tree Parser.Block.ExpressionBlock) -> List String
+nonExportableBlocks : List (Tree.Tree Generic.Language.ExpressionBlock) -> List String
 nonExportableBlocks forest =
-    forest |> Compiler.ASTTools.blockNames |> List.filter (\block -> List.member block nonExportableBlockNameList)
+    forest |> Generic.ASTTools.blockNames |> List.filter (\block -> List.member block nonExportableBlockNameList)
 
 
-nonExportableExpressions : List (Tree.Tree Parser.Block.ExpressionBlock) -> List String
+nonExportableExpressions : List (Tree.Tree Generic.Language.ExpressionBlock) -> List String
 nonExportableExpressions forest =
-    forest |> Compiler.ASTTools.expressionNames |> List.filter (\expr -> List.member expr Render.Expression.nonstandardElements)
+    forest |> Generic.ASTTools.expressionNames |> List.filter (\expr -> List.member expr Render.Expression.nonstandardElements)
 
 
 nonExportableBlockNameList =
