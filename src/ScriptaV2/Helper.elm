@@ -1,6 +1,8 @@
 module ScriptaV2.Helper exposing
     ( banner
+    , encodeForPDF
     , fileNameForExport
+    , getImageUrls
     , getName
     , makeSettings
     , pdfFileNameToGet

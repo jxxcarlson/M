@@ -7,6 +7,7 @@ module Render.Helper exposing
     , labeledArgs
     , noSuchOrdinaryBlock
     , noSuchVerbatimBlock
+    , nonExportableOrdinaryBlocks
     , nonExportableVerbatimBlocks
     , renderNothing
     , renderWithDefault
@@ -39,6 +40,10 @@ topPaddingForIndentedElements =
 
 nonExportableVerbatimBlocks =
     [ "hide", "svg", "chart", "include", "iframe" ]
+
+
+nonExportableOrdinaryBlocks =
+    [ "box", "set-key", "comment", "runninghead", "banner", "type", "setcounter", "q", "a" ]
 
 
 

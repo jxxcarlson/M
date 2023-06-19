@@ -3,6 +3,7 @@ module ScriptaV2.Compiler exposing
     , compileL
     , compileM
     , compileX
+    , parseFromString
     , parseL
     , parseM
     , parseX
@@ -68,6 +69,24 @@ compile lang width outerCount selectedId lines =
 -}
 pm str =
     parseM "!!" 0 (String.lines str) |> Result.map (Generic.Forest.map Generic.Language.simplifyExpressionBlock)
+
+
+parseFromString : Language -> String -> Result Error (Forest ExpressionBlock)
+parseFromString lang str =
+    parse lang Config.idPrefix 0 (String.lines str)
+
+
+parse : Language -> String -> Int -> List String -> Result Error (Forest ExpressionBlock)
+parse lang idPrefix outerCount lines =
+    case lang of
+        L0Lang ->
+            parseM idPrefix outerCount lines
+
+        MicroLaTeXLang ->
+            parseL idPrefix outerCount lines
+
+        XMarkdownLang ->
+            parseX idPrefix outerCount lines
 
 
 parseM : String -> Int -> List String -> Result Error (Forest ExpressionBlock)

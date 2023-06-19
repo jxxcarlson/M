@@ -4,6 +4,7 @@ import Generic.ASTTools
 import Generic.Language
 import Render.Block
 import Render.Expression
+import Render.Helper
 import Tree exposing (Tree)
 
 
@@ -18,4 +19,4 @@ nonExportableExpressions forest =
 
 
 nonExportableBlockNameList =
-    Render.Block.nonExportableVerbatimBlocks ++ Render.Block.nonExportableOrdinaryBlocks
+    Render.Helper.nonExportableVerbatimBlocks ++ Render.Helper.nonExportableOrdinaryBlocks
