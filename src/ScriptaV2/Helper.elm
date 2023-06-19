@@ -1,7 +1,9 @@
 module ScriptaV2.Helper exposing
     ( banner
+    , fileNameForExport
     , getName
     , makeSettings
+    , pdfFileNameToGet
     , setName
     , title
     , viewToc
@@ -20,7 +22,6 @@ import Render.Export.LaTeX
 import Render.Settings
 import Render.TOC
 import Time
-import Time.Posix
 import Tree
 
 
@@ -165,7 +166,6 @@ The PDF module in Example2 requires these.
 -- EDITOR
 
 
-{-| -}
 matchingIdsInAST =
     Generic.ASTTools.matchingIdsInAST
 

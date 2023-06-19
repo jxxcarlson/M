@@ -1,11 +1,10 @@
 module Render.Export.Image exposing (export, exportBlock)
 
-import Compiler.ASTTools
 import Dict
 import Either exposing (Either(..))
+import Generic.ASTTools
+import Generic.Language exposing (Expression, ExpressionBlock)
 import List.Extra
-import Parser.Block exposing (ExpressionBlock(..))
-import Parser.Expr exposing (Expr)
 import Render.Export.Util
 import Render.Settings exposing (RenderSettings)
 import Render.Utility
@@ -13,7 +12,7 @@ import Tools.Utility as Utility
 
 
 exportBlock : RenderSettings -> ExpressionBlock -> String
-exportBlock settings ((ExpressionBlock { content, args }) as block) =
+exportBlock settings block =
     let
         params =
             imageParametersForBlock settings block
@@ -33,7 +32,7 @@ fixWidth w =
         w
 
 
-export : RenderSettings -> List Expr -> String
+export : RenderSettings -> List Expression -> String
 export s exprs =
     let
         args =
@@ -80,12 +79,12 @@ type alias ImageParameters =
     }
 
 
-imageParameters : Render.Settings.RenderSettings -> List Expr -> ImageParameters
+imageParameters : Render.Settings.RenderSettings -> List Expression -> ImageParameters
 imageParameters settings body =
     let
         arguments : List String
         arguments =
-            Compiler.ASTTools.exprListToStringList body |> List.map String.words |> List.concat
+            Generic.ASTTools.exprListToStringList body |> List.map String.words |> List.concat
 
         url =
             List.head arguments |> Maybe.withDefault "no-image"
@@ -172,14 +171,10 @@ imageParameters settings body =
 
 
 imageParametersForBlock : Render.Settings.RenderSettings -> ExpressionBlock -> ImageParameters
-imageParametersForBlock settings (ExpressionBlock { content, args, properties }) =
+imageParametersForBlock settings block =
     let
-        arguments : List String
-        arguments =
-            args
-
         url =
-            case content of
+            case block.body of
                 Left str ->
                     str
 
@@ -187,14 +182,14 @@ imageParametersForBlock settings (ExpressionBlock { content, args, properties })
                     "bad block"
 
         caption =
-            Dict.get "caption" properties |> Maybe.withDefault "" |> String.replace ":" ""
+            Dict.get "caption" block.properties |> Maybe.withDefault "" |> String.replace ":" ""
 
         displayWidth =
             settings.width
 
         width : String
         width =
-            case Dict.get "width" properties of
+            case Dict.get "width" block.properties of
                 Nothing ->
                     rescale displayWidth displayWidth
 
@@ -211,7 +206,7 @@ imageParametersForBlock settings (ExpressionBlock { content, args, properties })
 
         fractionalWidth : String
         fractionalWidth =
-            case Dict.get "width" properties of
+            case Dict.get "width" block.properties of
                 Nothing ->
                     "0.51\\textwidth"
 
@@ -227,7 +222,7 @@ imageParametersForBlock settings (ExpressionBlock { content, args, properties })
                             fractionaRescale w
 
         placement =
-            case Dict.get "placement" properties of
+            case Dict.get "placement" block.properties of
                 Nothing ->
                     "C"
 

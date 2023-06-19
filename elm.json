@@ -20,6 +20,7 @@
             "elm-community/string-extra": "4.0.1",
             "mdgriffith/elm-ui": "1.1.8",
             "rtfeldman/console-print": "1.0.1",
+            "terezka/charts": "5.0.0",
             "terezka/elm-charts-alpha": "2.0.0",
             "toastal/either": "3.6.3",
             "zwilias/elm-rosetree": "1.5.0"

@@ -1,5 +1,6 @@
 module Generic.BlockUtilities exposing
     ( argsAndProperties
+    , condenseUrls
     , dropLast
     , getExpressionBlockName
     , getLineNumber
@@ -10,8 +11,35 @@ module Generic.BlockUtilities exposing
     )
 
 import Dict exposing (Dict)
-import Generic.Language exposing (BlockMeta, ExpressionBlock, Heading(..), PrimitiveBlock)
+import Either
+import Generic.Language exposing (BlockMeta, Expr(..), Expression, ExpressionBlock, Heading(..), PrimitiveBlock)
 import Tools.KV as KV
+
+
+condenseUrls : ExpressionBlock -> ExpressionBlock
+condenseUrls block =
+    case block.body of
+        Either.Left _ ->
+            block
+
+        Either.Right exprList ->
+            { block | body = Either.Right (List.map condenseUrl exprList) }
+
+
+{-| Use to transform image urls for export and PDF generation
+-}
+condenseUrl : Expression -> Expression
+condenseUrl expr =
+    case expr of
+        Fun "image" ((Text url meta1) :: rest) meta2 ->
+            Fun "image" (Text (smashUrl url) meta1 :: rest) meta2
+
+        _ ->
+            expr
+
+
+smashUrl url =
+    url |> String.replace "https://" "" |> String.replace "http://" ""
 
 
 getMessages : ExpressionBlock -> List String

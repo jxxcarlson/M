@@ -1,16 +1,15 @@
 module Render.Export.LaTeX exposing (export, exportExpr, rawExport)
 
-import Compiler.ASTTools as ASTTools
-import Compiler.TextMacro
-import Compiler.Util
 import Dict exposing (Dict)
 import Either exposing (Either(..))
+import Generic.ASTTools as ASTTools
+import Generic.BlockUtilities
+import Generic.Forest exposing (Forest)
+import Generic.Language exposing (Expr(..), Expression, ExpressionBlock, Heading(..))
+import Generic.TextMacro
 import List.Extra
 import Maybe.Extra
-import Parser.Block exposing (BlockType(..), ExpressionBlock(..))
-import Parser.Expr exposing (Expr(..))
-import Parser.Forest exposing (Forest)
-import Parser.Helpers exposing (Step(..), loop)
+import MicroLaTeX.Util
 import Render.Data
 import Render.Export.Image
 import Render.Export.Preamble
@@ -18,6 +17,7 @@ import Render.Export.Util
 import Render.Settings exposing (RenderSettings)
 import Render.Utility as Utility
 import Time
+import Tools.Loop exposing (Step(..), loop)
 import Tree exposing (Tree)
 
 
@@ -42,7 +42,7 @@ export currentTime settings_ ast =
             ASTTools.getVerbatimBlockValue "textmacros" ast
 
         macrosInTextMacroDefinitions =
-            Compiler.TextMacro.getTextMacroFunctionNames textMacroDefinitions
+            Generic.TextMacro.getTextMacroFunctionNames textMacroDefinitions
     in
     Render.Export.Preamble.make
         rawBlockNames
@@ -140,9 +140,9 @@ Function shiftSection makes the adjustments needed for export.
 
 -}
 shiftSection : Int -> ExpressionBlock -> ExpressionBlock
-shiftSection delta ((ExpressionBlock data) as block) =
-    if data.name == Just "section" then
-        case data.args of
+shiftSection delta block =
+    if Generic.BlockUtilities.getExpressionBlockName block == Just "section" then
+        case block.args of
             level :: rest ->
                 case String.toInt level of
                     Nothing ->
@@ -153,7 +153,7 @@ shiftSection delta ((ExpressionBlock data) as block) =
                             newLevel =
                                 String.fromInt (kk + delta)
                         in
-                        ExpressionBlock { data | args = newLevel :: rest }
+                        { block | args = newLevel :: rest }
 
             _ ->
                 block
@@ -199,9 +199,9 @@ rawExport : RenderSettings -> List (Tree ExpressionBlock) -> String
 rawExport settings ast =
     ast
         |> ASTTools.filterForestOnLabelNames (\name -> not (name == Just "runninghead"))
-        |> Parser.Forest.map Parser.Block.condenseUrls
+        |> Generic.Forest.map Generic.BlockUtilities.condenseUrls
         |> encloseLists
-        |> Parser.Forest.map (counterValue ast |> oneOrTwo |> shiftSection)
+        |> Generic.Forest.map (counterValue ast |> oneOrTwo |> shiftSection)
         |> List.map (exportTree settings)
         |> String.join "\n\n"
 
@@ -232,127 +232,130 @@ nextStep state =
             Loop (nextState tree state)
 
 
+emptyExpressionBlock =
+    Generic.Language.expressionBlockEmpty
+
+
 beginItemizedBlock : ExpressionBlock
 beginItemizedBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "beginBlock" ]
-        , content = Right [ Text "itemize" { begin = 0, end = 7, index = 0, id = "" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "beginBlock"
-        , numberOfLines = 2
-        , sourceText = "| beginBlock\nitemize"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "beginBlock"
+        , body = Right [ Text "itemize" { begin = 0, end = 7, index = 0, id = "" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| beginBlock\nitemize"
+                    , numberOfLines = 2
+                }
+            )
 
 
 endItemizedBlock : ExpressionBlock
 endItemizedBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "endBlock" ]
-        , content = Right [ Text "itemize" { begin = 0, end = 7, index = 0, id = "" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "endBlock"
-        , numberOfLines = 2
-        , sourceText = "| endBlock\nitemize"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "endBlock"
+        , body = Right [ Text "itemize" { begin = 0, end = 7, index = 0, id = "end" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| endBlock\nitemize"
+                    , numberOfLines = 2
+                }
+            )
 
 
 beginNumberedBlock : ExpressionBlock
 beginNumberedBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "beginNumberedBlock" ]
-        , content = Right [ Text "enumerate" { begin = 0, end = 7, index = 0, id = "begin" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "beginNumberedBlock"
-        , numberOfLines = 2
-        , sourceText = "| beginBlock\nitemize"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "beginNumberedBlock"
+        , body = Right [ Text "enumerate" { begin = 0, end = 7, index = 0, id = "begin" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| beginBlock\nitemize"
+                    , numberOfLines = 2
+                }
+            )
+
+
+
+--
+--ExpressionBlock
+--    { args = []
+--    , properties = Dict.empty
+--    , blockType = OrdinaryBlock [ "beginNumberedBlock" ]
+--    , content = Right [ Text "enumerate" { begin = 0, end = 7, index = 0, id = "begin" } ]
+--    , messages = []
+--    , id = "0"
+--    , tag = ""
+--    , indent = 1
+--    , lineNumber = 0
+--    , name = Just "beginNumberedBlock"
+--    , numberOfLines = 2
+--    , sourceText = "| beginBlock\nitemize"
+--    , error = Nothing
+--    }
 
 
 endNumberedBlock : ExpressionBlock
 endNumberedBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "endNumberedBlock" ]
-        , content = Right [ Text "enumerate" { begin = 0, end = 7, index = 0, id = "end" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "endNumberedBlock"
-        , numberOfLines = 2
-        , sourceText = "| endBlock\nitemize"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "endNumberedBlock"
+        , body = Right [ Text "enumerate" { begin = 0, end = 7, index = 0, id = "begin" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| endBlock\nitemize"
+                    , numberOfLines = 2
+                }
+            )
 
 
 beginDescriptionBlock : ExpressionBlock
 beginDescriptionBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "beginDescriptionBlock" ]
-        , content = Right [ Text "description" { begin = 0, end = 7, index = 0, id = "begin" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "beginDescriptionBlock"
-        , numberOfLines = 2
-        , sourceText = "| beginBlock\ndescription"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "beginDescriptionBlock"
+        , body = Right [ Text "description" { begin = 0, end = 7, index = 0, id = "begin" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| beginBlock\ndescription"
+                    , numberOfLines = 2
+                }
+            )
 
 
 endDescriptionBlock : ExpressionBlock
 endDescriptionBlock =
-    ExpressionBlock
-        { args = []
-        , properties = Dict.empty
-        , blockType = OrdinaryBlock [ "endDescriptionBlock" ]
-        , content = Right [ Text "description" { begin = 0, end = 7, index = 0, id = "end" } ]
-        , messages = []
-        , id = "0"
-        , tag = ""
-        , indent = 1
-        , lineNumber = 0
-        , name = Just "endDescriptionBlock"
-        , numberOfLines = 2
-        , sourceText = "| endBlock\ndescription"
-        , error = Nothing
-        }
+    { emptyExpressionBlock
+        | indent = 1
+        , heading = Ordinary "endDescriptionBlock"
+        , body = Right [ Text "description" { begin = 0, end = 7, index = 0, id = "end" } ]
+    }
+        |> Generic.BlockUtilities.updateMeta
+            (\m ->
+                { m
+                    | sourceText = "| endBlock\ndescription"
+                    , numberOfLines = 2
+                }
+            )
 
 
 nextState : Tree ExpressionBlock -> State -> State
 nextState tree state =
     let
         name_ =
-            case Tree.label tree of
-                ExpressionBlock { name } ->
-                    name
+            Tree.label tree |> Generic.BlockUtilities.getExpressionBlockName
     in
     case ( state.status, name_ ) of
         -- ITEMIZED LIST
@@ -391,38 +394,34 @@ nextState tree state =
 
 
 exportBlock : RenderSettings -> ExpressionBlock -> String
-exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as block) =
-    case blockType of
+exportBlock settings block =
+    case block.heading of
         Paragraph ->
-            case content of
+            case block.body of
                 Left str ->
                     mapChars2 str
 
                 Right exprs_ ->
                     exportExprList settings exprs_
 
-        OrdinaryBlock _ ->
-            case content of
+        Ordinary name ->
+            case block.body of
                 Left _ ->
                     ""
 
                 Right exprs_ ->
-                    let
-                        name_ =
-                            name |> Maybe.withDefault "anon"
-                    in
-                    case Dict.get name_ blockDict of
+                    case Dict.get name blockDict of
                         Just f ->
-                            f settings args (exportExprList settings exprs_)
+                            f settings block.args (exportExprList settings exprs_)
 
                         Nothing ->
-                            environment name_ (exportExprList settings exprs_)
+                            environment name (exportExprList settings exprs_)
 
-        VerbatimBlock _ ->
-            case content of
+        Verbatim name ->
+            case block.body of
                 Left str ->
                     case name of
-                        Just "math" ->
+                        "math" ->
                             let
                                 fix_ : String -> String
                                 fix_ str_ =
@@ -430,12 +429,12 @@ exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as bl
                                         |> String.lines
                                         |> List.filter (\line -> String.left 2 line /= "$$")
                                         |> String.join "\n"
-                                        |> Compiler.Util.transformLabel
+                                        |> MicroLaTeX.Util.transformLabel
                             in
                             -- TODO: This should be fixed upstream
                             [ "$$", fix_ str, "$$" ] |> String.join "\n"
 
-                        Just "datatable" ->
+                        "datatable" ->
                             let
                                 data =
                                     Render.Data.prepareTable 1 block
@@ -464,43 +463,43 @@ exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as bl
                                     in
                                     [ "\\begin{verbatim}", title, separator, renderedRows, "\\end{verbatim}" ] |> String.join "\n"
 
-                        Just "equation" ->
+                        "equation" ->
                             -- TODO: there should be a trailing "$$"
                             -- TODO: equation numbers and label
-                            [ "\\begin{equation}", str |> Compiler.Util.transformLabel, "\\end{equation}" ] |> String.join "\n"
+                            [ "\\begin{equation}", str |> MicroLaTeX.Util.transformLabel, "\\end{equation}" ] |> String.join "\n"
 
-                        Just "aligned" ->
+                        "aligned" ->
                             -- TODO: equation numbers and label
-                            [ "\\begin{align}", str |> Compiler.Util.transformLabel, "\\end{align}" ] |> String.join "\n"
+                            [ "\\begin{align}", str |> MicroLaTeX.Util.transformLabel, "\\end{align}" ] |> String.join "\n"
 
-                        Just "code" ->
+                        "code" ->
                             str |> fixChars |> (\s -> "\\begin{verbatim}\n" ++ s ++ "\n\\end{verbatim}")
 
-                        Just "tabular" ->
-                            str |> fixChars |> (\s -> "\\begin{tabular}{" ++ String.join " " args ++ "}\n" ++ s ++ "\n\\end{tabular}")
+                        "tabular" ->
+                            str |> fixChars |> (\s -> "\\begin{tabular}{" ++ String.join " " block.args ++ "}\n" ++ s ++ "\n\\end{tabular}")
 
-                        Just "verbatim" ->
+                        "verbatim" ->
                             str |> fixChars |> (\s -> "\\begin{verbatim}\n" ++ s ++ "\n\\end{verbatim}")
 
-                        Just "verse" ->
+                        "verse" ->
                             str |> fixChars |> (\s -> "\\begin{verbatim}\n" ++ s ++ "\n\\end{verbatim}")
 
-                        Just "load-files" ->
+                        "load-files" ->
                             ""
 
-                        Just "mathmacros" ->
+                        "mathmacros" ->
                             str
 
-                        Just "texComment" ->
+                        "texComment" ->
                             str |> String.lines |> texComment
 
-                        Just "textmacros" ->
-                            Compiler.TextMacro.exportTexMacros str
+                        "textmacros" ->
+                            Generic.TextMacro.exportTexMacros str
 
-                        Just "image" ->
+                        "image" ->
                             Render.Export.Image.exportBlock settings block
 
-                        Just "quiver" ->
+                        "quiver" ->
                             let
                                 lines =
                                     String.split "---" str
@@ -531,7 +530,7 @@ exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as bl
                             in
                             data
 
-                        Just "tikz" ->
+                        "tikz" ->
                             let
                                 renderedAsLaTeX =
                                     String.contains "\\hide{" str
@@ -548,11 +547,11 @@ exportBlock settings ((ExpressionBlock { blockType, name, args, content }) as bl
                             [ "\\[\n", data, "\n\\]" ]
                                 |> String.join ""
 
-                        Just "docinfo" ->
+                        "docinfo" ->
                             ""
 
                         _ ->
-                            Maybe.withDefault "??" name ++ ": export of this block is unimplemented"
+                            ": export of this block is unimplemented"
 
                 Right _ ->
                     "???(13)"
@@ -625,7 +624,7 @@ functionDict =
 -- MACRODICT
 
 
-macroDict : Dict String (RenderSettings -> List Expr -> String)
+macroDict : Dict String (RenderSettings -> List Expression -> String)
 macroDict =
     Dict.fromList
         [ ( "link", \_ -> link )
@@ -643,7 +642,7 @@ macroDict =
         ]
 
 
-dontRender : RenderSettings -> List Expr -> String
+dontRender : RenderSettings -> List Expression -> String
 dontRender _ _ =
     ""
 
@@ -720,7 +719,7 @@ inlineCode str =
     "\\verb`" ++ str ++ "`"
 
 
-link : List Expr -> String
+link : List Expression -> String
 link exprs =
     let
         args =
@@ -729,7 +728,7 @@ link exprs =
     [ "\\href{", args.second, "}{", args.first, "}" ] |> String.join ""
 
 
-vspace : List Expr -> String
+vspace : List Expression -> String
 vspace exprs =
     let
         arg =
@@ -743,7 +742,7 @@ vspace exprs =
     [ "\\vspace{", arg, "}" ] |> String.join ""
 
 
-ilink : List Expr -> String
+ilink : List Expression -> String
 ilink exprs =
     let
         args =
@@ -752,7 +751,7 @@ ilink exprs =
     [ "\\href{", "https://scripta.io/s/", args.second, "}{", args.first, "}" ] |> String.join ""
 
 
-bolditalic : List Expr -> String
+bolditalic : List Expression -> String
 bolditalic exprs =
     let
         args =
@@ -761,27 +760,27 @@ bolditalic exprs =
     "\\textbf{\\emph{" ++ args ++ "}}"
 
 
-brackets : List Expr -> String
+brackets : List Expression -> String
 brackets exprs =
     "[" ++ (Render.Export.Util.getArgs exprs |> String.join " ") ++ "]"
 
 
-lb : List Expr -> String
+lb : List Expression -> String
 lb _ =
     "["
 
 
-rb : List Expr -> String
+rb : List Expression -> String
 rb _ =
     "]"
 
 
-bt : List Expr -> String
+bt : List Expression -> String
 bt _ =
     "`"
 
 
-underscore : List Expr -> String
+underscore : List Expression -> String
 underscore _ =
     "$\\_$"
 
@@ -835,7 +834,7 @@ section1 args body =
         tag =
             body
                 |> String.words
-                |> Compiler.Util.normalizedWord
+                |> MicroLaTeX.Util.normalizedWord
 
         label =
             " \\label{" ++ tag ++ "}"
@@ -874,7 +873,7 @@ section2 args body =
         tag =
             body
                 |> String.words
-                |> Compiler.Util.normalizedWord
+                |> MicroLaTeX.Util.normalizedWord
 
         label =
             " \\label{" ++ tag ++ "}"
@@ -924,19 +923,19 @@ macro1 name arg =
                 "\\" ++ fName ++ "{" ++ mapChars2 (String.trimLeft arg) ++ "}"
 
 
-exportExprList : RenderSettings -> List Expr -> String
+exportExprList : RenderSettings -> List Expression -> String
 exportExprList settings exprs =
     List.map (exportExpr settings) exprs |> String.join "" |> mapChars1
 
 
-exportExpr : RenderSettings -> Expr -> String
+exportExpr : RenderSettings -> Expression -> String
 exportExpr settings expr =
     case expr of
         Fun name exps_ _ ->
             if name == "lambda" then
-                case Compiler.TextMacro.extract expr of
+                case Generic.TextMacro.extract expr of
                     Just lambda ->
-                        Compiler.TextMacro.toString (exportExpr settings) lambda
+                        Generic.TextMacro.toString (exportExpr settings) lambda
 
                     Nothing ->
                         "Error extracting lambda"
@@ -952,7 +951,7 @@ exportExpr settings expr =
         Text str _ ->
             mapChars2 str
 
-        Verbatim name body _ ->
+        VFun name body _ ->
             renderVerbatim name body
 
 
@@ -989,10 +988,10 @@ renderVerbatim name body =
 
         Just f ->
             if List.member name [ "equation", "aligned", "math" ] then
-                body |> Compiler.Util.transformLabel |> f
+                body |> MicroLaTeX.Util.transformLabel |> f
 
             else
-                body |> fixChars |> Compiler.Util.transformLabel |> f
+                body |> fixChars |> MicroLaTeX.Util.transformLabel |> f
 
 
 
