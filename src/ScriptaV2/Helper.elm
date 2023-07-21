@@ -1,11 +1,16 @@
 module ScriptaV2.Helper exposing
-    ( banner
+    ( RenderSettings
+    , banner
+    , defaultSettings
     , encodeForPDF
     , fileNameForExport
+    , getBlockNames
     , getImageUrls
     , getName
     , makeSettings
     , pdfFileNameToGet
+    , prepareContentForExport
+    , renderBody
     , setName
     , title
     , viewToc
@@ -13,7 +18,9 @@ module ScriptaV2.Helper exposing
 
 import Dict
 import Either
+import Element exposing (Attribute, Element)
 import Generic.ASTTools as ASTTools
+import Generic.Acc exposing (Accumulator)
 import Generic.Forest exposing (Forest)
 import Generic.Language exposing (ExpressionBlock)
 import Json.Encode
@@ -21,6 +28,7 @@ import List.Extra
 import Maybe.Extra
 import Render.Block
 import Render.Export.LaTeX
+import Render.Msg exposing (MarkupMsg)
 import Render.Settings
 import Render.TOC
 import Time
@@ -32,30 +40,37 @@ type alias RenderSettings =
     Render.Settings.RenderSettings
 
 
+banner : List (Tree.Tree ExpressionBlock) -> Maybe ExpressionBlock
 banner =
     ASTTools.banner
 
 
+getName : ExpressionBlock -> Maybe String
 getName =
     Generic.Language.getName
 
 
+makeSettings : String -> Maybe String -> Float -> Int -> Render.Settings.RenderSettings
 makeSettings =
     Render.Settings.makeSettings
 
 
+renderBody : Int -> Accumulator -> Render.Settings.RenderSettings -> List (Attribute MarkupMsg) -> ExpressionBlock -> List (Element MarkupMsg)
 renderBody =
     Render.Block.renderBody
 
 
+setName : String -> ExpressionBlock -> ExpressionBlock
 setName =
     Generic.Language.setName
 
 
+title : Forest ExpressionBlock -> String
 title =
     ASTTools.title
 
 
+viewToc : Int -> Accumulator -> List (Attribute MarkupMsg) -> Forest ExpressionBlock -> List (Element MarkupMsg)
 viewToc counter acc attr ast =
     Render.TOC.view counter acc attr ast
 
